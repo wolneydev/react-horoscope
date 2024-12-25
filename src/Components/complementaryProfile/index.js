@@ -23,7 +23,7 @@ const ComplementaryProfile = () => {
         ]);
         
         setSections([
-          { label: 'Gostos Musicais', data: music.data.data.items, component: MultipleBadge }, 
+          { label: 'Gostos Musicaiaaaaas', data: music.data.data.items, component: MultipleBadge }, 
           { label: 'Filmes e Séries', data: movies.data.data.items, component: MultipleBadge },
           { label: 'Gosta de beber?', data: beverages.data.data.items, component: MultipleBadge },
           { label: 'Cigarro', data: smoking.data.data.items, component: Dropdown },
@@ -52,7 +52,7 @@ const ComplementaryProfile = () => {
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>Cadastro de perfil</Text>
+      <Text style={styles.sectionTitle}>Cadastro de perfil a</Text>
       <FlatList
         data={sections}
         keyExtractor={(item, index) => index.toString()}
