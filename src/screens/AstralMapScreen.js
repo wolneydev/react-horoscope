@@ -3,11 +3,8 @@ import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 
 export default function AstralMapScreen({ route }) {
-  // Pegamos a lista passada como parâmetro
-  const { astralMap } = route.params; 
-  // astralMap é o "json.data.data" retornado na requisição
+  const { astralMap } = route.params;
 
-  // Render de cada item da lista
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.astroName}>{item.astro_name}</Text>
@@ -31,30 +28,41 @@ export default function AstralMapScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1E1B29', // Fundo escuro que remete ao céu noturno
     padding: 16,
-    backgroundColor: '#FFF'
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 12
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#F9F8F8', // Tom claro para contraste
+    marginBottom: 12,
+    textAlign: 'center',
   },
   card: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#F1F1F1',
-    borderRadius: 6
+    backgroundColor: '#2C2840', // Tom intermediário, simulando um “tom de constelação”
+    borderRadius: 8,
+    shadowColor: '#000',        // Leve sombra para destacar o card
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   astroName: {
     fontSize: 18,
-    fontWeight: 'bold'
+    fontWeight: '600',
+    color: '#FFD700', // Dourado para destacar o “astro”
+    marginBottom: 2,
   },
   horoscopeName: {
     fontSize: 16,
-    marginVertical: 4
+    color: '#C9BBCF', // Tom suave que combine com o fundo
+    marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#666'
-  }
+    color: '#D3D0D7', // Tom mais claro para fácil leitura
+    lineHeight: 20,
+  },
 });
