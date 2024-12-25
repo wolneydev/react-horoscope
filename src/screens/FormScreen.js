@@ -55,7 +55,7 @@ export default function FormScreen({ navigation }) {
     hideTimePicker();
   };
 
-  // Formatação simples (sem zero à esquerda)
+  // Formatação simples
   const formatSelectedDate = (date) => {
     if (!date) return '';
     const day = date.getDate();
@@ -68,7 +68,7 @@ export default function FormScreen({ navigation }) {
     if (!date) return '';
     const hours = date.getHours();
     const minutes = date.getMinutes();
-    return `${hours}:${minutes}`;
+    return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
   };
 
   // Função que chama a API
@@ -80,11 +80,9 @@ export default function FormScreen({ navigation }) {
       const hour = birthTime.getHours();
       const minute = birthTime.getMinutes();
 
-      // Apenas para demonstrar detecção de plataforma
       let platformMsg = isAndroid ? 'Enviando do Android...' : 'Enviando do iOS...';
       console.log(platformMsg);
 
-      // Ajuste para uso com axios
       const response = await api.post(
         'astralmap',
         {
@@ -102,11 +100,9 @@ export default function FormScreen({ navigation }) {
         }
       );
 
-      // axios retorna o resultado em response.data
       const json = response.data;
 
       if (json.status === 'success') {
-        // Navega para a tela AstralMapScreen, passando os dados
         navigation.navigate('AstralMapScreen', { astralMap: json.data.data });
       } else {
         Alert.alert('Erro', 'Ocorreu um erro ao gerar o mapa astral.');
@@ -121,26 +117,21 @@ export default function FormScreen({ navigation }) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="always" // Importante no Android
+      keyboardShouldPersistTaps="always"
     >
       <Text style={styles.title}>Preencha seus dados</Text>
 
-      {/* Campo de texto para cidade */}
       <Text style={styles.label}>Informe a cidade de nascimento:</Text>
       <TextInput
         style={styles.input}
         placeholder="Ex: São Paulo"
+        placeholderTextColor="#7A708E"
         value={city}
         onChangeText={setCity}
       />
 
-      {/* Botão e modal para data de nascimento */}
       <Text style={styles.label}>Selecione a data de nascimento:</Text>
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={showDatePicker}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.dateButton} onPress={showDatePicker} activeOpacity={0.7}>
         <Text style={styles.dateButtonText}>
           {formatSelectedDate(birthDate) || 'Escolher Data'}
         </Text>
@@ -155,13 +146,8 @@ export default function FormScreen({ navigation }) {
         is24Hour={isAndroid}
       />
 
-      {/* Botão e modal para hora de nascimento */}
       <Text style={styles.label}>Selecione o horário de nascimento:</Text>
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={showTimePicker}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.dateButton} onPress={showTimePicker} activeOpacity={0.7}>
         <Text style={styles.dateButtonText}>
           {formatSelectedTime(birthTime) || 'Escolher Horário'}
         </Text>
@@ -176,7 +162,6 @@ export default function FormScreen({ navigation }) {
         is24Hour={isAndroid}
       />
 
-      {/* Botão para submeter o formulário */}
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
       </TouchableOpacity>
@@ -184,11 +169,11 @@ export default function FormScreen({ navigation }) {
   );
 }
 
-// Estilos de exemplo
+// Estilos de tema noturno/astral:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#1E1B29', // Fundo escuro remetendo ao céu noturno
   },
   content: {
     padding: 16,
@@ -198,22 +183,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: '#F9F8F8', // Tom claro para contraste
   },
   label: {
     fontSize: 16,
+    color: '#C9BBCF', // Tom suave para textos
     marginVertical: 8,
   },
   input: {
+    backgroundColor: '#2C2840',
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: '#FFD700', // Mesmo tom dourado para dar destaque
     borderRadius: 4,
     padding: 10,
     marginBottom: 12,
     fontSize: 16,
+    color: '#F9F8F8',      // Texto claro para melhor leitura
   },
   dateButton: {
+    backgroundColor: '#2C2840',
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: '#FFD700',
     borderRadius: 4,
     padding: 12,
     marginBottom: 12,
@@ -221,10 +211,10 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#555',
+    color: '#C9BBCF',
   },
   button: {
-    backgroundColor: '#3498db',
+    backgroundColor: '#FFD700', // Dourado para contrastar com o fundo
     padding: 14,
     borderRadius: 4,
     alignItems: 'center',
@@ -232,7 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#FFF',
+    color: '#1E1B29', // Texto escuro para contraste com o dourado
     fontWeight: 'bold',
     fontSize: 16,
   },
