@@ -7,18 +7,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Platform, // Import para detectar a plataforma
+  Platform,
   Alert,
 } from 'react-native';
-
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import api from '../services/api';
 
 export default function FormScreen({ navigation }) {
   const isAndroid = Platform.OS === 'android';
   const isIOS = Platform.OS === 'ios';
 
   const [city, setCity] = useState('');
-
   const [birthDate, setBirthDate] = useState(new Date());
   const [birthTime, setBirthTime] = useState(new Date());
 
@@ -81,26 +80,31 @@ export default function FormScreen({ navigation }) {
       const hour = birthTime.getHours();
       const minute = birthTime.getMinutes();
 
-      // Exemplo de detecção de plataforma (caso queira personalizar o body):
+      // Apenas para demonstrar detecção de plataforma
       let platformMsg = isAndroid ? 'Enviando do Android...' : 'Enviando do iOS...';
       console.log(platformMsg);
 
-      const response = await fetch('https://api.match.diegoqueiroz.dev/v1/astralmap', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Ajuste para uso com axios
+      const response = await api.post(
+        'astralmap',
+        {
           city: city.trim(),
           year: parseInt(year, 10),
           month: parseInt(month, 10),
           day: parseInt(day, 10),
           hour: parseInt(hour, 10),
           minute: parseInt(minute, 10),
-        }),
-      });
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const json = await response.json();
+      // axios retorna o resultado em response.data
+      const json = response.data;
+
       if (json.status === 'success') {
         // Navega para a tela AstralMapScreen, passando os dados
         navigation.navigate('AstralMapScreen', { astralMap: json.data.data });
@@ -117,7 +121,7 @@ export default function FormScreen({ navigation }) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled" // Importante no Android
+      keyboardShouldPersistTaps="always" // Importante no Android
     >
       <Text style={styles.title}>Preencha seus dados</Text>
 
@@ -141,18 +145,13 @@ export default function FormScreen({ navigation }) {
           {formatSelectedDate(birthDate) || 'Escolher Data'}
         </Text>
       </TouchableOpacity>
-      {/** 
-       *   No iOS e no Android, o mesmo componente funciona. 
-       *   Se quiser comportamentos distintos, 
-       *   você pode fazer if(isAndroid) ou if(isIOS) em alguma prop. 
-       */}
+
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
         date={birthDate}
         onConfirm={handleConfirmDate}
         onCancel={hideDatePicker}
-        // Exemplo: no Android costuma mostrar 24h por padrão
         is24Hour={isAndroid}
       />
 
@@ -167,13 +166,13 @@ export default function FormScreen({ navigation }) {
           {formatSelectedTime(birthTime) || 'Escolher Horário'}
         </Text>
       </TouchableOpacity>
+
       <DateTimePickerModal
         isVisible={isTimePickerVisible}
         mode="time"
         date={birthTime}
         onConfirm={handleConfirmTime}
         onCancel={hideTimePicker}
-        // Ajuste do formato de 24 horas baseado na plataforma
         is24Hour={isAndroid}
       />
 
