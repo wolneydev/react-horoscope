@@ -1,18 +1,24 @@
-import { View } from 'react-native';
-import * as React from 'react';
+// App.js
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import ComplementaryProfile from './src/Components/complementaryProfile';
+import * as React from 'react';
 
-import FormScreen from './src/screens/FormScreen'; 
+// Importando as telas
+import SplashScreen from './src/screens/SplashScreen';
+import FormScreen from './src/screens/FormScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
-const Stack = createStackNavigator();
 
+const Stack = createStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName="SplashScreen">
+        <Stack.Screen 
+          name="SplashScreen" 
+          component={SplashScreen} 
+          options={{ headerShown: false }} // Oculta o header da splash
+        />
         <Stack.Screen 
           name="FormScreen" 
           component={FormScreen} 

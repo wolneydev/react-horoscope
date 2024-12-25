@@ -7,11 +7,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform, // Import para detectar a plataforma
+  Alert,
 } from 'react-native';
 
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 export default function FormScreen({ navigation }) {
+  const isAndroid = Platform.OS === 'android';
+  const isIOS = Platform.OS === 'ios';
+
   const [city, setCity] = useState('');
 
   const [birthDate, setBirthDate] = useState(new Date());
@@ -51,19 +56,19 @@ export default function FormScreen({ navigation }) {
     hideTimePicker();
   };
 
-  // Para exibir de forma simples (sem zero à esquerda):
+  // Formatação simples (sem zero à esquerda)
   const formatSelectedDate = (date) => {
     if (!date) return '';
-    const day = date.getDate(); // 1-31
-    const month = date.getMonth() + 1; // 1-12
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
   const formatSelectedTime = (date) => {
     if (!date) return '';
-    const hours = date.getHours(); // 0-23
-    const minutes = date.getMinutes(); // 0-59
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
     return `${hours}:${minutes}`;
   };
 
@@ -76,40 +81,44 @@ export default function FormScreen({ navigation }) {
       const hour = birthTime.getHours();
       const minute = birthTime.getMinutes();
 
-      const response = await fetch(
-        'https://api.match.diegoqueiroz.dev/v1/astralmap',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            city: city.trim(),
-            year: parseInt(year, 10),
-            month: parseInt(month, 10),
-            day: parseInt(day, 10),
-            hour: parseInt(hour, 10),
-            minute: parseInt(minute, 10),
-          }),
-        }
-      );
+      // Exemplo de detecção de plataforma (caso queira personalizar o body):
+      let platformMsg = isAndroid ? 'Enviando do Android...' : 'Enviando do iOS...';
+      console.log(platformMsg);
+
+      const response = await fetch('https://api.match.diegoqueiroz.dev/v1/astralmap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          city: city.trim(),
+          year: parseInt(year, 10),
+          month: parseInt(month, 10),
+          day: parseInt(day, 10),
+          hour: parseInt(hour, 10),
+          minute: parseInt(minute, 10),
+        }),
+      });
 
       const json = await response.json();
-
       if (json.status === 'success') {
         // Navega para a tela AstralMapScreen, passando os dados
         navigation.navigate('AstralMapScreen', { astralMap: json.data.data });
       } else {
-        alert('Ocorreu um erro ao gerar o mapa astral.');
+        Alert.alert('Erro', 'Ocorreu um erro ao gerar o mapa astral.');
       }
     } catch (error) {
       console.error(error);
-      alert('Erro na requisição. Verifique o console.');
+      Alert.alert('Erro na requisição', 'Verifique o console para mais detalhes.');
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled" // Importante no Android
+    >
       <Text style={styles.title}>Preencha seus dados</Text>
 
       {/* Campo de texto para cidade */}
@@ -132,12 +141,19 @@ export default function FormScreen({ navigation }) {
           {formatSelectedDate(birthDate) || 'Escolher Data'}
         </Text>
       </TouchableOpacity>
+      {/** 
+       *   No iOS e no Android, o mesmo componente funciona. 
+       *   Se quiser comportamentos distintos, 
+       *   você pode fazer if(isAndroid) ou if(isIOS) em alguma prop. 
+       */}
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
         date={birthDate}
         onConfirm={handleConfirmDate}
         onCancel={hideDatePicker}
+        // Exemplo: no Android costuma mostrar 24h por padrão
+        is24Hour={isAndroid}
       />
 
       {/* Botão e modal para hora de nascimento */}
@@ -157,7 +173,8 @@ export default function FormScreen({ navigation }) {
         date={birthTime}
         onConfirm={handleConfirmTime}
         onCancel={hideTimePicker}
-        is24Hour={true}
+        // Ajuste do formato de 24 horas baseado na plataforma
+        is24Hour={isAndroid}
       />
 
       {/* Botão para submeter o formulário */}
