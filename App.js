@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import ComplementaryProfile from './src/Components/complementaryProfile';
 
 import FormScreen from './src/screens/FormScreen'; 
+import HomeScreen from './src/screens/HomeScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
 const Stack = createStackNavigator();
 
@@ -13,6 +14,11 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen 
+          name="HomeScreen" 
+          component={HomeScreen} 
+          options={{ title: 'Seu Perfil' }}
+        />
         <Stack.Screen 
           name="FormScreen" 
           component={FormScreen} 

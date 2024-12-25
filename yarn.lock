@@ -4237,6 +4237,11 @@ expect@^29.7.0:
     jest-message-util "^29.7.0"
     jest-util "^29.7.0"
 
+expo-apple-authentication@~7.1.2:
+  version "7.1.2"
+  resolved "https://registry.yarnpkg.com/expo-apple-authentication/-/expo-apple-authentication-7.1.2.tgz#2488facb2c7bd3d01743a2ad97dceedeb8a21c47"
+  integrity sha512-4Izjv4e/hV2wK/Eb5W7qJsTfNlLyGndqXRU8ZMvxtVgKItmvWkbOP+8G8cD2G/13IIN+ePr04+5v5tn+JPqxuw==
+
 expo-asset@~11.0.1:
   version "11.0.1"
   resolved "https://registry.npmjs.org/expo-asset/-/expo-asset-11.0.1.tgz"
