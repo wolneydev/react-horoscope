@@ -1,14 +1,11 @@
 // App.js
-import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as React from 'react';
 
-
 // Importando as telas
 import SplashScreen from './src/screens/SplashScreen';
 import FormScreen from './src/screens/FormScreen'; 
-
 import AstralMapScreen from './src/screens/AstralMapScreen';
 
 const Stack = createStackNavigator();
