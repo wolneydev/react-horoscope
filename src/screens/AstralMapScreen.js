@@ -1,26 +1,38 @@
 // src/screens/AstralMapScreen.js
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ImageBackground } from 'react-native';
 
 export default function AstralMapScreen({ route }) {
   const { astralMap } = route.params;
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Text style={styles.astroName}>{item.astro_name}</Text>
-      <Text style={styles.horoscopeName}>{item.horoscope_name}</Text>
+      <Text style={styles.astroName}>{item.astro.name}</Text>
+      <Text style={styles.horoscopeName}>{item.sign.name}</Text>
       <Text style={styles.description}>{item.description}</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Seu Mapa Astral</Text>
-      <FlatList
-        data={astralMap}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderItem}
-      />
+      <Text style={styles.astroName}>Barra de açoes</Text>
+      <View style={styles.divider} />
+      <ImageBackground source={require('../assets/images/starry-night2.jpg')} style={styles.bigCard}>
+        <ImageBackground source={require('../assets/images/starry-night2.jpg')} style={styles.card}>
+          <Text style={styles.astroName}>Pronto!</Text>
+          <Text style={styles.horoscopeName}>testando</Text>
+          <Text style={styles.description}>layout</Text>
+          </ImageBackground>
+
+        <View style={styles.divider} />
+
+        <FlatList
+          data={astralMap.astros}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderItem}
+        />
+        
+      </ImageBackground>
     </View>
   );
 }
@@ -38,10 +50,29 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
+  divider: {
+    height: 2,
+    backgroundColor: '#FFD700',
+    marginTop: 8,
+    marginBottom: 24,
+
+  },
+  bigCard: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#000', // Tom intermediário, simulando um “tom de constelação”
+    borderColor: '#FFD700',      // Borda dourada para destacar o card
+    borderRadius: 8,
+    shadowColor: '#000',        // Leve sombra para destacar o card
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   card: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#2C2840', // Tom intermediário, simulando um “tom de constelação”
+    backgroundColor: '#1E1B29', // Tom intermediário, simulando um “tom de constelação”
     borderRadius: 8,
     shadowColor: '#000',        // Leve sombra para destacar o card
     shadowOffset: { width: 0, height: 2 },
@@ -62,7 +93,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: '#D3D0D7', // Tom mais claro para fácil leitura
+    color: '#fff', // Tom mais claro para fácil leitura
     lineHeight: 20,
   },
 });

@@ -103,7 +103,7 @@ export default function FormScreen({ navigation }) {
       const json = response.data;
 
       if (json.status === 'success') {
-        navigation.navigate('AstralMapScreen', { astralMap: json.data.data });
+        navigation.navigate('AstralMapScreen', { astralMap: json.data.astral_map });
       } else {
         Alert.alert('Erro', 'Ocorreu um erro ao gerar o mapa astral.');
       }
