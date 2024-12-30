@@ -5,7 +5,7 @@ const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     // Espera 3 segundos e então vai para a próxima tela
     const timer = setTimeout(() => {
-      navigation.replace('FormScreen');
+      navigation.replace('HomeScreen');
     }, 3000);
 
     return () => clearTimeout(timer);

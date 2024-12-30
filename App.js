@@ -7,6 +7,7 @@ import * as React from 'react';
 import SplashScreen from './src/screens/SplashScreen';
 import FormScreen from './src/screens/FormScreen'; 
 import AstralMapScreen from './src/screens/AstralMapScreen';
+import HomeScreen from './src/screens/HomeScreen';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,11 @@ const App = () => {
           name="SplashScreen" 
           component={SplashScreen} 
           options={{ headerShown: false }} // Oculta o header da splash
+        />
+
+        <Stack.Screen 
+          name="HomeScreen" 
+          component={HomeScreen} 
         />
 
         <Stack.Screen 
