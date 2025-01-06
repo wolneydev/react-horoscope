@@ -8,6 +8,8 @@ import SplashScreen from './src/screens/SplashScreen';
 import FormScreen from './src/screens/FormScreen'; 
 import AstralMapScreen from './src/screens/AstralMapScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import GreetingsScreen from './src/screens/auth/register/GreetingsScreen';
+import GreetingsFirstDataScreen from './src/screens/auth/register/GreetingsFirstDataScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,6 +26,17 @@ const App = () => {
         <Stack.Screen 
           name="HomeScreen" 
           component={HomeScreen} 
+          options={{ headerShown: false }} // Oculta o header da splash
+        />
+        <Stack.Screen
+          name="GreetingsScreen"
+          component={GreetingsScreen}
+          options={{ headerShown: false }} // Oculta o header da splash
+        />
+        <Stack.Screen
+          name="GreetingsFirstDataScreen"
+          component={GreetingsFirstDataScreen}
+          options={{ headerShown: false }} // Oculta o header da splash
         />
 
         <Stack.Screen 
