@@ -11,12 +11,13 @@ export default function AstralMapScreen({ route }) {
     <View style={styles.card}>
       {/* Nome do astro (por exemplo: 'Sol', 'Lua', 'Ascendente', etc.) */}
       <Text style={styles.astroName}>{item.astral_entity.name}</Text>
-      {/* Signo em que esse astro se encontra (por exemplo: 'Leão', 'Câncer', etc.) */}
-      <Text style={styles.horoscopeName}>{item.sign.name}  -  {item.degree}º</Text>
+
       {/* explanation (caso exista) */}
       {item.astral_entity.explanation && (
         <Text style={styles.explanation}>{item.astral_entity.explanation}</Text>
       )}
+      {/* Signo em que esse astro se encontra (por exemplo: 'Leão', 'Câncer', etc.) */}
+      <Text style={styles.horoscopeName}>{item.sign.name}  -  {item.degree}º</Text>      
 
       {/* Descrição do posicionamento */}
       <Text style={styles.description}>{item.description}</Text>
