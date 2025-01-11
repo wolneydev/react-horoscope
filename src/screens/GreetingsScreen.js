@@ -1,21 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Text, ImageBackground, Button } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const GreetingsFirstDataScreen = () => {
+const GreetingsScreen = () => {
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigation.navigate('AstralMapDataFormScreen');
+    }, 5000);
+
+    return () => clearTimeout(timer); // Cleanup the timer on component unmount
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
-
-      <ImageBackground source={require('../../../assets/images/starry-night2.jpg')} style={styles.section}>
+      <ImageBackground source={require('../assets/images/starry-night2.jpg')} style={styles.section}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>É aqui que começa sua jornada</Text>
           <Text style={styles.sectionDescription}>
-            OLOLOLOLOLLOLO
+            Vamos procurar seu par ideal com base no seu mapa astral!
           </Text>
         </View>
         <View style={styles.section30}>
           <Text style={styles.sectionText}>Colocar um gif animado qualquer aqui. uma constelaçãozinha gitando uma mandala qq zorra</Text>
           <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
-          <Button title="Começar" onPress={() => {}} />
+          <Button title="Começar" onPress={() => navigation.navigate('AstralMapDataFormScreen')} />
         </View>
       </ImageBackground>
     </View>
@@ -23,9 +33,11 @@ const GreetingsFirstDataScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
   },
+  
   section: {
     flex: 1,
     alignItems: 'center',
@@ -61,4 +73,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GreetingsFirstDataScreen;
+export default GreetingsScreen;
