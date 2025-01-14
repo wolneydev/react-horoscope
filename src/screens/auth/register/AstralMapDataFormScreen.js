@@ -1,5 +1,5 @@
 // src/screens/auth/register/AstralMapDataFormScreen.js
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Text,
   TextInput,
@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   ImageBackground,
+  Animated
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import api from '../../../services/api';
@@ -17,15 +18,18 @@ export default function AstralMapDataFormScreen({ navigation }) {
   const isAndroid = Platform.OS === 'android';
   const isIOS = Platform.OS === 'ios';
 
+  const [nome, setNome] = useState('');
   const [city, setCity] = useState('');
-  const [birthDate, setBirthDate] = useState();
-  const [birthTime, setBirthTime] = useState();
-
-  // Controle do modal de Data
+  const [birthDate, setBirthDate] = useState(new Date());
+  const [birthTime, setBirthTime] = useState(new Date());
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [password_confirmation, setPasswordConfirmation] = useState('');
+  const [isEmailRegistrationVisible, setEmailRegistrationVisibility] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
-  // Controle do modal de Hora
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+
+  const animation = useRef(new Animated.Value(0)).current; // Initialize animated value
 
   // Mostrar/ocultar modal de Data
   const showDatePicker = () => {
@@ -80,18 +84,25 @@ export default function AstralMapDataFormScreen({ navigation }) {
       const hour = birthTime.getHours();
       const minute = birthTime.getMinutes();
 
+      const mail = email.trim();
+      console.log(`Enviando email: ${mail}`);
+
       let platformMsg = isAndroid ? 'Enviando do Android...' : 'Enviando do iOS...';
       console.log(platformMsg);
 
       const response = await api.post(
-        'astralmap',
+        'auth/register',
         {
-          city: city.trim(),
-          year: parseInt(year, 10),
-          month: parseInt(month, 10),
-          day: parseInt(day, 10),
-          hour: parseInt(hour, 10),
-          minute: parseInt(minute, 10),
+          name: nome.trim(),
+          email: email.trim(),
+          password: password.trim(),
+          password_confirmation: password_confirmation.trim(),
+          birth_city: city.trim(),
+          birth_year: parseInt(year, 10),
+          birth_month: parseInt(month, 10),
+          birth_day: parseInt(day, 10),
+          birth_hour: parseInt(hour, 10),
+          birth_minute: parseInt(minute, 10),
         },
         {
           headers: {
@@ -101,12 +112,56 @@ export default function AstralMapDataFormScreen({ navigation }) {
       );
 
       const json = response.data;
-
-      if (json.status === 'success') {
-        navigation.navigate('AstralMapScreen', { astralMap: json.data.astral_map });
+      
+      if (json.success === true) {
+        navigation.navigate('AstralMapScreen', { astralMap: json.data.astral_map.astral_map });
       } else {
         Alert.alert('Erro', 'Ocorreu um erro ao gerar o mapa astral.');
       }
+    } catch (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+        Alert.alert('Erro na requisição', `Status: ${error.response.status}\n${error.response.data.message || 'Verifique o console para mais detalhes.'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+        Alert.alert('Erro na requisição', 'Nenhuma resposta recebida. Verifique sua conexão com a internet.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
+        Alert.alert('Erro na requisição', error.message);
+      }
+      console.error('Error config:', error.config);
+    }
+  };
+
+  const toggleEmailRegistration = () => {
+      // Show the view
+      setEmailRegistrationVisibility(true);
+      Animated.timing(animation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+  };
+
+  const animatedHeight = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 100], // Adjust the height as needed
+  });
+
+  const animatedOpacity = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  
+  const handleGerarMapaAstral = async () => {
+    try {
+      toggleEmailRegistration();
     } catch (error) {
       console.error(error);
       Alert.alert('Erro na requisição', 'Verifique o console para mais detalhes.');
@@ -124,15 +179,25 @@ export default function AstralMapDataFormScreen({ navigation }) {
 
           <TextInput
             style={styles.input}
+            placeholder="Informe o seu Nome"
+            placeholderTextColor="#7A708E"
+            value={nome}
+            onChangeText={setNome}
+          />
+
+          <Text style={styles.label}>Informe a cidade de nascimento:</Text>
+          <TextInput
+            style={styles.input}
             placeholder="Informe a cidade de nascimento"
             placeholderTextColor="#7A708E"
             value={city}
             onChangeText={setCity}
           />
 
-          oi<TouchableOpacity style={styles.dateButton} onPress={showDatePicker} activeOpacity={0.7}>
+          <Text style={styles.label}>Selecione a data de nascimento:</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={showDatePicker} activeOpacity={0.7}>
             <Text style={styles.dateButtonText}>
-              {formatSelectedDate(birthDate) || 'Selecione a Data de Nascimento'}
+              {formatSelectedDate(birthDate) || 'Escolher Data'}
             </Text>
           </TouchableOpacity>
 
@@ -145,9 +210,10 @@ export default function AstralMapDataFormScreen({ navigation }) {
             is24Hour={isAndroid}
           />
 
+          <Text style={styles.label}>Selecione o horário de nascimento:</Text>
           <TouchableOpacity style={styles.dateButton} onPress={showTimePicker} activeOpacity={0.7}>
             <Text style={styles.dateButtonText}>
-              {formatSelectedTime(birthTime) || 'Selecione o horário de nascimento'}
+              {formatSelectedTime(birthTime) || 'Escolher Horário'}
             </Text>
           </TouchableOpacity>
 
@@ -160,14 +226,44 @@ export default function AstralMapDataFormScreen({ navigation }) {
             is24Hour={isAndroid}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <TouchableOpacity style={styles.button} onPress={handleGerarMapaAstral} activeOpacity={0.7}>
             <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
           </TouchableOpacity>
+
+          {/* Conditionally render the email registration view with animation */}
+          {isEmailRegistrationVisible && (
+            <Animated.View style={[styles.emailRegistration, { height: animatedHeight, opacity: animatedOpacity }]}>
+              <Text style={styles.emailRegistrationText}>Email Registration Form</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Informe E-mail"
+                placeholderTextColor="#7A708E"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Informe a senha"
+                placeholderTextColor="#7A708E"
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirme a senha"
+                placeholderTextColor="#7A708E"
+                value={password_confirmation}
+                onChangeText={setPasswordConfirmation}
+              />
+              <TouchableOpacity style={styles.button} onPress={handleSubmit} activeOpacity={0.7}>
+                <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
+              </TouchableOpacity>
+            </Animated.View>
+            
+          )}
+
         </View>
-        <View style={styles.section30}>
-          <Text style={styles.sectionText}>Colocar um gif animado qualquer aqui. uma constelaçãozinha gitando uma mandala qq zorra</Text>
-          <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
-        </View>
+        
       
       </ImageBackground>
     </View>
@@ -248,5 +344,8 @@ const styles = StyleSheet.create({
     color: '#1E1B29', // Texto escuro para contraste com o dourado
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  toggleButtonText: {
+    color: '#fff',
   },
 });

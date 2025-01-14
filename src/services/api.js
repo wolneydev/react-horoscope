@@ -2,7 +2,7 @@
   import axios from 'axios';
 
   const api = axios.create({
-    baseURL: 'https://api.match.diegoqueiroz.dev/v1/', // Adicione 'http://' ou 'https://'
+    baseURL: 'https://api.astralmatch.life/v1/',
   });
   
   export default api;
