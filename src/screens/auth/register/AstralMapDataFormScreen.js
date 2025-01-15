@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import api from '../../../services/api';
+import StorageService from '../../../store/store';
 
 export default function AstralMapDataFormScreen({ navigation }) {
   const isAndroid = Platform.OS === 'android';
@@ -113,18 +114,33 @@ export default function AstralMapDataFormScreen({ navigation }) {
 
       const { status, data } = response.data;
 
-      console.log('data:', data);
-
       if (status === 'success') {
+        // Preparando dados do usuário
+        const userData = {
+          name: data.name,
+          email: data.email,
+          uuid: data.uuid,
+          birthData: {
+            city: data.birth_city,
+            year: data.birth_year,
+            month: data.birth_month,
+            day: data.birth_day,
+            hour: data.birth_hour,
+            minute: data.birth_minute
+          }
+        };
 
-        navigation.navigate('AstralMapScreen', { astralMap: data.astral_map });
+        // Salvando dados usando o serviço
+        await StorageService.saveUserData(userData);
+        await StorageService.saveAccessToken(data.access_token);
+        await StorageService.saveAstralMap(data.astral_map);
 
+        navigation.navigate('AstralMapScreen');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Erro:', error);
+      Alert.alert('Erro', 'Não foi possível completar o registro');
     }
-
-  
   };
 
   const toggleEmailRegistration = () => {

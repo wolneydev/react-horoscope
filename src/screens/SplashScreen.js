@@ -1,16 +1,28 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
-import { store } from '../Components/store/store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import StorageService from '../store/store';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
-    // Espera 3 segundos e então vai para a próxima tela
-    const timer = setTimeout(() => {
-      navigation.replace('HomeScreen');
-    }, 3000);
+    const checkInitialRoute = async () => {
+      try {
+        // Verifica se o usuário está logado
+        const isLoggedIn = await StorageService.isLoggedIn();
+        const userData = await StorageService.getUserData();
 
-    return () => clearTimeout(timer);
+        console.log('isLoggedIn', isLoggedIn);
+        console.log('userData', userData);
+        
+        // Espera 3 segundos antes de navegar
+        setTimeout(() => {
+          navigation.replace('HomeScreen');
+        }, 3000);
+      } catch (error) {
+        console.error('Erro ao verificar dados salvos:', error);
+      }
+    };
+
+    checkInitialRoute();
   }, [navigation]);
 
   return (

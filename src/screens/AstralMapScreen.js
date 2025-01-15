@@ -1,10 +1,28 @@
 // src/screens/AstralMapScreen.js
-import React from 'react';
-import { View, Text, FlatList, StyleSheet, ImageBackground } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator } from 'react-native';
+import StorageService from '../store/store';
 
-export default function AstralMapScreen({ route }) {
-  // A partir de route.params, extraímos o objeto astralMap
-  const { astralMap } = route.params;
+export default function AstralMapScreen() {
+
+  const [astralMap, setAstralMap] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Carrega o mapa astral do storage
+  useEffect(() => {
+    const loadAstralMap = async () => {
+      try {
+        const savedAstralMap = await StorageService.getAstralMap();
+        setAstralMap(savedAstralMap);
+      } catch (error) {
+        console.error('Erro ao carregar mapa astral:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAstralMap();
+  }, []);
 
   // Função para renderizar cada item de 'astral_entities'
   const renderItem = ({ item }) => (
@@ -24,17 +42,30 @@ export default function AstralMapScreen({ route }) {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#FFD700" />
+      </View>
+    );
+  }
+
+  if (!astralMap) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>Não foi possível carregar o mapa astral</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.divider} />
-
       <ImageBackground
         source={require('../assets/images/starry-night2.jpg')}
         style={styles.bigCard}
       >
         <View style={styles.divider} />
-
-        {/* FlatList para exibir as entidades astrais (planetas, Asc/Desc, etc.) */}
         <FlatList
           data={astralMap.astral_entities}
           keyExtractor={(item) => item.id.toString()}
@@ -109,5 +140,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     lineHeight: 20,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
