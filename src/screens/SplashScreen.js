@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { store } from '../Components/store/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     // Espera 3 segundos e então vai para a próxima tela
     const timer = setTimeout(() => {
-      navigation.replace('FormScreen');
+      navigation.replace('HomeScreen');
     }, 3000);
 
     return () => clearTimeout(timer);

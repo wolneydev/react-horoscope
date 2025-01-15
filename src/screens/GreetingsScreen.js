@@ -1,32 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Text, ImageBackground, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const HomeScreen = () => {
+const GreetingsScreen = () => {
   const navigation = useNavigation();
-  
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigation.navigate('AstralMapDataFormScreen');
+    }, 5000);
+
+    return () => clearTimeout(timer); // Cleanup the timer on component unmount
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
-
-      <ImageBackground source={require('../assets/heart-constellation.png')} style={styles.section}>
-      </ImageBackground>
       <ImageBackground source={require('../assets/images/starry-night2.jpg')} style={styles.section}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Astral Match</Text>
+          <Text style={styles.sectionTitle}>É aqui que começa sua jornada</Text>
           <Text style={styles.sectionDescription}>
-            Encontre seu par ideal com base no seu mapa astral!
+            Vamos procurar seu par ideal com base no seu mapa astral!
           </Text>
         </View>
-        <View style={styles.section}>
-          <View style={styles.buttonContainer}>
-            <View style={styles.buttonWrapper}>
-              <Button title="Começar uma nova jornada astral" onPress={() => navigation.navigate('GreetingsScreen')} />
-            </View>
-            <View style={styles.buttonWrapper}>
-              <Button title="Já tenho uma conta" onPress={() => {}} />
-            </View>
-          </View>
-          <Text style={styles.sectionText}>Ao continuar, você concorda com os Termos de Serviço e a Política de Privacidade.</Text>
+        <View style={styles.section30}>
+          <Text style={styles.sectionText}>Colocar um gif animado qualquer aqui. uma constelaçãozinha gitando uma mandala qq zorra</Text>
+          <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
+          <Button title="Começar" onPress={() => navigation.navigate('AstralMapDataFormScreen')} />
         </View>
       </ImageBackground>
     </View>
@@ -34,11 +33,21 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
   },
+  
   section: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    padding: 20,
+  },
+  section30: {
+    flex: 0.3,
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
@@ -62,13 +71,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#fff',
   },
-  buttonContainer: {
-    width: '100%',
-    marginTop: 20,
-  },
-  buttonWrapper: {
-    marginVertical: 5,
-  },
 });
 
-export default HomeScreen;
+export default GreetingsScreen;

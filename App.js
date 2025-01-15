@@ -7,6 +7,9 @@ import * as React from 'react';
 import SplashScreen from './src/screens/SplashScreen';
 import FormScreen from './src/screens/FormScreen'; 
 import AstralMapScreen from './src/screens/AstralMapScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import GreetingsScreen from './src/screens/GreetingsScreen';
+import AstralMapDataFormScreen from './src/screens/auth/register/AstralMapDataFormScreen';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +20,22 @@ const App = () => {
         <Stack.Screen 
           name="SplashScreen" 
           component={SplashScreen} 
+          options={{ headerShown: false }} // Oculta o header da splash
+        />
+
+        <Stack.Screen 
+          name="HomeScreen" 
+          component={HomeScreen} 
+          options={{ headerShown: false }} // Oculta o header da splash
+        />
+        <Stack.Screen
+          name="GreetingsScreen"
+          component={GreetingsScreen}
+          options={{ headerShown: false }} // Oculta o header da splash
+        />
+        <Stack.Screen
+          name="AstralMapDataFormScreen"
+          component={AstralMapDataFormScreen}
           options={{ headerShown: false }} // Oculta o header da splash
         />
 
