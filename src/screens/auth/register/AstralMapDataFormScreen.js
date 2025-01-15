@@ -18,13 +18,13 @@ export default function AstralMapDataFormScreen({ navigation }) {
   const isAndroid = Platform.OS === 'android';
   const isIOS = Platform.OS === 'ios';
 
-  const [nome, setNome] = useState('');
-  const [city, setCity] = useState('');
+  const [nome, setNome] = useState('Itu Assis');
+  const [city, setCity] = useState('Itu');
   const [birthDate, setBirthDate] = useState(new Date());
   const [birthTime, setBirthTime] = useState(new Date());
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [password_confirmation, setPasswordConfirmation] = useState('');
+  const [email, setEmail] = useState('12311212@gmail.com');
+  const [password, setPassword] = useState('12345678');
+  const [password_confirmation, setPasswordConfirmation] = useState('12345678');
   const [isEmailRegistrationVisible, setEmailRegistrationVisibility] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -111,32 +111,20 @@ export default function AstralMapDataFormScreen({ navigation }) {
         }
       );
 
-      const json = response.data;
-      
-      if (json.success === true) {
-        navigation.navigate('AstralMapScreen', { astralMap: json.data.astral_map.astral_map });
-      } else {
-        Alert.alert('Erro', 'Ocorreu um erro ao gerar o mapa astral.');
+      const { status, data } = response.data;
+
+      console.log('data:', data);
+
+      if (status === 'success') {
+
+        navigation.navigate('AstralMapScreen', { astralMap: data.astral_map });
+
       }
     } catch (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-        Alert.alert('Erro na requisição', `Status: ${error.response.status}\n${error.response.data.message || 'Verifique o console para mais detalhes.'}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error request:', error.request);
-        Alert.alert('Erro na requisição', 'Nenhuma resposta recebida. Verifique sua conexão com a internet.');
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
-        Alert.alert('Erro na requisição', error.message);
-      }
-      console.error('Error config:', error.config);
+      console.error('Error:', error);
     }
+
+  
   };
 
   const toggleEmailRegistration = () => {
