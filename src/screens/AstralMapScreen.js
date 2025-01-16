@@ -1,12 +1,32 @@
 // src/screens/AstralMapScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator, BackHandler } from 'react-native';
 import StorageService from '../store/store';
 
 export default function AstralMapScreen() {
 
+  const navigation = useNavigation();
+
   const [astralMap, setAstralMap] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Previne o usuário de voltar para a tela de cadastro ou login uma vez logado
+  useFocusEffect(
+    React.useCallback(() => {
+      const backAction = () => {
+        navigation.navigate('HomeScreen');
+        return true;
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction
+      );
+
+      return () => backHandler.remove();
+    }, [navigation])
+  );
   
   // Carrega o mapa astral do storage
   useEffect(() => {

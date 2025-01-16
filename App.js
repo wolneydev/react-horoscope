@@ -9,7 +9,8 @@ import FormScreen from './src/screens/FormScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
-import AstralMapDataFormScreen from './src/screens/auth/register/AstralMapDataFormScreen';
+import RegisterScreen from './src/screens/auth/RegisterScreen';
+import LoginScreen from './src/screens/auth/LoginScreen';
 
 const Stack = createStackNavigator();
 
@@ -20,25 +21,28 @@ const App = () => {
         <Stack.Screen 
           name="SplashScreen" 
           component={SplashScreen} 
-          options={{ headerShown: false }} // Oculta o header da splash
+          options={{ headerShown: false }}
         />
-
         <Stack.Screen 
           name="HomeScreen" 
           component={HomeScreen} 
-          options={{ headerShown: false }} // Oculta o header da splash
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="GreetingsScreen"
           component={GreetingsScreen}
-          options={{ headerShown: false }} // Oculta o header da splash
+          options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="AstralMapDataFormScreen"
-          component={AstralMapDataFormScreen}
-          options={{ headerShown: false }} // Oculta o header da splash
+          name="RegisterScreen"
+          component={RegisterScreen}
+          options={{ headerShown: false }}
         />
-
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen 
           name="FormScreen" 
           component={FormScreen} 

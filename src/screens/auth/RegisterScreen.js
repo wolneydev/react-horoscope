@@ -1,4 +1,4 @@
-// src/screens/auth/register/AstralMapDataFormScreen.js
+// src/screens/auth/register/RegisterScreen.js
 import React, { useState, useRef } from 'react';
 import {
   Text,
@@ -9,13 +9,14 @@ import {
   Platform,
   Alert,
   ImageBackground,
-  Animated
+  Animated,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import api from '../../../services/api';
-import StorageService from '../../../store/store';
+import api from '../../services/api';
+import StorageService from '../../store/store';
 
-export default function AstralMapDataFormScreen({ navigation }) {
+export default function RegisterScreen({ navigation }) {
+  
   const isAndroid = Platform.OS === 'android';
   const isIOS = Platform.OS === 'ios';
 
@@ -174,7 +175,7 @@ export default function AstralMapDataFormScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../../../assets/images/starry-night2.jpg')} style={styles.section}>
+      <ImageBackground source={require('../../assets/images/starry-night2.jpg')} style={styles.section}>
         <View style={styles.section}>
           
           <Text style={styles.sectionDescription}>

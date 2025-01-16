@@ -7,7 +7,7 @@ const GreetingsScreen = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.navigate('AstralMapDataFormScreen');
+      navigation.navigate('RegisterScreen');
     }, 5000);
 
     return () => clearTimeout(timer); // Cleanup the timer on component unmount
@@ -25,7 +25,7 @@ const GreetingsScreen = () => {
         <View style={styles.section30}>
           <Text style={styles.sectionText}>Colocar um gif animado qualquer aqui. uma constelaçãozinha gitando uma mandala qq zorra</Text>
           <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
-          <Button title="Começar" onPress={() => navigation.navigate('AstralMapDataFormScreen')} />
+          <Button title="Começar" onPress={() => navigation.navigate('RegisterScreen')} />
         </View>
       </ImageBackground>
     </View>
