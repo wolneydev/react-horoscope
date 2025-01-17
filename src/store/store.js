@@ -3,10 +3,71 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const STORAGE_KEYS = {
   USER_DATA: '@user_data',
   ACCESS_TOKEN: '@access_token',
+  TOKEN_EXPIRATION: '@token_expiration',
   ASTRAL_MAP: '@astral_map',
 };
 
+// Token expira em 7 dias
+const TOKEN_DURATION = (7 * 24 * 60 * 60 * 1000) - 25 * 1000 * 60 ; // 25 minutos antes do token expirar
+
 class StorageService {
+
+  async saveAccessToken(token) {
+    try {
+      const expiration = new Date().getTime() + TOKEN_DURATION;
+      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+      await AsyncStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRATION, expiration.toString());
+    } catch (error) {
+      console.error('Erro ao salvar token:', error);
+      throw error;
+    }
+  }
+
+  async getAccessToken() {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      const expiration = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRATION);
+      
+      if (!token || !expiration) return null;
+
+      // Verifica se o token expirou
+      const now = new Date().getTime();
+      if (now > parseInt(expiration, 10)) {
+        await this.clearToken();
+        return null;
+      }
+
+      return token;
+    } catch (error) {
+      console.error('Erro ao ler token:', error);
+      return null;
+    }
+  }
+
+  async clearToken() {
+    try {
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.ACCESS_TOKEN,
+        STORAGE_KEYS.TOKEN_EXPIRATION
+      ]);
+    } catch (error) {
+      console.error('Erro ao limpar token:', error);
+    }
+  }
+
+  async isTokenValid() {
+    try {
+      const expiration = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRATION);
+      if (!expiration) return false;
+
+      const now = new Date().getTime();
+      return now < parseInt(expiration, 10);
+    } catch (error) {
+      console.error('Erro ao verificar validade do token:', error);
+      return false;
+    }
+  }
+
   // Métodos para usuário
   async saveUserData(userData) {
     try {
@@ -27,24 +88,6 @@ class StorageService {
     }
   }
 
-  // Métodos para token
-  async saveAccessToken(token) {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
-    } catch (error) {
-      console.error('Erro ao salvar token:', error);
-      throw error;
-    }
-  }
-
-  async getAccessToken() {
-    try {
-      return await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    } catch (error) {
-      console.error('Erro ao ler token:', error);
-      throw error;
-    }
-  }
 
   // Método para salvar mapa astral
   async saveAstralMap(astralMap) {

@@ -14,6 +14,7 @@ import {
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import api from '../../services/api';
 import StorageService from '../../store/store';
+import CryptoService from '../../services/crypto';
 
 export default function RegisterScreen({ navigation }) {
   
@@ -79,18 +80,18 @@ export default function RegisterScreen({ navigation }) {
 
   // Função que chama a API
   const handleSubmit = async () => {
+
+    // Criptografa a senha antes de salvar o estado
+    const encryptedPassword = CryptoService.encrypt(password);
+    console.log('encryptedPassword', encryptedPassword);
+
     try {
       const year = birthDate.getFullYear();
       const month = birthDate.getMonth() + 1;
       const day = birthDate.getDate();
       const hour = birthTime.getHours();
       const minute = birthTime.getMinutes();
-
       const mail = email.trim();
-      console.log(`Enviando email: ${mail}`);
-
-      let platformMsg = isAndroid ? 'Enviando do Android...' : 'Enviando do iOS...';
-      console.log(platformMsg);
 
       const response = await api.post(
         'auth/register',
@@ -121,6 +122,7 @@ export default function RegisterScreen({ navigation }) {
           name: data.name,
           email: data.email,
           uuid: data.uuid,
+          encryptedPassword: encryptedPassword,
           birthData: {
             city: data.birth_city,
             year: data.birth_year,
