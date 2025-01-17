@@ -1,11 +1,10 @@
 // src/screens/AstralMapScreen.js
 import React, { useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator, BackHandler } from 'react-native';
-import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator, Button } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator, BackHandler, Button } from 'react-native';
 import StorageService from '../store/store';
 
-export default function AstralMapScreen({ navigation }) {
+export default function AstralMapScreen() {
 
   const navigation = useNavigation();
 

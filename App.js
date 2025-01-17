@@ -11,7 +11,6 @@ import HomeScreen from './src/screens/HomeScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
-import AstralMapDataFormScreen from './src/screens/auth/register/AstralMapDataFormScreen';
 import CompatibilityScreen from './src/screens/CompatibilityScreen';
 
 const Stack = createStackNavigator();
