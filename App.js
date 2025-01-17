@@ -10,6 +10,7 @@ import AstralMapScreen from './src/screens/AstralMapScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
 import AstralMapDataFormScreen from './src/screens/auth/register/AstralMapDataFormScreen';
+import CompatibilityScreen from './src/screens/CompatibilityScreen';
 
 const Stack = createStackNavigator();
 
@@ -48,6 +49,8 @@ const App = () => {
           name="AstralMapScreen" 
           component={AstralMapScreen} 
           options={{ title: 'Seu Mapa Astral' }}
+        />
+       <Stack.Screen name="Compatibility" component={CompatibilityScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
