@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator, BackHandler } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ImageBackground, ActivityIndicator, Button } from 'react-native';
 import StorageService from '../store/store';
 
-export default function AstralMapScreen() {
+export default function AstralMapScreen({ navigation }) {
 
   const navigation = useNavigation();
 
@@ -44,6 +45,7 @@ export default function AstralMapScreen() {
     loadAstralMap();
   }, []);
 
+
   // Função para renderizar cada item de 'astral_entities'
   const renderItem = ({ item }) => (
     <View style={styles.card}>
@@ -80,18 +82,25 @@ export default function AstralMapScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.divider} />
       <ImageBackground
         source={require('../assets/images/starry-night2.jpg')}
         style={styles.bigCard}
       >
-        <View style={styles.divider} />
+
+       
         <FlatList
           data={astralMap.astral_entities}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
         />
+  
+  <Button
+  title="Verificar Compatibilidade Astral"
+  onPress={() => navigation.navigate('Compatibility', { uuid1: astralMap.uuid })}
+/>  
+ 
       </ImageBackground>
+      
     </View>
   );
 }
