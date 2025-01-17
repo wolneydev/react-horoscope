@@ -1,18 +1,10 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
-import StorageService from '../store/store';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     const checkInitialRoute = async () => {
       try {
-        // Verifica se o usuário está logado
-        const isLoggedIn = await StorageService.isLoggedIn();
-        const userData = await StorageService.getUserData();
-
-        console.log('isLoggedIn', isLoggedIn);
-        console.log('userData', userData);
-        
         // Espera 3 segundos antes de navegar
         setTimeout(() => {
           navigation.replace('HomeScreen');
