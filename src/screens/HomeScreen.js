@@ -1,9 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, ImageBackground, Button, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Text, ImageBackground, Button, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import StorageService from '../store/store';
 import CryptoService from '../services/crypto';
 import api from '../services/api';
+import AnimatedStars from '../Components/animation/AnimatedStars';
+
+const CustomButton = ({ title, onPress, color }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[
+      styles.buttonWrapper,
+      color === '#ff4444' && { 
+        backgroundColor: 'rgba(255, 68, 68, 0.15)', 
+        borderColor: '#FFD700' 
+      }
+    ]}
+  >
+    <View style={styles.buttonContent}>
+      <Text style={[
+        styles.buttonText,
+        color === '#ff4444' && { 
+          color: '#ff4444',
+          textShadowColor: '#ff4444'
+        }
+      ]}>
+        {title}
+      </Text>
+    </View>
+  </TouchableOpacity>
+);
+
+const Divider = () => (
+  <View style={styles.dividerContainer}>
+    <View style={styles.dividerLine} />
+    <View style={styles.dividerStar} />
+    <View style={styles.dividerLine} />
+  </View>
+);
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -109,63 +143,53 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
+      <AnimatedStars />
       <ImageBackground source={require('../assets/heart-constellation.png')} style={styles.section}>
         {userData && (
           <Text style={styles.welcomeText}>Bem-vindo(a), {userData.name}!</Text>
         )}
       </ImageBackground>
-      <ImageBackground source={require('../assets/images/starry-night2.jpg')} style={styles.section}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Astral Match</Text>
-          <Text style={styles.sectionDescription}>
-            Encontre seu par ideal com base no seu mapa astral!
-          </Text>
+
+      <Divider />
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Astral Match</Text>
+        <Text style={styles.sectionDescription}>
+          Encontre seu par ideal com base no seu mapa astral!
+        </Text>
+      </View>
+
+      <Divider />
+
+      <View style={styles.section}>
+        <View style={styles.buttonContainer}>
+          {!userData ? (
+            <>
+              <CustomButton 
+                title="Começar uma nova jornada astral" 
+                onPress={() => navigation.navigate('GreetingsScreen')} 
+              />
+              <CustomButton 
+                title="Já tenho uma conta" 
+                onPress={() => navigation.navigate('LoginScreen')} 
+              />
+            </>
+          ) : (
+            <View>
+              <CustomButton 
+                title="Ver meu mapa astral" 
+                onPress={() => navigation.navigate('AstralMapScreen')} 
+              />
+              <CustomButton 
+                title={loggingOut ? "Saindo..." : "Sair"}
+                onPress={handleLogout}
+                disabled={loggingOut}
+                color="#ff4444"
+              />
+            </View>
+          )}
         </View>
-        <View style={styles.section}>
-          <View style={styles.buttonContainer}>
-            {!userData ? (
-              <>
-                <View style={styles.buttonWrapper}>
-                  <Button 
-                    title="Começar uma nova jornada astral" 
-                    onPress={() => navigation.navigate('GreetingsScreen')} 
-                  />
-                </View>
-                <View style={styles.buttonWrapper}>
-                  <Button 
-                    title="Já tenho uma conta" 
-                    onPress={() => navigation.navigate('LoginScreen')} 
-                  />
-                </View>
-              </>
-            ) : (
-              <View>
-                <View style={styles.buttonWrapper}>
-                  <Button 
-                    title="Ver meu mapa astral" 
-                    onPress={() => navigation.navigate('AstralMapScreen')} 
-                  />
-                </View>
-                <View style={styles.buttonWrapper}>
-                  <Button 
-                    title={loggingOut ? "Saindo..." : "Sair"}
-                    onPress={handleLogout}
-                    disabled={loggingOut}
-                    color="#ff4444"
-                  />
-                </View>
-                {loggingOut && (
-                  <ActivityIndicator 
-                    style={styles.logoutLoader} 
-                    color="#FFD700" 
-                    size="small" 
-                  />
-                )}
-              </View>
-            )}
-          </View>
-        </View>
-      </ImageBackground>
+      </View>
     </View>
   );
 };
@@ -173,6 +197,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1E1B29',
   },
   centerContent: {
     justifyContent: 'center',
@@ -187,33 +212,28 @@ const styles = StyleSheet.create({
   logoutLoader: {
     marginTop: 10,
   },
-  buttonWrapper: {
-    marginVertical: 5,
-  },
   section: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#fff',
+    color: '#FFD700',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   sectionDescription: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    color: '#fff',
-  },
-  sectionText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginTop: 20,
-    color: '#fff',
+    color: '#E0E0E0',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
   },
   buttonContainer: {
     width: '100%',
@@ -221,17 +241,63 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginVertical: 5,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    overflow: 'hidden',
+  },
+  buttonContent: {
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   welcomeText: {
-    fontSize: 20,
-    color: '#ccc',
+    fontSize: 24,
+    color: '#FFD700',
     textAlign: 'center',
     marginTop: 20,
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
-  buttonStyle: {
-    marginVertical: 5,
-    marginHorizontal: 10,
-    padding: 10,
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 215, 0, 0.3)',
+    shadowColor: '#FFD700',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+  },
+  dividerStar: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#FFD700',
+    borderRadius: 4,
+    marginHorizontal: 15,
+    shadowColor: '#FFD700',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 5,
   },
 });
 

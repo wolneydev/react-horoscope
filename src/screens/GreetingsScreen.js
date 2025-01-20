@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Text, ImageBackground, Button } from 'react-native';
+import { View, StyleSheet, Text, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AnimatedStars from '../Components/animation/AnimatedStars';
 
 const GreetingsScreen = () => {
   const navigation = useNavigation();
@@ -15,19 +16,18 @@ const GreetingsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../assets/images/starry-night2.jpg')} style={styles.section}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>É aqui que começa sua jornada</Text>
-          <Text style={styles.sectionDescription}>
-            Vamos procurar seu par ideal com base no seu mapa astral!
-          </Text>
+      <AnimatedStars />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>É aqui que começa sua jornada</Text>
+        <Text style={styles.sectionDescription}>
+          Vamos procurar seu par ideal com base no seu mapa astral!
+        </Text>
+      </View>
+      <View style={styles.section30}>
+        <Text style={styles.sectionText}>Colocar um gif animado qualquer aqui. uma constelaçãozinha gitando uma mandala qq zorra</Text>
+        <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
+        <Button title="Começar" onPress={() => navigation.navigate('RegisterScreen')} />
         </View>
-        <View style={styles.section30}>
-          <Text style={styles.sectionText}>Colocar um gif animado qualquer aqui. uma constelaçãozinha gitando uma mandala qq zorra</Text>
-          <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
-          <Button title="Começar" onPress={() => navigation.navigate('RegisterScreen')} />
-        </View>
-      </ImageBackground>
     </View>
   );
 };
@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   
   container: {
     flex: 1,
+    backgroundColor: '#1E1B29',
   },
   
   section: {

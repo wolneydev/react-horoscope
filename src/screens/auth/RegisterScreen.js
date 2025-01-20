@@ -8,13 +8,13 @@ import {
   View,
   Platform,
   Alert,
-  ImageBackground,
   Animated,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import api from '../../services/api';
 import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
+import AnimatedStars from '../../Components/animation/AnimatedStars';
 
 export default function RegisterScreen({ navigation }) {
   
@@ -177,102 +177,99 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../../assets/images/starry-night2.jpg')} style={styles.section}>
-        <View style={styles.section}>
-          
-          <Text style={styles.sectionDescription}>
-            Vamos procurar seu par ideal com base no seu mapa astral!
-          </Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Informe o seu Nome"
-            placeholderTextColor="#7A708E"
-            value={nome}
-            onChangeText={setNome}
-          />
-
-          <Text style={styles.label}>Informe a cidade de nascimento:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Informe a cidade de nascimento"
-            placeholderTextColor="#7A708E"
-            value={city}
-            onChangeText={setCity}
-          />
-
-          <Text style={styles.label}>Selecione a data de nascimento:</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={showDatePicker} activeOpacity={0.7}>
-            <Text style={styles.dateButtonText}>
-              {formatSelectedDate(birthDate) || 'Escolher Data'}
-            </Text>
-          </TouchableOpacity>
-
-          <DateTimePickerModal
-            isVisible={isDatePickerVisible}
-            mode="date"
-            date={birthDate}
-            onConfirm={handleConfirmDate}
-            onCancel={hideDatePicker}
-            is24Hour={isAndroid}
-          />
-
-          <Text style={styles.label}>Selecione o horário de nascimento:</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={showTimePicker} activeOpacity={0.7}>
-            <Text style={styles.dateButtonText}>
-              {formatSelectedTime(birthTime) || 'Escolher Horário'}
-            </Text>
-          </TouchableOpacity>
-
-          <DateTimePickerModal
-            isVisible={isTimePickerVisible}
-            mode="time"
-            date={birthTime}
-            onConfirm={handleConfirmTime}
-            onCancel={hideTimePicker}
-            is24Hour={isAndroid}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleGerarMapaAstral} activeOpacity={0.7}>
-            <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
-          </TouchableOpacity>
-
-          {/* Conditionally render the email registration view with animation */}
-          {isEmailRegistrationVisible && (
-            <Animated.View style={[styles.emailRegistration, { height: animatedHeight, opacity: animatedOpacity }]}>
-              <Text style={styles.emailRegistrationText}>Email Registration Form</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Informe E-mail"
-                placeholderTextColor="#7A708E"
-                value={email}
-                onChangeText={setEmail}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Informe a senha"
-                placeholderTextColor="#7A708E"
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Confirme a senha"
-                placeholderTextColor="#7A708E"
-                value={password_confirmation}
-                onChangeText={setPasswordConfirmation}
-              />
-              <TouchableOpacity style={styles.button} onPress={handleSubmit} activeOpacity={0.7}>
-                <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
-              </TouchableOpacity>
-            </Animated.View>
-            
-          )}
-
-        </View>
+      <AnimatedStars />
+      <View style={styles.section}>
         
-      
-      </ImageBackground>
+        <Text style={styles.sectionDescription}>
+          Vamos procurar seu par ideal com base no seu mapa astral!
+        </Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Informe o seu Nome"
+          placeholderTextColor="#7A708E"
+          value={nome}
+          onChangeText={setNome}
+        />
+
+        <Text style={styles.label}>Informe a cidade de nascimento:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Informe a cidade de nascimento"
+          placeholderTextColor="#7A708E"
+          value={city}
+          onChangeText={setCity}
+        />
+
+        <Text style={styles.label}>Selecione a data de nascimento:</Text>
+        <TouchableOpacity style={styles.dateButton} onPress={showDatePicker} activeOpacity={0.7}>
+          <Text style={styles.dateButtonText}>
+            {formatSelectedDate(birthDate) || 'Escolher Data'}
+          </Text>
+        </TouchableOpacity>
+
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          date={birthDate}
+          onConfirm={handleConfirmDate}
+          onCancel={hideDatePicker}
+          is24Hour={isAndroid}
+        />
+
+        <Text style={styles.label}>Selecione o horário de nascimento:</Text>
+        <TouchableOpacity style={styles.dateButton} onPress={showTimePicker} activeOpacity={0.7}>
+          <Text style={styles.dateButtonText}>
+            {formatSelectedTime(birthTime) || 'Escolher Horário'}
+          </Text>
+        </TouchableOpacity>
+
+        <DateTimePickerModal
+          isVisible={isTimePickerVisible}
+          mode="time"
+          date={birthTime}
+          onConfirm={handleConfirmTime}
+          onCancel={hideTimePicker}
+          is24Hour={isAndroid}
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleGerarMapaAstral} activeOpacity={0.7}>
+          <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
+        </TouchableOpacity>
+
+        {/* Conditionally render the email registration view with animation */}
+        {isEmailRegistrationVisible && (
+          <Animated.View style={[styles.emailRegistration, { height: animatedHeight, opacity: animatedOpacity }]}>
+            <Text style={styles.emailRegistrationText}>Email Registration Form</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Informe E-mail"
+              placeholderTextColor="#7A708E"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Informe a senha"
+              placeholderTextColor="#7A708E"
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirme a senha"
+              placeholderTextColor="#7A708E"
+              value={password_confirmation}
+              onChangeText={setPasswordConfirmation}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleSubmit} activeOpacity={0.7}>
+              <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
+            </TouchableOpacity>
+          </Animated.View>
+          
+        )}
+
+      </View>
     </View>
   );
 }
@@ -282,6 +279,7 @@ const styles = StyleSheet.create({
   
   container: {
     flex: 1,
+    backgroundColor: '#1E1B29',
   },
   
   section: {

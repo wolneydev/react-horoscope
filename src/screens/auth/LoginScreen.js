@@ -9,6 +9,8 @@ import {
   ImageBackground,
   ActivityIndicator,
 } from 'react-native';
+import AnimatedStars from '../../Components/animation/AnimatedStars';
+
 import api from '../../services/api';
 import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
@@ -41,6 +43,8 @@ export default function LoginScreen({ navigation }) {
 
       if (status === 'success') {
         setLoadingMessage('Preparando seus dados...');
+
+        console.log(data.uuid);
         
         const encryptedPassword = CryptoService.encrypt(password);
         const userData = {
@@ -78,69 +82,65 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ImageBackground 
-        source={require('../../assets/images/starry-night2.jpg')} 
-        style={styles.section}
-      >
-        <View style={styles.section}>
-          <Text style={styles.sectionDescription}>
-            Bem-vindo(a) de volta ao seu destino astral!
+      <AnimatedStars />
+      <View style={styles.section}>
+        <Text style={styles.sectionDescription}>
+          Bem-vindo(a) de volta ao seu destino astral!
+        </Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#7A708E"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          editable={!loading}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          placeholderTextColor="#7A708E"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          editable={!loading}
+        />
+
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={handleSubmit} 
+          activeOpacity={0.7}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Entrando...' : 'Entrar'}
           </Text>
+        </TouchableOpacity>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#7A708E"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!loading}
-          />
+        {loading && (
+          <>
+            <ActivityIndicator 
+              style={styles.loader} 
+              color="#FFD700" 
+              size="small" 
+            />
+            <Text style={styles.loadingText}>{loadingMessage}</Text>
+          </>
+        )}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Senha"
-            placeholderTextColor="#7A708E"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
-
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handleSubmit} 
-            activeOpacity={0.7}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </Text>
-          </TouchableOpacity>
-
-          {loading && (
-            <>
-              <ActivityIndicator 
-                style={styles.loader} 
-                color="#FFD700" 
-                size="small" 
-              />
-              <Text style={styles.loadingText}>{loadingMessage}</Text>
-            </>
-          )}
-
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('RegisterScreen')}
-            style={styles.linkButton}
-            disabled={loading}
-          >
-            <Text style={styles.linkText}>
-              Ainda não tem uma conta? Cadastre-se
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('RegisterScreen')}
+          style={styles.linkButton}
+          disabled={loading}
+        >
+          <Text style={styles.linkText}>
+            Ainda não tem uma conta? Cadastre-se
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -148,6 +148,7 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1E1B29',
   },
   section: {
     flex: 1,
@@ -161,38 +162,61 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   input: {
-    backgroundColor: '#2C2840',
+    backgroundColor: 'rgba(44, 40, 64, 0.8)',
     borderWidth: 1,
     borderColor: '#FFD700',
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 12,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
     fontSize: 16,
     color: '#F9F8F8',
+    shadowColor: '#FFD700',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   button: {
-    backgroundColor: '#FFD700',
-    padding: 14,
-    borderRadius: 4,
+    backgroundColor: 'rgba(255, 215, 0, 0.9)',
+    padding: 16,
+    borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 30,
+    shadowColor: '#FFD700',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
   buttonText: {
     color: '#1E1B29',
     fontWeight: 'bold',
     fontSize: 16,
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   linkButton: {
     alignItems: 'center',
+    padding: 10,
   },
   linkText: {
     color: '#FFD700',
     fontSize: 14,
     textDecorationLine: 'underline',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   loader: {
     marginTop: 10,
@@ -202,47 +226,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 5,
     fontSize: 14,
-  },
-  section: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  sectionDescription: {
-    fontSize: 18,
-    color: '#F9F8F8',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    backgroundColor: '#2C2840',
-    borderWidth: 1,
-    borderColor: '#FFD700',
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 12,
-    fontSize: 16,
-    color: '#F9F8F8',
-  },
-  button: {
-    backgroundColor: '#FFD700',
-    padding: 14,
-    borderRadius: 4,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  buttonText: {
-    color: '#1E1B29',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  linkButton: {
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#FFD700',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
 });
