@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, ImageBackground, Button, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ImageBackground, Button, ActivityIndicator, Alert, TouchableOpacity, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import StorageService from '../store/store';
 import CryptoService from '../services/crypto';
 import api from '../services/api';
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import { BlurView } from '@react-native-community/blur';
 
 const CustomButton = ({ title, onPress, color }) => (
   <TouchableOpacity
@@ -115,14 +116,13 @@ const HomeScreen = () => {
       setLoggingOut(true);
       setLogoutMessage('Finalizando sessão...');
       
-      // Limpa os dados
       await StorageService.clearAll();
       
       setLogoutMessage('Saindo...');
-      // Espera 2 segundos
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setUserData(null);
+
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
       Alert.alert('Erro', 'Não foi possível fazer logout');
@@ -145,9 +145,6 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <AnimatedStars />
       <ImageBackground source={require('../assets/heart-constellation.png')} style={styles.section}>
-        {userData && (
-          <Text style={styles.welcomeText}>Bem-vindo(a), {userData.name}!</Text>
-        )}
       </ImageBackground>
 
       <Divider />
@@ -162,6 +159,9 @@ const HomeScreen = () => {
       <Divider />
 
       <View style={styles.section}>
+        {userData && (
+          <Text style={styles.welcomeText}>Bem-vindo(a), {userData.name}!</Text>
+        )}
         <View style={styles.buttonContainer}>
           {!userData ? (
             <>
