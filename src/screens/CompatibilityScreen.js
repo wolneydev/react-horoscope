@@ -53,17 +53,17 @@ export default function CompatibilityScreen({ route }) {
       <Text style={styles.details}>
         {item.signo1} x {item.signo2} - {item.compatibilidade}%
       </Text>
+      <Text style={styles.details}>
+        Descrição: {item.descriptions} 
+      </Text>      
     </View>
   );
 
   const renderFooter = () => (
     <View style={styles.footer}>
-      <Text style={styles.averageTitle}>Compatibilidade Média</Text>
-      <Text style={styles.averageValue}>
-        {averageCompatibility !== null
+      <Text style={styles.averageTitle}>Compatibilidade:  {averageCompatibility !== null
           ? `${averageCompatibility.toFixed(2)}%`
-          : 'Não calculada'}
-      </Text>
+          : ''}</Text>
     </View>
   );
 
@@ -74,7 +74,7 @@ export default function CompatibilityScreen({ route }) {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
-          <Text style={styles.title}>Verificar Compatibilidade</Text>
+          <Text style={styles.title}>Sinastria</Text>
 
           {/* Campo do UUID2 - Aqui o usuário digita o segundo UUID */}
           <Text style={styles.label}>Cole ou digite o código do mapa da pessoa que deseja comparar</Text>
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: 'white',
     marginBottom: 16,
     textAlign: 'center',
   },

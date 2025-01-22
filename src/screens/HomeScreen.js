@@ -13,8 +13,8 @@ const CustomButton = ({ title, onPress, color }) => (
     style={[
       styles.buttonWrapper,
       color === '#ff4444' && { 
-        backgroundColor: 'rgba(255, 68, 68, 0.15)', 
-        borderColor: '#FFD700' 
+        backgroundColor: 'rgba(109, 68, 255, 0.15)', 
+        borderColor: 'white' 
       }
     ]}
   >
@@ -22,7 +22,7 @@ const CustomButton = ({ title, onPress, color }) => (
       <Text style={[
         styles.buttonText,
         color === '#ff4444' && { 
-          color: '#ff4444',
+          color: 'white',
           textShadowColor: '#ff4444'
         }
       ]}>
@@ -143,21 +143,13 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AnimatedStars />
-      <ImageBackground source={require('../assets/heart-constellation.png')} style={styles.section}>
-      </ImageBackground>
-
-      <Divider />
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Astral Match</Text>
         <Text style={styles.sectionDescription}>
           Encontre seu par ideal com base no seu mapa astral!
         </Text>
       </View>
-
-      <Divider />
-
+      <AnimatedStars />
       <View style={styles.section}>
         {userData && (
           <Text style={styles.welcomeText}>Bem-vindo(a), {userData.name}!</Text>
@@ -219,11 +211,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 28,
+    fontSize: 46,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#FFD700',
-    textShadowColor: '#FFD700',
+    color: 'white',
+    textShadowColor: 'white',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
@@ -231,7 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     color: '#E0E0E0',
-    textShadowColor: '#FFD700',
+    textShadowColor: 'white',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
   },
@@ -242,9 +234,9 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     marginVertical: 5,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
     borderWidth: 1,
-    borderColor: '#FFD700',
+    borderColor: 'white',
     overflow: 'hidden',
   },
   buttonContent: {
@@ -260,8 +252,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   welcomeText: {
-    fontSize: 24,
-    color: '#FFD700',
+    fontSize: 18,
+    color: 'white',
     textAlign: 'center',
     marginTop: 20,
     textShadowColor: '#FFD700',

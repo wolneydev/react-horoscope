@@ -8,10 +8,12 @@ import SplashScreen from './src/screens/SplashScreen';
 import FormScreen from './src/screens/FormScreen'; 
 import AstralMapScreen from './src/screens/AstralMapScreen';
 import HomeScreen from './src/screens/HomeScreen';
-import GreetingsScreen from './src/screens/GreetingsScreen';
+
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import CompatibilityScreen from './src/screens/CompatibilityScreen';
+import GreetingsScreen from './src/screens/GreetingsScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -47,14 +49,16 @@ const App = () => {
         <Stack.Screen 
           name="FormScreen" 
           component={FormScreen} 
-          options={{ title: 'Digite seus dados' }}
+          options={{ headerShown: false  }}
         />
         <Stack.Screen 
           name="AstralMapScreen" 
           component={AstralMapScreen} 
-          options={{ title: 'Seu Mapa Astral' }}
+          options={{ headerShown: false }}
         />
-       <Stack.Screen name="Compatibility" component={CompatibilityScreen}
+       <Stack.Screen name="Compatibility"
+          component={CompatibilityScreen}
+         options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

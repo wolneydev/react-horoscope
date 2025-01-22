@@ -182,7 +182,7 @@ const AnimatedStars = () => {
               height: 3,
               left: randomX + (star.x * scale),
               top: randomY + (star.y * scale),
-              backgroundColor: '#FFD700',
+              backgroundColor: 'white',
             },
           ]}
         />
