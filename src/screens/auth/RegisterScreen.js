@@ -16,6 +16,7 @@ import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
 
+
 export default function RegisterScreen({ navigation }) {
   
   const isAndroid = Platform.OS === 'android';

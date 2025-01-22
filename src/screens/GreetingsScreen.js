@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 
+
 const GreetingsScreen = () => {
   const navigation = useNavigation();
 

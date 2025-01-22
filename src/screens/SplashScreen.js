@@ -19,13 +19,9 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../assets/heart-constellation.png')}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
+
         <Text style={styles.title}>Astral Match</Text>
-      </ImageBackground>
+
     </View>
   );
 };
