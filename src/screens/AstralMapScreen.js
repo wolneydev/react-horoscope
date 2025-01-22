@@ -57,7 +57,9 @@ export default function AstralMapScreen() {
 
   // Função para renderizar cada item de 'astral_entities'
   const renderItem = ({ item }) => (
+
     <View style={styles.card}>
+       
       {/* Nome do astro (por exemplo: 'Sol', 'Lua', 'Ascendente', etc.) */}
       <Text style={styles.astroName}>{item.astral_entity.name}</Text>
 
@@ -91,15 +93,16 @@ export default function AstralMapScreen() {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={astralMap.astral_entities}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-      />
+          <View>
+            <Text style={styles.title}>Mapa astral</Text>
+          </View>
+          <View style={styles.explanationContainer}>
+        <Text style={styles.explanationText}>Compartilhe esse código com alguém que deseja comparar o mapa com o seu: </Text>
+      </View>
 
-      {/* Exibição do UUID com botão copiar */}
       <View style={styles.uuidContainer}>
-        <Text style={styles.uuidText}>UUID: {astralMap.uuid}</Text>
+      
+        <Text style={styles.uuidText}>{astralMap.uuid}</Text>
         <TouchableOpacity onPress={copyUuidToClipboard} style={styles.copyButton}>
           <Icon name="content-copy" size={20} color="#FFD700" />
         </TouchableOpacity>
@@ -108,8 +111,17 @@ export default function AstralMapScreen() {
       <Button
         title="Verificar Compatibilidade Astral"
         onPress={() => navigation.navigate('Compatibility', { uuid1: astralMap.uuid })}
-        color="#FFD700"
+        color="navy"
+      />          
+      <FlatList
+        data={astralMap.astral_entities}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
       />
+
+      {/* Exibição do UUID com botão copiar */}
+      
+     
     </View>
   );
 }
@@ -194,4 +206,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  explanationText: {
+    color: '#fff',
+    fontSize: 12,
+    textAlign: 'center',
+  }, 
+  explanationContainer: {
+    flexDirection: 'colunm',
+    alignItems: 'left',
+    justifyContent: 'space-between',
+  },   
 });

@@ -144,7 +144,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Astral Combination</Text>
+        <Text style={styles.sectionTitle}>Astral Match</Text>
         <Text style={styles.sectionDescription}>
           Encontre seu par ideal com base no seu mapa astral!
         </Text>

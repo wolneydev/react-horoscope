@@ -49,14 +49,16 @@ const App = () => {
         <Stack.Screen 
           name="FormScreen" 
           component={FormScreen} 
-          options={{ title: 'Digite seus dados' }}
+          options={{ headerShown: false  }}
         />
         <Stack.Screen 
           name="AstralMapScreen" 
           component={AstralMapScreen} 
-          options={{ title: 'Seu Mapa Astral' }}
+          options={{ headerShown: false }}
         />
-       <Stack.Screen name="Compatibility" component={CompatibilityScreen}
+       <Stack.Screen name="Compatibility"
+          component={CompatibilityScreen}
+         options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

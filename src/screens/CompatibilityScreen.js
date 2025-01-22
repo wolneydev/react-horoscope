@@ -61,12 +61,9 @@ export default function CompatibilityScreen({ route }) {
 
   const renderFooter = () => (
     <View style={styles.footer}>
-      <Text style={styles.averageTitle}>Compatibilidade Média</Text>
-      <Text style={styles.averageValue}>
-        {averageCompatibility !== null
+      <Text style={styles.averageTitle}>Compatibilidade:  {averageCompatibility !== null
           ? `${averageCompatibility.toFixed(2)}%`
-          : 'Não calculada'}
-      </Text>
+          : ''}</Text>
     </View>
   );
 
