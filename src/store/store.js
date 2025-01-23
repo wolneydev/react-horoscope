@@ -128,6 +128,15 @@ class StorageService {
       return false;
     }
   }
+
+  async isEmailVerified() {
+    try {
+      const userData = await this.getUserData();
+      return userData.email_verified === true;
+    } catch (error) {
+      return false;
+    }
+  }
 }
 
 export default new StorageService();

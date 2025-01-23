@@ -92,7 +92,6 @@ export default function RegisterScreen({ navigation }) {
       const day = birthDate.getDate();
       const hour = birthTime.getHours();
       const minute = birthTime.getMinutes();
-      const mail = email.trim();
 
       const response = await api.post(
         'auth/register',
@@ -139,7 +138,7 @@ export default function RegisterScreen({ navigation }) {
         await StorageService.saveAccessToken(data.access_token);
         await StorageService.saveAstralMap(data.astral_map);
 
-        navigation.navigate('AstralMapScreen');
+        navigation.navigate('HomeScreen');
       }
     } catch (error) {
       console.error('Erro:', error);
@@ -238,7 +237,6 @@ export default function RegisterScreen({ navigation }) {
           <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
         </TouchableOpacity>
 
-        {/* Conditionally render the email registration view with animation */}
         {isEmailRegistrationVisible && (
           <Animated.View style={[styles.emailRegistration, { height: animatedHeight, opacity: animatedOpacity }]}>
             <Text style={styles.emailRegistrationText}>Email Registration Form</Text>
