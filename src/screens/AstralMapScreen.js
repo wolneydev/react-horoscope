@@ -96,23 +96,7 @@ export default function AstralMapScreen() {
           <View>
             <Text style={styles.title}>Mapa astral</Text>
           </View>
-          <View style={styles.explanationContainer}>
-        <Text style={styles.explanationText}>Compartilhe esse código com alguém que deseja comparar o mapa com o seu: </Text>
-      </View>
-
-      <View style={styles.uuidContainer}>
-      
-        <Text style={styles.uuidText}>{astralMap.uuid}</Text>
-        <TouchableOpacity onPress={copyUuidToClipboard} style={styles.copyButton}>
-          <Icon name="content-copy" size={20} color="#FFD700" />
-        </TouchableOpacity>
-      </View>
-
-      <Button
-        title="Verificar Compatibilidade Astral"
-        onPress={() => navigation.navigate('Compatibility', { uuid1: astralMap.uuid })}
-        color="navy"
-      />          
+         
       <FlatList
         data={astralMap.astral_entities}
         keyExtractor={(item) => item.id.toString()}

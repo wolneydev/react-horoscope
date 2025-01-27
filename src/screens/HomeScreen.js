@@ -6,6 +6,8 @@ import CryptoService from '../services/crypto';
 import api from '../services/api';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import { BlurView } from '@react-native-community/blur';
+import Mandala from '../Components/Mandala';
+
 
 const CustomButton = ({ title, onPress, color }) => (
   <TouchableOpacity
@@ -14,7 +16,7 @@ const CustomButton = ({ title, onPress, color }) => (
       styles.buttonWrapper,
       color === '#ff4444' && { 
         backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-        borderColor: 'white' 
+        borderColor: '#FFD700' 
       }
     ]}
   >
@@ -142,8 +144,11 @@ const HomeScreen = () => {
   }
 
   return (
+   
     <View style={styles.container}>
       <View style={styles.section}>
+  
+       <Mandala />
         <Text style={styles.sectionTitle}>Astral Match</Text>
         <Text style={styles.sectionDescription}>
           Encontre seu par ideal com base no seu mapa astral!
@@ -183,6 +188,7 @@ const HomeScreen = () => {
         </View>
       </View>
     </View>
+
   );
 };
 
@@ -211,32 +217,29 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 46,
-    fontWeight: 'bold',
+    fontSize: 28,
     marginBottom: 10,
     color: 'white',
-    textShadowColor: 'white',
+    textShadowColor: 'gray',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   sectionDescription: {
-    fontSize: 18,
+    fontSize: 12,
     textAlign: 'center',
     color: '#E0E0E0',
-    textShadowColor: 'white',
+    textShadowColor: 'gray',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
   },
   buttonContainer: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 0,
   },
   buttonWrapper: {
     marginVertical: 5,
     borderRadius: 12,
     backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-    borderWidth: 1,
-    borderColor: 'white',
     overflow: 'hidden',
   },
   buttonContent: {
@@ -247,16 +250,16 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 13,
+
     letterSpacing: 0.5,
   },
   welcomeText: {
-    fontSize: 18,
+    fontSize: 12,
     color: 'white',
     textAlign: 'center',
-    marginTop: 20,
-    textShadowColor: '#FFD700',
+    marginTop: 0,
+    textShadowColor: 'gray',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
