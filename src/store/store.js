@@ -132,7 +132,8 @@ class StorageService {
   async isEmailVerified() {
     try {
       const userData = await this.getUserData();
-      return userData.email_verified === true;
+      console.log('userData', userData);
+      return userData.email_verified_at !== null;
     } catch (error) {
       return false;
     }

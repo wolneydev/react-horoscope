@@ -115,12 +115,14 @@ export default function RegisterScreen({ navigation }) {
       );
 
       const { status, data } = response.data;
+      console.log(response.data);
 
       if (status === 'success') {
         // Preparando dados do usuário
         const userData = {
           name: data.name,
           email: data.email,
+          email_verified_at: data.email_verified_at,
           uuid: data.uuid,
           encryptedPassword: encryptedPassword,
           birthData: {
