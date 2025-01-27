@@ -15,38 +15,23 @@ import LoginScreen from './src/screens/auth/LoginScreen';
 import CompatibilityScreen from './src/screens/CompatibilityScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
 
-
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
-function AuthStack() {
-  return (
-    
+// Stack Navigator para telas principais
+function MainStack() {
+  return (  
     <Stack.Navigator initialRouteName="SplashScreen">
       <Stack.Screen
         name="SplashScreen"
         component={SplashScreen}
         options={{ headerShown: false }}
       />
-      
-     
-    </Stack.Navigator>
-  );
-}
-
-// Stack Navigator para telas principais
-function MainStack() {
-  return (
-  
-
-    <Stack.Navigator initialRouteName="HomeScreen">
-
-        <Stack.Screen
-          name="HomeScreen"
-          component={HomeScreen} // HomeScreen com Mandala agora
-          options={{ headerShown: false }}
-        />
-
+      <Stack.Screen
+        name="HomeScreen"
+        component={HomeScreen} // HomeScreen com Mandala agora
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="RegisterScreen"
         component={RegisterScreen}
@@ -62,13 +47,11 @@ function MainStack() {
         component={GreetingsScreen}
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="AstralMapScreen"
         component={AstralMapScreen}
         options={{ headerShown: false }}
-      />      
-    
+      />    
       <Stack.Screen
         name="FormScreen"
         component={FormScreen}

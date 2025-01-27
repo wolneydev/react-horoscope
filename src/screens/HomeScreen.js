@@ -68,7 +68,6 @@ const HomeScreen = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [userData, setUserData] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('Conectando...');
-  const [logoutMessage, setLogoutMessage] = useState('');
 
   // Memoize AnimatedStars para evitar re-renderização
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
@@ -160,7 +159,7 @@ const HomeScreen = () => {
 
     return (
       <View>
-        {!userData.isEmailVerified && (
+        {false && (
           <View style={styles.verificationContainer}>
             <Text style={styles.verificationText}>
               Enviamos um e-mail para {userData.email}. Verifique seu e-mail siga as instruções para ativar sua conta.
@@ -176,12 +175,12 @@ const HomeScreen = () => {
         <CustomButton 
           title="Ver meu mapa astral" 
           onPress={() => handleNavigation('AstralMapScreen')} 
-          disabled={loading || !userData.isEmailVerified}
+          disabled={loading || !true}
         />
         <CustomButton 
           title="Analisar compatibilidade astral" 
           onPress={() => handleNavigation('AstralMapScreen')} 
-          disabled={loading || !userData.isEmailVerified}
+          disabled={loading || !true}
         />        
         <CustomBlackButton 
           title={loggingOut ? "Saindo..." : "Sair"}
