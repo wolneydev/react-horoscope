@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import AnimatedStars from '../Components/animation/AnimatedStars';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
@@ -19,9 +20,10 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-
-        <Text style={styles.title}>Astral Match</Text>
-
+      <AnimatedStars />
+      <View style={styles.topSection}>
+        <Text style={styles.sectionTitle}>Astral Match</Text>
+      </View>
     </View>
   );
 };
@@ -29,22 +31,22 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1E1B29',
   },
-  backgroundImage: {
+  topSection: {
     flex: 1,
-    // Deixa o conteúdo (texto) centralizado
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  title: {
-    fontSize: 48,
+  sectionTitle: {
+    fontSize: 46,
     fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    // sombra opcional para destacar texto em fundos claros
-    textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    marginBottom: 10,
+    color: 'white',
+    textShadowColor: 'white',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
 });
 
