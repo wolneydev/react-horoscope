@@ -19,7 +19,6 @@ import GreetingsScreen from './src/screens/GreetingsScreen';
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
-// Stack Navigator para o fluxo de autenticação
 function AuthStack() {
   return (
     
@@ -29,21 +28,7 @@ function AuthStack() {
         component={SplashScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="RegisterScreen"
-        component={RegisterScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="LoginScreen"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="GreetingsScreen"
-        component={GreetingsScreen}
-        options={{ headerShown: false }}
-      />
+      
      
     </Stack.Navigator>
   );
@@ -61,6 +46,22 @@ function MainStack() {
           component={HomeScreen} // HomeScreen com Mandala agora
           options={{ headerShown: false }}
         />
+
+      <Stack.Screen
+        name="RegisterScreen"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GreetingsScreen"
+        component={GreetingsScreen}
+        options={{ headerShown: false }}
+      />
 
       <Stack.Screen
         name="AstralMapScreen"
