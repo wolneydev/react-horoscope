@@ -1,47 +1,34 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, BackHandler, ToastAndroid, TouchableOpacity, Button } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Certifique-se de que este pacote está instalado
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, BackHandler, Image } from 'react-native';
 import StorageService from '../store/store';
 import Header from '../Components/Header';
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import RightMandala from '../Components/mandalas/RightMandala';
+
+// Mapeamento de imagens baseado nos nomes dos signos
+const imageMap = {
+  áries: require('../assets/images/sign/aries.jpg'),
+  touro: require('../assets/images/sign/taurus.jpg'),
+  gêmeos: require('../assets/images/sign/gemini.jpg'),
+  câncer: require('../assets/images/sign/cancer.jpg'),
+  leão: require('../assets/images/sign/leo.jpg'),
+  virgem: require('../assets/images/sign/virgo.jpg'),
+  libra: require('../assets/images/sign/libra.jpg'),
+  escorpião: require('../assets/images/sign/scorpio.jpg'),
+  sagitário: require('../assets/images/sign/sagittarius.jpg'),
+  capricórnio: require('../assets/images/sign/capricorn.jpg'),
+  aquário: require('../assets/images/sign/aquarius.jpg'),
+  peixes: require('../assets/images/sign/pisces.jpg'),
+};
 
 export default function AstralMapScreen() {
   const navigation = useNavigation();
   const [astralMap, setAstralMap] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Memoize AnimatedStars para evitar re-renderização
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
 
-  const CustomButton = ({ title, onPress, color, disabled }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.buttonWrapper,
-        color === '#ff4444' && { 
-          backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-          borderColor: 'white' 
-        },
-        disabled && { opacity: 0.5 }
-      ]}
-    >
-      <View style={styles.buttonContent}>
-        <Text style={[
-          styles.buttonText,
-          color === '#ff4444' && { 
-            color: 'white',
-            textShadowColor: '#ff4444'
-          }
-        ]}>
-          {title}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  // Previne o usuário de voltar para a tela de cadastro ou login uma vez logado
   useFocusEffect(
     React.useCallback(() => {
       const backAction = () => {
@@ -49,16 +36,12 @@ export default function AstralMapScreen() {
         return true;
       };
 
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        backAction
-      );
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
       return () => backHandler.remove();
     }, [navigation])
   );
 
-  // Carrega o mapa astral do storage
   useEffect(() => {
     const loadAstralMap = async () => {
       try {
@@ -74,37 +57,29 @@ export default function AstralMapScreen() {
     loadAstralMap();
   }, []);
 
-  const copyUuidToClipboard = useCallback(() => {
-    try {
-      if (astralMap?.uuid) {
-        Clipboard.setString(astralMap.uuid);
-        ToastAndroid.show('Código copiado com sucesso!', ToastAndroid.SHORT);
-      } else {
-        ToastAndroid.show('Código não disponível', ToastAndroid.SHORT);
-      }
-    } catch (error) {
-      console.error('Erro ao copiar código:', error);
-      ToastAndroid.show('Erro ao copiar código', ToastAndroid.SHORT);
-    }
-  }, [astralMap?.uuid]);
+  const renderItem = ({ item }) => {
+    const signName = item.sign.name.toLowerCase();
+    const imageSource = imageMap[signName];
 
-  // Função para renderizar cada item de 'astral_entities'
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      {/* Nome do astro (por exemplo: 'Sol', 'Lua', 'Ascendente', etc.) */}
-      <Text style={styles.astroName}>{item.astral_entity.name}</Text>
-
-      {/* explanation (caso exista) */}
-      {item.astral_entity.explanation && (
-        <Text style={styles.explanation}>{item.astral_entity.explanation}</Text>
-      )}
-      {/* Signo em que esse astro se encontra (por exemplo: 'Leão', 'Câncer', etc.) */}
-      <Text style={styles.horoscopeName}>{item.sign.name} - {item.degree}º</Text>
-
-      {/* Descrição do posicionamento */}
-      <Text style={styles.description}>{item.description}</Text>
-    </View>
-  );
+    return (
+      <View style={styles.card}>
+        <RightMandala/>
+        {imageSource ? (
+          <Image source={imageSource} style={styles.image} />
+        ) : (
+          <Text style={styles.missingImageText}>Imagem não disponível</Text>
+        )}
+        <Text style={styles.horoscopeName}>
+          {item.sign.name} - {item.degree}º
+        </Text>
+        {item.astral_entity.explanation && (
+          <Text style={styles.explanation}>{item.astral_entity.explanation}</Text>
+        )}        
+        <Text style={styles.astroName}>{item.astral_entity.name}</Text>
+        <Text style={styles.description}>{item.description}</Text>
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -135,18 +110,6 @@ export default function AstralMapScreen() {
       {memoizedStars}
       <Header />
       <View style={styles.content}>
-
-        <View style={styles.explanationContainer}>
-          <Text style={styles.codeText}>
-            Este é o código de seu mapa! Compartilhe com alguém que deseja verificar a compatibilidade entre seus mapas. Aperte para copiar.
-          </Text>
-          <CustomButton 
-            title={astralMap.uuid} 
-            onPress={() => copyUuidToClipboard()}
-            disabled={loading}
-          />
-        </View>
-
         <FlatList
           data={astralMap.astral_entities}
           keyExtractor={(item) => item.id.toString()}
@@ -161,7 +124,7 @@ export default function AstralMapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1B29',
+    backgroundColor: '#08141d',
   },
   content: {
     flex: 1,
@@ -176,27 +139,23 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   card: {
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    marginBottom: 6,
+    padding: 50,
+    backgroundColor: '#141527',
     borderWidth: 1,
     borderRadius: 12,
-    borderColor: 'white',
-  },
-  copyButton: {
-    marginLeft: 10,
-    padding: 5,
+    borderColor: '#FFD700',
   },
   astroName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFD700', // Dourado para destacar o "astro"
+    color: '#FFD700',
     marginBottom: 2,
   },
   horoscopeName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'lightblue', // Tom suave que combine com o fundo
+    color: 'lightblue',
     marginBottom: 4,
   },
   explanation: {
@@ -216,39 +175,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  explanationContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'white',
-  },
-  codeText: {
-    marginTop: 10,
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: 'center',
     marginBottom: 10,
-    color: '#fff',
+  },
+  missingImageText: {
+    color: 'white',
+    textAlign: 'center',
     fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'justify',
-  },
-  buttonWrapper: {
-    marginVertical: 5,
-    borderRadius: 12,
-    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-    marginBottom: 20,
-  },
-  buttonContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-    letterSpacing: 0.5,
+    marginBottom: 10,
   },
 });

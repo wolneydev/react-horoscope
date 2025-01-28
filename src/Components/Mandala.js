@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: 'rgba(109, 68, 255, 0.15)', // Cor lilás para a sombra
+    shadowColor: '#141527', // Cor lilás para a sombra
     shadowOpacity: 0.7,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 8,

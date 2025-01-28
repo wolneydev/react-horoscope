@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     marginRight: 8, // Espaçamento entre badges
     alignSelf: 'flex-start', // Ajusta para conteúdo flexível
     borderWidth: 1,
-    borderColor: 'black', // Bordas navy claras
+    borderColor: 'black', // Bordas '#141527' claras
   },
   badgePressed: {
     backgroundColor: '#42b883', // Fundo 7B68EE ao clicar

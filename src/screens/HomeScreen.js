@@ -14,7 +14,7 @@ const CustomButton = ({ title, onPress, color, disabled }) => (
     style={[
       styles.buttonWrapper,
       color === '#ff4444' && { 
-        backgroundColor: 'rgba(109, 68, 255, 0.15)', 
+        backgroundColor: '#141527', 
         borderColor: '#FFD700' 
       },
       disabled && { opacity: 0.5 }
@@ -41,7 +41,7 @@ const CustomBlackButton = ({ title, onPress, color, disabled }) => (
     style={[
       styles.buttonWrapper,
       color === '#ff4444' && { 
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(46, 46, 90, 0.4)',
         borderColor: 'white' 
       },
       disabled && { opacity: 0.5 }
@@ -280,7 +280,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1B29',
+    backgroundColor: '#141527',
   },
   content: {
     flex: 1,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     marginVertical: 5,
     borderRadius: 12,
-    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
+    backgroundColor: 'green', 
     overflow: 'hidden',
   },
   buttonContent: {
@@ -348,10 +348,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(30, 27, 41, 0.3)',
+    backgroundColor: '#141527',
   },
   loadingCard: {
-    backgroundColor: 'rgba(30, 27, 41, 0.85)',
+    backgroundColor: '#141527',
     borderRadius: 15,
     padding: 20,
     marginTop: 50,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   verificationContainer: {
-    backgroundColor: 'rgba(109, 68, 255, 0.15)',
+    backgroundColor: '#141527',
     borderRadius: 12,
     padding: 15,
     marginBottom: 15,

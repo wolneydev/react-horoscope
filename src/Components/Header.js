@@ -12,7 +12,7 @@ const Header = () => {
 const styles = StyleSheet.create({
   header: {
     height: 50,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: '#141527',
     justifyContent: 'center',
     alignItems: 'left',
     borderBottomWidth: 1,
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: 'white',
-    textShadowColor: 'white',
+    textShadowColor: '#FFD700',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
