@@ -1,6 +1,6 @@
 // App.js
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -29,7 +29,7 @@ function MainStack() {
       />
       <Stack.Screen
         name="HomeScreen"
-        component={HomeScreen} // HomeScreen com Mandala agora
+        component={HomeScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -48,27 +48,26 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="AstralMapScreen"
-        component={AstralMapScreen}
+        name="DrawerScreens"
+        component={AppDrawer}
         options={{ headerShown: false }}
-      />    
-      <Stack.Screen
-        name="FormScreen"
-        component={FormScreen}
-        options={{ title: 'Digite seus dados' }}
-      />
-      <Stack.Screen
-        name="Compatibility"
-        component={CompatibilityScreen}
-        options={{ title: 'Compatibilidade Astral' }}
       />
     </Stack.Navigator>
-
   );
 }
 
 // Menu Drawer Navigator
 function AppDrawer() {
+  const navigation = useNavigation();
+
+  const handleLogout = () => {
+    // Navega de volta para a tela de login
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'LoginScreen' }],
+    });
+  };
+
   return (
     <Drawer.Navigator
       screenOptions={{
@@ -80,15 +79,24 @@ function AppDrawer() {
       }}
     >
       <Drawer.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="Mapa Astral"
-        component={MainStack}
+        component={AstralMapScreen}
         options={{
           drawerIcon: ({ color, size }) => (
             <Icon name="agriculture" color={color} size={size} />
           ),
         }}
       />
-    <Drawer.Screen
+      <Drawer.Screen
         name="Sinastria"
         component={CompatibilityScreen}
         options={{
@@ -97,13 +105,19 @@ function AppDrawer() {
           ),
         }}
       />
-    <Drawer.Screen
+      <Drawer.Screen
         name="Sair"
         component={HomeScreen}
         options={{
           drawerIcon: ({ color, size }) => (
-            <Icon name="stars" color={color} size={size} />
+            <Icon name="logout" color={color} size={size} />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            handleLogout();
+          },
         }}
       />      
     </Drawer.Navigator>
@@ -114,7 +128,7 @@ function AppDrawer() {
 const App = () => {
   return (
     <NavigationContainer>
-      <AppDrawer />
+      <MainStack />
     </NavigationContainer>
   );
 };

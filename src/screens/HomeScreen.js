@@ -70,7 +70,7 @@ const HomeScreen = () => {
   const [loadingMessage, setLoadingMessage] = useState('Conectando...');
 
   // Memoize AnimatedStars para evitar re-renderização
-  const memoizedStars = useMemo(() => <AnimatedStars />, []);
+  const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -249,12 +249,12 @@ const HomeScreen = () => {
   return (
    
     <View style={styles.container}>
-      {memoizedStars}
+      {memoStars}
       <View style={styles.content}>
         <View style={styles.topSection}>
     
-       <Mandala />
-        <Text style={styles.sectionTitle}>Astral Match</Text>
+          <Mandala />
+          <Text style={styles.sectionTitle}>Astral Match</Text>
           <Text style={styles.sectionDescription}>
             Encontre seu par ideal com base no seu mapa astral!
           </Text>
@@ -297,15 +297,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sectionTitle: {
-    fontSize: 28,
+    fontSize: 32,
     marginBottom: 10,
     color: 'white',
-    textShadowColor: 'gray',
+    textShadowColor: 'white',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   sectionDescription: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
     color: '#E0E0E0',
     textShadowColor: 'gray',
@@ -319,6 +319,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     borderRadius: 12,
     backgroundColor: 'rgba(109, 68, 255, 0.15)', 
+    borderWidth: 1,
+    borderColor: 'white',
     overflow: 'hidden',
   },
   buttonContent: {
@@ -329,9 +331,11 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 13,
-
+    fontSize: 14,
     letterSpacing: 0.5,
+    textShadowColor: 'white',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 3,
   },
   welcomeText: {
     fontSize: 12,
@@ -370,18 +374,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '500',
-  },
-  debugButton: {
-    backgroundColor: 'rgba(255, 0, 0, 0.3)',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: 'red',
-  },
-  debugButtonText: {
-    color: 'white',
-    fontSize: 14,
   },
   verificationContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.15)',
