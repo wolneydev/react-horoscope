@@ -46,6 +46,11 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="AstralMapScreen"
+        component={AstralMapScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="LoginScreen"
         component={LoginScreen}
         options={{ headerShown: false }}
