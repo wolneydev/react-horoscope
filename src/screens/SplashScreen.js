@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo} from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import Mandala from '../Components/Mandala';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
@@ -18,12 +19,18 @@ const SplashScreen = ({ navigation }) => {
     checkInitialRoute();
   }, [navigation]);
 
+  // Memoize AnimatedStars para evitar re-renderização
+  const memoStars = useMemo(() => <AnimatedStars />, []);
+
   return (
     <View style={styles.container}>
-      <AnimatedStars />
-      <View style={styles.topSection}>
-        <Text style={styles.sectionTitle}>Astral Match</Text>
+      {memoStars}
+      <View style={styles.content}>
+        <View style={styles.topSection}>
+          <Mandala />
+        </View>
       </View>
+
     </View>
   );
 };
@@ -33,6 +40,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1E1B29',
   },
+  content: {
+    flex: 1,
+  },
   topSection: {
     flex: 1,
     alignItems: 'center',
@@ -40,13 +50,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 46,
-    fontWeight: 'bold',
+    fontSize: 32,
     marginBottom: 10,
     color: 'white',
     textShadowColor: 'white',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#E0E0E0',
+    textShadowColor: 'gray',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
   },
 });
 

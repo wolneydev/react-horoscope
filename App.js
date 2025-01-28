@@ -1,7 +1,7 @@
 // App.js
 import React from 'react';
 import "react-native-url-polyfill/auto";
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -56,8 +56,8 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="AstralMapScreen"
-        component={AstralMapScreen}
+        name="DrawerScreens"
+        component={AppDrawer}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -76,6 +76,16 @@ function MainStack() {
 
 // Menu Drawer Navigator
 function AppDrawer() {
+  const navigation = useNavigation();
+
+  const handleLogout = () => {
+    // Navega de volta para a tela de login
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'LoginScreen' }],
+    });
+  };
+
   return (
     <Drawer.Navigator
     detachInactiveScreens={false} // Altere para false
@@ -88,8 +98,17 @@ function AppDrawer() {
     }}
   >
       <Drawer.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="Mapa Astral"
-        component={MainStack}
+        component={AstralMapScreen}
         options={{
           drawerIcon: ({ color, size }) => (
             <Icon name="agriculture" color={color} size={size} />
@@ -110,8 +129,14 @@ function AppDrawer() {
         component={HomeScreen}
         options={{
           drawerIcon: ({ color, size }) => (
-            <Icon name="stars" color={color} size={size} />
+            <Icon name="logout" color={color} size={size} />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            handleLogout();
+          },
         }}
       />
     </Drawer.Navigator>
@@ -128,7 +153,7 @@ const App = () => {
     >   
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        <AppDrawer />
+        <MainStack />
       </NavigationContainer>
     </GestureHandlerRootView>
     </ScrollView> 

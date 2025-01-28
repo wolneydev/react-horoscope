@@ -1,5 +1,5 @@
 // src/screens/auth/register/RegisterScreen.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   Text,
   TextInput,
@@ -15,7 +15,7 @@ import api from '../../services/api';
 import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
-
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function RegisterScreen({ navigation }) {
   
@@ -34,6 +34,9 @@ export default function RegisterScreen({ navigation }) {
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
 
   const animation = useRef(new Animated.Value(0)).current; // Initialize animated value
+  
+  // Memoize AnimatedStars para evitar re-renderização
+  const memoStars = useMemo(() => <AnimatedStars />, []);
 
   // Mostrar/ocultar modal de Data
   const showDatePicker = () => {
@@ -179,35 +182,41 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <AnimatedStars />
+      {memoStars}
       <View style={styles.section}>
         
         <Text style={styles.sectionDescription}>
           Vamos procurar seu par ideal com base no seu mapa astral!
         </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Informe o seu Nome"
-          placeholderTextColor="#7A708E"
-          value={nome}
-          onChangeText={setNome}
-        />
+        <View style={styles.inputContainer}>
+          <Icon name="person" size={20} color="#7A708E" />
+          <TextInput
+            style={styles.input}
+            placeholder="Informe o seu Nome"
+            placeholderTextColor="#7A708E"
+            onChangeText={setNome}
+          />
+        </View>
 
-        <Text style={styles.label}>Informe a cidade de nascimento:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Informe a cidade de nascimento"
-          placeholderTextColor="#7A708E"
-          value={city}
-          onChangeText={setCity}
-        />
+        <View style={styles.inputContainer}>
+          <Icon name="location-city" size={20} color="#7A708E" />
+          <TextInput
+            style={styles.input}
+            placeholder="Informe a cidade de nascimento"
+            placeholderTextColor="#7A708E"
+            value={city}
+            onChangeText={setCity}
+          />
+        </View>
 
-        <Text style={styles.label}>Selecione a data de nascimento:</Text>
         <TouchableOpacity style={styles.dateButton} onPress={showDatePicker} activeOpacity={0.7}>
-          <Text style={styles.dateButtonText}>
-            {formatSelectedDate(birthDate) || 'Escolher Data'}
-          </Text>
+          <View style={styles.dateButtonContent}>
+            <Icon name="calendar-today" size={20} color="#7A708E" />
+            <Text style={styles.dateButtonText}>
+              {birthDate ? formatSelectedDate(birthDate) : "Selecionar a data de nascimento"}
+            </Text>
+          </View>
         </TouchableOpacity>
 
         <DateTimePickerModal
@@ -219,11 +228,14 @@ export default function RegisterScreen({ navigation }) {
           is24Hour={isAndroid}
         />
 
-        <Text style={styles.label}>Selecione o horário de nascimento:</Text>
+        
         <TouchableOpacity style={styles.dateButton} onPress={showTimePicker} activeOpacity={0.7}>
-          <Text style={styles.dateButtonText}>
-            {formatSelectedTime(birthTime) || 'Escolher Horário'}
-          </Text>
+          <View style={styles.dateButtonContent}>
+            <Icon name="access-time" size={20} color="#7A708E" />
+            <Text style={styles.dateButtonText}>
+              {birthTime ? formatSelectedTime(birthTime) : "Selecione o horário de nascimento"}
+            </Text>
+          </View>
         </TouchableOpacity>
 
         <DateTimePickerModal
@@ -241,28 +253,41 @@ export default function RegisterScreen({ navigation }) {
 
         {isEmailRegistrationVisible && (
           <Animated.View style={[styles.emailRegistration, { height: animatedHeight, opacity: animatedOpacity }]}>
-            <Text style={styles.emailRegistrationText}>Email Registration Form</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Informe E-mail"
-              placeholderTextColor="#7A708E"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Informe a senha"
-              placeholderTextColor="#7A708E"
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirme a senha"
-              placeholderTextColor="#7A708E"
-              value={password_confirmation}
-              onChangeText={setPasswordConfirmation}
-            />
+            <View style={styles.inputContainer}>
+              <Icon name="email" size={20} color="#7A708E" />
+              <TextInput
+                style={styles.input}
+                placeholder="Informe E-mail"
+                placeholderTextColor="#7A708E"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Icon name="lock" size={20} color="#7A708E" />
+              <TextInput
+                style={styles.input}
+                placeholder="Informe a senha"
+                placeholderTextColor="#7A708E"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Icon name="lock-outline" size={20} color="#7A708E" />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirme a senha"
+                placeholderTextColor="#7A708E"
+                value={password_confirmation}
+                onChangeText={setPasswordConfirmation}
+                secureTextEntry
+              />
+            </View>
+
             <TouchableOpacity style={styles.button} onPress={handleSubmit} activeOpacity={0.7}>
               <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
             </TouchableOpacity>
@@ -315,15 +340,22 @@ const styles = StyleSheet.create({
     color: '#C9BBCF', // Tom suave para textos
     marginVertical: 8,
   },
-  input: {
-    backgroundColor: '#2C2840',
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(109, 68, 255, 0.15)',
     borderWidth: 1,
-    borderColor: '#FFD700', // Mesmo tom dourado para dar destaque
+    borderColor: '#fff',
     borderRadius: 4,
-    padding: 10,
     marginBottom: 12,
+    paddingHorizontal: 10,
+  },
+  input: {
+    flex: 1,
+    padding: 10,
     fontSize: 16,
-    color: '#F9F8F8',      // Texto claro para melhor leitura
+    color: '#F9F8F8',
+    marginLeft: 10, // Espaço entre o ícone e o texto
   },
   dateButton: {
     backgroundColor: '#2C2840',
@@ -332,11 +364,15 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 12,
     marginBottom: 12,
-    justifyContent: 'center',
+  },
+  dateButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   dateButtonText: {
     fontSize: 16,
     color: '#C9BBCF',
+    marginLeft: 10,
   },
   button: {
     backgroundColor: '#FFD700', // Dourado para contrastar com o fundo
