@@ -17,6 +17,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
 import IndexScreen from './src/screens/IndexScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import HousesScreen from './src/screens/HousesScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import CompatibilityScreen from './src/screens/CompatibilityScreen';
@@ -25,6 +26,7 @@ import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
 import { useState, useRef, useEffect } from 'react';
+
 
 enableScreens(false);
 
@@ -43,6 +45,18 @@ function MainStack() {
       <Stack.Screen
         name="IndexScreen"
         component={IndexScreen}
+        name="HousesScreen"
+        component={HousesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />      
+      <Stack.Screen
+        name="AstralMapScreen"
+        component={AstralMapScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
