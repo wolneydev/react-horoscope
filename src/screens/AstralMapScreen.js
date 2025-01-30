@@ -2,9 +2,9 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, BackHandler, Image } from 'react-native';
 import StorageService from '../store/store';
-import Header from '../Components/Header';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import RightMandala from '../Components/mandalas/RightMandala';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
@@ -22,7 +22,7 @@ const imageMap = {
   peixes: require('../assets/images/sign/pisces.jpg'),
 };
 
-export default function AstralMapScreen() {
+const AstralMapScreen = () => {
   const navigation = useNavigation();
   const [astralMap, setAstralMap] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,29 +63,45 @@ export default function AstralMapScreen() {
 
     return (
       <View style={styles.card}>
-        <RightMandala/>
-        {imageSource ? (
-          <Image source={imageSource} style={styles.image} />
-        ) : (
-          <Text style={styles.missingImageText}>Imagem não disponível</Text>
-        )}
-        <Text style={styles.horoscopeName}>
-          {item.sign.name} - {item.degree}º
-        </Text>
+        <View style={styles.cardHeader}>
+          {imageSource ? (
+            <Image source={imageSource} style={styles.image} />
+          ) : (
+            <Text style={styles.missingImageText}>Imagem não disponível</Text>
+          )}
+          <View style={styles.headerTexts}>
+            <Text style={styles.astroName}>{item.astral_entity.name}</Text>
+            <Text style={styles.horoscopeName}>
+              {item.sign.name} - {item.degree}º
+            </Text>
+          </View>
+        </View>
         {item.astral_entity.explanation && (
           <Text style={styles.explanation}>{item.astral_entity.explanation}</Text>
         )}        
-        <Text style={styles.astroName}>{item.astral_entity.name}</Text>
         <Text style={styles.description}>{item.description}</Text>
       </View>
     );
   };
 
+  // Componente para o header da FlatList
+  const ListHeader = () => (
+    <View style={styles.infoCard}>
+      <View style={styles.infoIconContainer}>
+        <Icon name="auto-awesome" size={24} color="#6D44FF" />
+      </View>
+      <Text style={styles.infoCardTitle}>Mapa Astral</Text>
+      <Text style={styles.infoCardDescription}>
+        O mapa astral, ou carta natal, é um retrato do céu no momento exato do seu nascimento. 
+        Ele revela suas características pessoais, talentos naturais e desafios de vida.
+      </Text>
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={styles.container}>
         {memoizedStars}
-        <Header />
         <View style={[styles.content, styles.centerContent]}>
           <ActivityIndicator size="large" color="#FFD700" />
         </View>
@@ -97,7 +113,6 @@ export default function AstralMapScreen() {
     return (
       <View style={styles.container}>
         {memoizedStars}
-        <Header />
         <View style={[styles.content, styles.centerContent]}>
           <Text style={styles.errorText}>Não foi possível carregar o mapa astral</Text>
         </View>
@@ -108,27 +123,28 @@ export default function AstralMapScreen() {
   return (
     <View style={styles.container}>
       {memoizedStars}
-      <Header />
       <View style={styles.content}>
         <FlatList
-          data={astralMap.astral_entities}
+          data={astralMap?.astral_entities}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
+          ListHeaderComponent={ListHeader}
           style={styles.flatList}
         />
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#08141d',
+    backgroundColor: '#141527',
+    padding: 20,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
   },
   centerContent: {
     justifyContent: 'center',
@@ -136,15 +152,23 @@ const styles = StyleSheet.create({
   },
   flatList: {
     flex: 1,
-    marginTop: 16,
   },
   card: {
-    marginBottom: 6,
-    padding: 50,
-    backgroundColor: '#141527',
+    marginBottom: 14,
+    padding: 20,
+    backgroundColor: 'rgba(8, 20, 29, 0.4)',
     borderWidth: 1,
     borderRadius: 12,
     borderColor: '#FFD700',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,    
+  },
+  headerTexts: {
+    flex: 1,
+    justifyContent: 'center',
   },
   astroName: {
     fontSize: 18,
@@ -153,10 +177,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   horoscopeName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: 'lightblue',
-    marginBottom: 4,
   },
   explanation: {
     fontSize: 12,
@@ -176,16 +199,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignSelf: 'center',
-    marginBottom: 10,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    marginRight: 10,
   },
   missingImageText: {
     color: 'white',
-    textAlign: 'center',
     fontSize: 14,
+    flex: 1,
+  },
+  infoCard: {
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.3)',
+  },
+  infoIconContainer: {
+    backgroundColor: 'rgba(109, 68, 255, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
     marginBottom: 10,
   },
+  infoCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  infoCardDescription: {
+    color: '#bbb',
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 15,
+  },
 });
+
+export default AstralMapScreen;

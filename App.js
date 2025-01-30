@@ -1,13 +1,16 @@
 // App.js
 import React from 'react';
 import "react-native-url-polyfill/auto";
-import { NavigationContainer, useNavigation, DrawerActions } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { GestureHandlerRootView } from 'react-native-gesture-handler'; // Importação necessária
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   StyleSheet,
+  View,
+  Text,
+  Image,
 } from 'react-native';
 // Importando as telas
 import SplashScreen from './src/screens/SplashScreen';
@@ -21,7 +24,7 @@ import GreetingsScreen from './src/screens/GreetingsScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 enableScreens(false);
 
@@ -66,6 +69,46 @@ function MainStack() {
   );
 }
 
+function CustomDrawerContent(props) {
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const savedUserData = await StorageService.getUserData();
+        setUserData(savedUserData);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  return (
+    <DrawerContentScrollView {...props}>
+      {/* Header com Avatar */}
+      <View style={styles.drawerHeader}>
+        <View style={styles.userInfo}>
+          <View style={styles.avatarContainer}>
+            <Image 
+              source={require('./src/assets/images/sign/aries.jpg')}
+              style={styles.avatar}
+            />
+            <View style={styles.statusDot} />
+          </View>
+          <View style={styles.userTextInfo}>
+            <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
+            <Text style={styles.userName}>{userData?.name || 'Usuário'}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Drawer Items */}
+      <DrawerItemList {...props} />
+    </DrawerContentScrollView>
+  );
+}
+
 // Menu Drawer Navigator
 function AppDrawer() {
   const navigation = useNavigation();
@@ -97,11 +140,21 @@ function AppDrawer() {
   return (
     <>
       <Drawer.Navigator
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={{
-          headerStyle: { backgroundColor: '#141527' },
+          headerStyle: { 
+            backgroundColor: '#141527',
+            borderWidth: 1,
+            borderColor: 'rgba(109, 68, 255, 0.2)'
+          },          
           headerTintColor: 'white',
-          drawerStyle: { backgroundColor: '#141527' },
+          drawerStyle: { 
+            backgroundColor: '#141527',
+            borderRightWidth: 1,
+            borderRightColor: 'rgba(109, 68, 255, 0.2)',
+          },
           drawerActiveTintColor: 'white',
+          drawerActiveBackgroundColor: 'rgba(109, 68, 255, 0.2)',
           drawerInactiveTintColor: '#fff',
         }}
       >
@@ -168,12 +221,57 @@ const App = () => {
     </GestureHandlerRootView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   content:{
     flex: 1,
-  }
+  },
+  drawerHeader: {
+    padding: 20,
+    paddingLeft: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(109, 68, 255, 0.2)',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#6D44FF',
+  },
+  statusDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#141527',
+  },
+  userTextInfo: {
+    marginLeft: 15,
+  },
+  welcomeText: {
+    color: '#7A708E',
+    fontSize: 14,
+  },
+  userName: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
 });
+
 export default App;
