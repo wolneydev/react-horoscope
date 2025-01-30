@@ -15,11 +15,13 @@ import SplashScreen from './src/screens/SplashScreen';
 import FormScreen from './src/screens/FormScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import HousesScreen from './src/screens/HousesScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import CompatibilityScreen from './src/screens/CompatibilityScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
 import { enableScreens } from 'react-native-screens';
+
 
 enableScreens(false);
 
@@ -36,10 +38,15 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="HousesScreen"
+        component={HousesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}
         options={{ headerShown: false }}
-      />
+      />      
       <Stack.Screen
         name="RegisterScreen"
         component={RegisterScreen}
@@ -151,17 +158,13 @@ function AppDrawer() {
 // Componente principal
 const App = () => {
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >   
+  
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         <MainStack />
       </NavigationContainer>
     </GestureHandlerRootView>
-    </ScrollView> 
+
   );
 };
 const styles = StyleSheet.create({
