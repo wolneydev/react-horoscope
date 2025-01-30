@@ -156,10 +156,11 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 14,
     padding: 20,
-    backgroundColor: 'rgba(8, 20, 29, 0.4)',
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
+    alignSelf: 'flex-start',
     borderWidth: 1,
     borderRadius: 12,
-    borderColor: '#FFD700',
+    borderColor: 'rgba(109, 68, 255, 0.3)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.3)',
+    borderColor: '#FFD700',
   },
   infoIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',

@@ -111,37 +111,42 @@ const HousesScreen = () => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'gray', // Fundo azul
-    paddingTop: 1,
+    backgroundColor: '#1a1a2e', // Fundo mais escuro
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   itemContainer: {
     flexDirection: 'row',
-    padding: 10,
     alignItems: 'center',
-    backgroundColor: '#222c47', 
-    marginBottom: 1,
-    borderRadius: 1,
-    marginHorizontal: 10,
+    marginBottom: 10,  
+    backgroundColor: 'rgba(109, 68, 255, 0.1)', // Mantendo fundo do item
+    borderRadius: 12,
+    padding: 10,
+  },
+  textContainer: {
+    flex: 1, // Ocupa o espaço restante ao lado da imagem
+    padding: 15,
+    backgroundColor: 'rgba(109, 68, 255, 0.1)', // Fundo do texto no item
+    borderWidth: 1,
+    borderRadius: 12,
+    borderColor: 'rgba(109, 68, 255, 0.3)',
   },
   image: {
     width: 100,
     height: 100,
-    borderRadius: 25,
-  },
-  textContainer: {
-    marginLeft: 10,
-    flex: 1,
-    color:'white',
+    borderRadius: 20,
+    marginRight: 10, // Espaçamento entre imagem e texto
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color:'white'
+    color: '#FFD700',
   },
   description: {
     fontSize: 14,
-    color:'white',
+    color: 'white',
   },
 });
+
 
 export default HousesScreen;

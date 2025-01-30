@@ -43,17 +43,16 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="IndexScreen"
         component={IndexScreen}
-        name="HousesScreen"
-        component={HousesScreen}
+        name="IndexScreen"
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="HomeScreen"
-        component={HomeScreen}
+        component={HousesScreen}
+        name="HousesScreen"
         options={{ headerShown: false }}
       />      
+    
       <Stack.Screen
         name="AstralMapScreen"
         component={AstralMapScreen}
@@ -181,6 +180,7 @@ function AppDrawer() {
             ),
           }}
         />
+        
         <Drawer.Screen
           name="Mapa Astral"
           component={AstralMapScreen}
@@ -199,6 +199,16 @@ function AppDrawer() {
             ),
           }}
         />
+
+        <Drawer.Screen
+          name="Casas"
+          component={HousesScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="stars" color={color} size={size} />
+            ),
+          }}
+        />        
         <Drawer.Screen
           name="Sair"
           component={EmptyComponent}
