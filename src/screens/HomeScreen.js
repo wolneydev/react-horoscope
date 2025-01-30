@@ -1,279 +1,311 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, Text, ImageBackground, Button, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import StorageService from '../store/store';
-import CryptoService from '../services/crypto';
-import api from '../services/api';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
-import Mandala from '../Components/Mandala';
-
-
-const CustomButton = ({ title, onPress, color, disabled }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[
-      styles.buttonWrapper,
-      color === '#ff4444' && { 
-        backgroundColor: '#141527', 
-        borderColor: '#FFD700' 
-      },
-      disabled && { opacity: 0.5 }
-    ]}
-    disabled={disabled}
-  >
-    <View style={styles.buttonContent}>
-      <Text style={[
-        styles.buttonText,
-        color === '#ff4444' && { 
-          color: 'white',
-          textShadowColor: '#ff4444'
-        }
-      ]}>
-        {title}
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
-
-const CustomBlackButton = ({ title, onPress, color, disabled }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[
-      styles.buttonWrapper,
-      color === '#ff4444' && { 
-        backgroundColor: 'rgba(46, 46, 90, 0.4)',
-        borderColor: 'white' 
-      },
-      disabled && { opacity: 0.5 }
-    ]}
-    disabled={disabled}
-  >
-    <View style={styles.buttonContent}>
-      <Text style={[
-        styles.buttonText,
-        color === '#ff4444' && { 
-          color: 'white',
-          textShadowColor: '#ff4444'
-        }
-      ]}>
-        {title}
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
+import SpinningMandala from '../Components/SpinningMandala';
+import LoadingOverlay from '../Components/LoadingOverlay';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import StorageService from '../store/store';
+import { useMemo } from 'react';
+import api from '../services/api';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const [loading, setLoading] = useState(true);
-  const [loggingOut, setLoggingOut] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [loadingMessage, setLoadingMessage] = useState('Conectando...');
+  const [isLoading, setIsLoading] = useState(true);
+  const shakeAnimation = useRef(new Animated.Value(0)).current;
+  const [isDebugChecking, setIsDebugChecking] = useState(false);
+  const autoCheckIntervalRef = useRef(null);
+
+  const startShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -10,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleCardPress = (screenName) => {
+    if (!userData?.email_verified_at) {
+      startShake();
+      return;
+    }
+    navigation.navigate('HomeScreen', { screen: screenName });
+  };
+
+  const handleVerifyEmail = () => {
+    // Implementar lógica para reenviar email de verificação
+    console.log('Reenviando email de verificação...');
+  };
+
+  const debugForceVerification = async () => {
+    if (isDebugChecking) return; // Evita múltiplas verificações simultâneas
+    
+    try {
+      setIsDebugChecking(true);
+      console.log('Iniciando verificação de debug...');
+
+      const token = await StorageService.getAccessToken();
+      
+      // Executa verificação a cada 3 segundos por 5 vezes
+      let count = 0;
+      const debugInterval = setInterval(async () => {
+        try {
+          console.log(`Verificação ${count + 1} de 5`);
+          
+          // Faz requisição para verificar status do email
+          const response = await api.get('users/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          console.log('Resposta da API:', response.data);
+          console.log('Resposta da API:', response.data.data.email_verified_at);
+
+          if (response.data.data.email_verified_at) {
+            console.log('Email verificado com sucesso!');
+            
+            // Atualiza dados do usuário
+            const updatedUserData = {
+              ...userData,
+              email_verified_at: response.data.data.email_verified_at
+            };
+            
+            await StorageService.saveUserData(updatedUserData);
+            setUserData(updatedUserData);
+            
+            // Para a verificação
+            clearInterval(debugInterval);
+            setIsDebugChecking(false);
+            return;
+          }
+          
+          count++;
+          if (count >= 5) {
+            console.log('Limite de tentativas atingido');
+            clearInterval(debugInterval);
+            setIsDebugChecking(false);
+          }
+        } catch (error) {
+          console.error('Erro na verificação:', error);
+          clearInterval(debugInterval);
+          setIsDebugChecking(false);
+        }
+      }, 3000);
+
+    } catch (error) {
+      console.error('Erro ao iniciar verificação de debug:', error);
+      setIsDebugChecking(false);
+    }
+  };
+
+  // Função para verificar email periodicamente
+  const startEmailVerification = async () => {
+    if (autoCheckIntervalRef.current) {
+      clearInterval(autoCheckIntervalRef.current);
+    }
+
+    try {
+      console.log('Iniciando verificação periódica...');
+      const token = await StorageService.getAccessToken();
+      
+      autoCheckIntervalRef.current = setInterval(async () => {
+        try {
+          console.log('Verificando status do email...');
+          
+          const response = await api.get('users/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          console.log('Resposta da API:', response.data.data.email_verified_at);
+
+          if (response.data.data.email_verified_at) {
+            console.log('Email verificado com sucesso!');
+            
+            // Atualiza dados do usuário
+            const updatedUserData = {
+              ...userData,
+              email_verified_at: response.data.data.email_verified_at
+            };
+            
+            await StorageService.saveUserData(updatedUserData);
+            setUserData(updatedUserData);
+            
+            // Para a verificação
+            clearInterval(autoCheckIntervalRef.current);
+            autoCheckIntervalRef.current = null;
+          }
+        } catch (error) {
+          console.error('Erro na verificação:', error);
+        }
+      }, 10000); // Verifica a cada 10 segundos
+
+    } catch (error) {
+      console.error('Erro ao iniciar verificação periódica:', error);
+    }
+  };
+
+  // Inicia verificação quando a tela recebe foco
+  useFocusEffect(
+    useCallback(() => {
+      if (!userData?.email_verified_at) {
+        startEmailVerification();
+      }
+
+      // Cleanup quando a tela perde foco
+      return () => {
+        if (autoCheckIntervalRef.current) {
+          console.log('Parando verificação periódica...');
+          clearInterval(autoCheckIntervalRef.current);
+          autoCheckIntervalRef.current = null;
+        }
+      };
+    }, [userData?.email_verified_at])
+  );
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
+        const savedUserData = await StorageService.getUserData();
+        setUserData(savedUserData);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
-  useEffect(() => {
-    const initializeData = async () => {
-      try {
-        const savedUserData = await StorageService.getUserData();
-        const isTokenValid = await StorageService.isTokenValid();
-        setUserData(savedUserData);
-
-        if (!isTokenValid && savedUserData) {
-          setLoadingMessage('Autenticando ...');
-          await autoLogin(savedUserData);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar dados salvos:', error);
-      } finally {
-        setLoading(false);
-        setLoadingMessage('Conectando ...');
-      }
-    };
-
-    initializeData();
-  }, []);
-
-  const handleLogout = useCallback(async () => {
-    try {
-      setLoadingMessage('Finalizando sessão...');
-      setLoading(true);
-      await StorageService.clearAll();
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setUserData(null);
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      Alert.alert('Erro', 'Não foi possível fazer logout');
-    } finally {
-      setLoading(false);
-      setLoggingOut(false);
-      setLoadingMessage('Conectando...');
-    }
-  }, []);
-
-  const handleNavigation = useCallback((screen) => {
-    navigation.navigate(screen);
-  }, [navigation]);
-
-  const fetchUserData = useCallback(async () => {
-    try {
-      setLoadingMessage('Atualizando dados...');
-      setLoading(true);
-      const response = await api.get('user/me');
-      
-      if (response.data.status === 'success') {
-        const updatedUserData = {
-          ...userData,
-          isEmailVerified: response.data.data.is_email_verified
-        };
-        await StorageService.saveUserData(updatedUserData);
-        setUserData(updatedUserData);
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar dados:', error);
-      Alert.alert('Erro', 'Não foi possível atualizar os dados');
-    } finally {
-      setLoading(false);
-      setLoadingMessage('Conectando...');
-    }
-  }, [userData]);
-
-  // Memoize os botões
-  const renderButtons = useMemo(() => {
-    if (!userData) {
-      return (
-        <>
-          <CustomButton 
-            title="Começar uma nova jornada astral" 
-            onPress={() => handleNavigation('GreetingsScreen')} 
-            disabled={loading}
-          />
-          <CustomButton 
-            title="Já tenho uma conta" 
-            onPress={() => handleNavigation('LoginScreen')} 
-            disabled={loading}
-          />          
-        </>
-      );
-    }
-
-    return (
-      <View>
-        {false && (
-          <View style={styles.verificationContainer}>
-            <Text style={styles.verificationText}>
-              Enviamos um e-mail para {userData.email}. Verifique seu e-mail siga as instruções para ativar sua conta.
-            </Text>
-            <CustomButton 
-              title="Atualizar dados" 
-              onPress={fetchUserData}
-              disabled={loading}
-              color="#6D44FF"
-            />
-          </View>
-        )}
-        <CustomButton 
-          title="Ver meu mapa astral" 
-          onPress={() => handleNavigation('AstralMapScreen')} 
-          disabled={loading || !true}
-        />
-        <CustomButton 
-          title="Analisar compatibilidade astral" 
-          onPress={() => handleNavigation('AstralMapScreen')} 
-          disabled={loading || !true}
-        />        
-        <CustomBlackButton 
-          title={loggingOut ? "Saindo..." : "Sair"}
-          onPress={() => handleLogout()}
-          disabled={loading || loggingOut}
-          color="#ff4444"
-        />
-      </View>
-    );
-  }, [userData, loading, loggingOut, handleNavigation, handleLogout, fetchUserData]);
-
-  // Memoize o loading overlay
-  const loadingOverlay = useMemo(() => {
-    if (!loading) return null;
-    return (
-      <View style={styles.loadingOverlay}>
-        <View style={styles.loadingCard}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color="white" />
-            <Text style={styles.loadingText}>{loadingMessage}</Text>
-          </View>
-        </View>
-      </View>
-    );
-  }, [loading, loadingMessage]);
-
-  const autoLogin = async (savedUserData) => {
-    try {
-      const decryptedPassword = CryptoService.decrypt(savedUserData.encryptedPassword);
-      
-      const response = await api.post('auth/login', {
-        email: savedUserData.email.trim(),
-        password: decryptedPassword.trim(),
-      });
-
-      const { status, data } = response.data;
-
-      if (status === 'success') {
-        const updatedUserData = {
-          name: data.name,
-          email: data.email,
-          uuid: data.uuid,
-          encryptedPassword: savedUserData.encryptedPassword,
-          birthData: {
-            city: data.birth_city,
-            year: data.birth_year,
-            month: data.birth_month,
-            day: data.birth_day,
-            hour: data.birth_hour,
-            minute: data.birth_minute
-          }
-        };
-
-        await StorageService.saveAccessToken(data.access_token);
-        await StorageService.saveUserData(updatedUserData);
-        await StorageService.saveAstralMap(data.astral_map);
-
-        setUserData(updatedUserData);
-      }
-    } catch (error) {
-      console.error('Erro no login automático:', error);
-      await StorageService.clearAll();
-    }
-  };
-
   return (
-   
     <View style={styles.container}>
+      
       {memoStars}
-      <View style={styles.content}>
-        <View style={styles.topSection}>
-    
-          <Mandala />
-          <Text style={styles.sectionTitle}>Astral Match</Text>
-          <Text style={styles.sectionDescription}>
-            Encontre seu par ideal com base no seu mapa astral!
-          </Text>
-        </View>
-
-        {userData && (
-          <Text style={styles.welcomeText}>Bem-vindo(a), {userData.name}!</Text>
-        )}
-
-        <View style={styles.bottomSection}>
-          <View style={styles.buttonContainer}>
-            {renderButtons}
+      {isLoading && <LoadingOverlay />}
+      
+      {/* Header com Avatar e Nome */}
+      <View style={styles.header}>
+        <View style={styles.userInfo}>
+          <View style={styles.avatarContainer}>
+            <Image 
+              source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
+              style={styles.avatar}
+            />
+            <View style={styles.statusDot} />
+          </View>
+          <View style={styles.userTextInfo}>
+            <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
+            <Text style={styles.userName}>{userData?.name || ''}</Text>
           </View>
         </View>
       </View>
 
-      {loadingOverlay}
-    </View>
+      {/* Cards de Navegação */}
+      <View style={styles.cardsContainer}>
 
+        <Animated.View style={{ transform: [{ translateX: shakeAnimation }] }}>
+          {/* Card de Verificação de Email */}
+          {!userData?.email_verified_at && (
+            <>
+              <TouchableOpacity 
+                style={styles.warningCard}
+                onPress={handleVerifyEmail}
+              >
+                <View style={styles.warningIconContainer}>
+                  <Icon name="warning" size={24} color="#FFD700" />
+                </View>
+                <Text style={styles.warningCardTitle}>Verifique seu Email</Text>
+                <Text style={styles.warningCardDescription}>
+                  Enviamos um email para {userData?.email}.
+                </Text>
+                <Text style={styles.warningCardDescription}>
+                  Por favor, verifique sua caixa de entrada e siga as instruções para ativar sua conta.
+                </Text>
+                <Text style={styles.warningCardAction}>Reenviar email de verificação</Text>
+                <Icon name="arrow-forward" size={24} color="#FFD700" style={styles.cardIcon} />
+              </TouchableOpacity>
+
+              {/* Botão de Debug */}
+              {__DEV__ && (
+                <TouchableOpacity 
+                  style={[
+                    styles.debugButton,
+                    isDebugChecking && styles.debugButtonActive
+                  ]}
+                  onPress={debugForceVerification}
+                  disabled={isDebugChecking}
+                >
+                  <Text style={styles.debugButtonText}>
+                    {isDebugChecking ? 'Verificando...' : 'Debug: Testar Verificação'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </Animated.View>
+
+        {/* Card de Verificação de Email */}
+        {userData?.email_verified_at && (
+          <>
+            <TouchableOpacity 
+              style={styles.successMailVerificationCard}
+            >
+              <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Mapa Astral Card */}        
+        <TouchableOpacity 
+          style={[
+            styles.card,
+            !userData?.email_verified_at && styles.disabledCard
+          ]}
+          onPress={() => handleCardPress('Mapa Astral')}
+        >
+          <Text style={styles.cardTitle}>Mapa Astral</Text>
+          <Text style={styles.cardDescription}>Veja seu mapa astral completo</Text>
+          <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
+        </TouchableOpacity>        
+
+        {/* Sinastria Card */}
+        <TouchableOpacity 
+          style={[
+            styles.card,
+            !userData?.email_verified_at && styles.disabledCard
+          ]}
+          onPress={() => handleCardPress('Sinastria')}
+        >
+          <Text style={styles.cardTitle}>Sinastria</Text>
+          <Text style={styles.cardDescription}>Compare mapas astrais e descubra compatibilidades</Text>
+          <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
@@ -282,115 +314,145 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#141527',
   },
-  content: {
-    flex: 1,
-  },
-  topSection: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  header: {
     padding: 20,
+    paddingTop: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(109, 68, 255, 0.2)',
   },
-  bottomSection: {
-    padding: 20,
-    paddingBottom: 40,
-    width: '100%',
-  },
-  sectionTitle: {
-    fontSize: 32,
-    marginBottom: 10,
-    color: 'white',
-    textShadowColor: 'white',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: '#E0E0E0',
-    textShadowColor: 'gray',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 5,
-  },
-  buttonContainer: {
-    width: '100%',
-  },
-  buttonWrapper: {
-    marginVertical: 5,
-    borderRadius: 12,
-    backgroundColor: 'green', 
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-  },
-  buttonContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    letterSpacing: 0.5,
-    textShadowColor: 'white',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
-  },
-  welcomeText: {
-    fontSize: 12,
-    color: 'white',
-    textAlign: 'center',
-    marginTop: 0,
-    textShadowColor: 'gray',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#141527',
-  },
-  loadingCard: {
-    backgroundColor: '#141527',
-    borderRadius: 15,
-    padding: 20,
-    marginTop: 50,
-    marginHorizontal: 20,
-    borderWidth: 1,
-    borderColor: 'white',
-    elevation: 5,
-  },
-  loadingContent: {
+  userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
   },
-  loadingText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
+  avatarContainer: {
+    position: 'relative',
   },
-  verificationContainer: {
-    backgroundColor: '#141527',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 1,
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
     borderColor: '#6D44FF',
   },
-  verificationText: {
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 10,
+  statusDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#141527',
+  },
+  userTextInfo: {
+    marginLeft: 15,
+  },
+  welcomeText: {
+    color: '#7A708E',
     fontSize: 14,
-    textShadowColor: 'rgba(255, 255, 255, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
+  },
+  userName: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  cardsContainer: {
+    padding: 20,
+  },
+  card: {
+    backgroundColor: 'rgba(109, 68, 255, 0.2)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.3)',
+  },
+  cardTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  cardDescription: {
+    color: '#bbb',
+    fontSize: 15,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  cardIcon: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+  },
+  warningCard: {
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  warningIconContainer: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  warningCardTitle: {
+    color: '#FFD700',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  warningCardDescription: {
+    color: '#FFD700',
+    fontSize: 15,
+    marginTop: 5,
+    marginBottom: 10,
+    opacity: 0.8,
+  },
+  warningCardAction: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    marginTop: 5,
+  },
+  successMailVerificationCard: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 15,
+    padding: 14,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
+  },
+  successMailVerificationCardTitle: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  disabledCard: {
+    opacity: 0.5,
+  },
+  debugButton: {
+    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 0, 0, 0.3)',
+  },
+  debugButtonActive: {
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    borderColor: 'rgba(255, 0, 0, 0.2)',
+  },
+  debugButtonText: {
+    color: '#FF0000',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

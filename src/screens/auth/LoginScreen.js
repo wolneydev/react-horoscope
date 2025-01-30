@@ -44,8 +44,6 @@ export default function LoginScreen({ navigation }) {
       if (status === 'success') {
         setLoadingMessage('Preparando seus dados...');
 
-        console.log(data.uuid);
-        
         const encryptedPassword = CryptoService.encrypt(password);
         const userData = {
           name: data.name,

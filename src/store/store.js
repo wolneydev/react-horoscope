@@ -88,6 +88,14 @@ class StorageService {
     }
   }
 
+  async clearUserData() {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    } catch (error) {
+      console.error('Erro ao limpar dados do usuário:', error);
+      throw error;
+    }
+  }
 
   // Método para salvar mapa astral
   async saveAstralMap(astralMap) {
@@ -132,7 +140,6 @@ class StorageService {
   async isEmailVerified() {
     try {
       const userData = await this.getUserData();
-      console.log('userData', userData);
       return userData.email_verified_at !== null;
     } catch (error) {
       return false;
