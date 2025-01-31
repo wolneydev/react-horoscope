@@ -84,18 +84,78 @@ function MainStack() {
 
 function CustomDrawerContent(props) {
   const [userData, setUserData] = useState(null);
+  const [zodiacSign, setZodiacSign] = useState("default");
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const savedUserData = await StorageService.getUserData();
+
+        if (savedUserData?.birthData?.day && savedUserData?.birthData?.month) {
+          const sign = getZodiacSign(savedUserData.birthData.day, savedUserData.birthData.month);
+          setZodiacSign(sign);
+        }
+
         setUserData(savedUserData);
       } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
+        console.error("Erro ao carregar dados do usuário:", error);
       }
     };
+
     fetchUserData();
   }, []);
+
+  // Função para identificar o signo
+  const getZodiacSign = (day, month) => {
+    const zodiacSigns = [
+      { sign: "capricorn", start: "12-22", end: "01-19" },
+      { sign: "aquarius", start: "01-20", end: "02-18" },
+      { sign: "pisces", start: "02-19", end: "03-20" },
+      { sign: "aries", start: "03-21", end: "04-19" },
+      { sign: "taurus", start: "04-20", end: "05-20" },
+      { sign: "gemini", start: "05-21", end: "06-20" },
+      { sign: "cancer", start: "06-21", end: "07-22" },
+      { sign: "leo", start: "07-23", end: "08-22" },
+      { sign: "virgo", start: "08-23", end: "09-22" },
+      { sign: "libra", start: "09-23", end: "10-22" },
+      { sign: "scorpio", start: "10-23", end: "11-21" },
+      { sign: "sagittarius", start: "11-22", end: "12-21" },
+    ];
+
+    const birthDate = `${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+    console.log("Data de nascimento:", birthDate);
+
+    for (const zodiac of zodiacSigns) {
+      if (
+        (birthDate >= zodiac.start && month === parseInt(zodiac.start.split("-")[0])) ||
+        (birthDate <= zodiac.end && month === parseInt(zodiac.end.split("-")[0]))
+      ) {
+        console.log("Signo encontrado:", zodiac.sign);
+        return zodiac.sign;
+      }
+    }
+
+    return "default";
+  };
+
+  // Objeto de mapeamento de imagens
+  const zodiacImages = {
+    aries: require("./src/assets/images/sign/aries.jpg"),
+    taurus: require("./src/assets/images/sign/taurus.jpg"),
+    gemini: require("./src/assets/images/sign/gemini.jpg"),
+    cancer: require("./src/assets/images/sign/cancer.jpg"),
+    leo: require("./src/assets/images/sign/leo.jpg"),
+    virgo: require("./src/assets/images/sign/virgo.jpg"),
+    libra: require("./src/assets/images/sign/libra.jpg"),
+    scorpio: require("./src/assets/images/sign/scorpio.jpg"),
+    sagittarius: require("./src/assets/images/sign/sagittarius.jpg"),
+    capricorn: require("./src/assets/images/sign/capricorn.jpg"),
+    aquarius: require("./src/assets/images/sign/aquarius.jpg"),
+    pisces: require("./src/assets/images/sign/pisces.jpg"),
+    default: require("./src/assets/images/sign/virgo.jpg"), // Imagem fallback
+  };
+
+  console.log("Imagem carregada:", zodiacImages[zodiacSign]); // Debug
 
   return (
     <DrawerContentScrollView {...props}>
@@ -104,14 +164,14 @@ function CustomDrawerContent(props) {
         <View style={styles.userInfo}>
           <View style={styles.avatarContainer}>
             <Image 
-              source={require('./src/assets/images/sign/aries.jpg')}
+              source={zodiacImages[zodiacSign]} // Usa a imagem correspondente ao signo
               style={styles.avatar}
             />
             <View style={styles.statusDot} />
           </View>
           <View style={styles.userTextInfo}>
             <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
-            <Text style={styles.userName}>{userData?.name || 'Usuário'}</Text>
+            <Text style={styles.userName}>{userData?.name || "Usuário"}</Text>
           </View>
         </View>
       </View>
