@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 
-export default function CompatibilityScreen({ route }) {
+export default function SynastryDesambiguationScreen({ route }) {
   const [uuid1] = useState(route.params?.uuid1 || ''); // Recebe o uuid1 da tela anterior
   const [uuid2, setUuid2] = useState('');
   const [compatibilities, setCompatibilities] = useState([]);

@@ -20,8 +20,9 @@ import HomeScreen from './src/screens/HomeScreen';
 import HousesScreen from './src/screens/HousesScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
-import CompatibilityScreen from './src/screens/CompatibilityScreen';
+import SynastryDesambiguationScreen from './src/screens/SynastryDesambiguationScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
+import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
@@ -76,6 +77,16 @@ function MainStack() {
       <Stack.Screen
         name="HomeScreen"
         component={AppDrawer}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SynastryDesambiguationScreen"
+        component={SynastryDesambiguationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreateExtraChartScreen"
+        component={CreateExtraChartScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
@@ -252,7 +263,7 @@ function AppDrawer() {
         />
         <Drawer.Screen
           name="Sinastria"
-          component={CompatibilityScreen}
+          component={SynastryDesambiguationScreen}
           options={{
             drawerIcon: ({ color, size }) => (
               <Icon name="stars" color={color} size={size} />
