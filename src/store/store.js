@@ -4,7 +4,7 @@ const STORAGE_KEYS = {
   USER_DATA: '@user_data',
   ACCESS_TOKEN: '@access_token',
   TOKEN_EXPIRATION: '@token_expiration',
-  ASTRAL_MAP: '@astral_map',
+  ASTRAL_MAPS: '@astral_maps',
 };
 
 // Token expira em 7 dias
@@ -97,24 +97,54 @@ class StorageService {
     }
   }
 
-  // Método para salvar mapa astral
-  async saveAstralMap(astralMap) {
+  // Método para salvar mapas astrais
+  async saveAstralMaps(astralMaps) {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ASTRAL_MAP, JSON.stringify(astralMap));
+      const jsonValue = JSON.stringify(astralMaps);
+      await AsyncStorage.setItem(STORAGE_KEYS.ASTRAL_MAPS, jsonValue);
+    } catch (error) {
+      console.error('Erro ao salvar mapas astrais:', error);
+      throw error;
+    }
+  }
+
+  async saveAstralMap(newAstralMap) {
+    try {
+      // Primeiro, busca os mapas existentes
+      const existingMapsJson = await this.getAstralMaps();
+
+      // Adiciona o novo mapa ao array
+      const updatedMaps = [...existingMapsJson, newAstralMap];
+      
+      // Salva o array atualizado
+      const jsonValue = JSON.stringify(updatedMaps);
+      await AsyncStorage.setItem(STORAGE_KEYS.ASTRAL_MAPS, jsonValue);
+      
+      console.log('Mapa astral salvo com sucesso:', updatedMaps); // Debug
     } catch (error) {
       console.error('Erro ao salvar mapa astral:', error);
       throw error;
     }
   }
 
-  async getAstralMap() {
+  async getAstralMaps() {
     try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.ASTRAL_MAP);
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.ASTRAL_MAPS);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (error) {
-      console.error('Erro ao ler mapa astral:', error);
+      console.error('Erro ao recuperar mapas astrais:', error);
       throw error;
     }
+  }
+
+  async getMyAstralMap() {
+    const astralMaps = await this.getAstralMaps();
+    return astralMaps.find(map => map.is_my_astral_map === 1);
+  }
+
+  async getExtraCharts() {
+    const astralMaps = await this.getAstralMaps();
+    return astralMaps.filter(map => map.is_my_astral_map !== 1);
   }
 
   // Método para logout

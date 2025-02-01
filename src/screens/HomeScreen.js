@@ -42,12 +42,31 @@ const HomeScreen = () => {
     ]).start();
   };
 
-  const handleCardPress = (screenName) => {
+  const handleCardPress = async (screenName) => {
     if (!userData?.email_verified_at) {
       startShake();
       return;
     }
-    navigation.navigate('HomeScreen', { screen: screenName });
+
+    try {
+      setIsLoading(true);
+      const myAstralMap = await StorageService.getMyAstralMap();
+
+      if (myAstralMap) {
+        navigation.navigate('HomeScreen', { 
+          screen: screenName, 
+          params: { astralMap: myAstralMap } 
+        });
+      } else {
+        console.error('Mapa astral não encontrado');
+        // Opcional: adicionar feedback visual para o usuário
+      }
+    } catch (error) {
+      console.error('Erro ao carregar mapa astral:', error);
+      // Opcional: adicionar feedback visual para o usuário
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyEmail = () => {

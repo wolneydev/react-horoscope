@@ -1,26 +1,46 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import StorageService from '../store/store';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
-  const [extraCharts, setExtraCharts] = useState([
-    // Dados de exemplo - substituir por dados reais da API
-    { id: '1', name: 'Maria Silva', date: '15/04/1990', time: '14:30' },
-    { id: '2', name: 'João Santos', date: '22/08/1988', time: '08:15' },
-  ]);
+  const [extraCharts, setExtraCharts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadExtraCharts();
+  }, []);
+
+  const loadExtraCharts = async () => {
+    try {
+      setIsLoading(true);
+      const charts = await StorageService.getExtraCharts();
+      setExtraCharts(charts);
+    } catch (error) {
+      console.error('Erro ao carregar mapas extras:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const renderChartItem = ({ item }) => (
-    <TouchableOpacity style={styles.chartCard}>
+    <TouchableOpacity 
+      style={styles.chartCard}
+      onPress={() => {
+        // Adicionar navegação para comparação de mapas
+        console.log('Selecionado mapa:', item);
+      }}
+    >
       <View style={styles.chartIconContainer}>
         <Icon name="person" size={24} color="#6D44FF" />
       </View>
       <View style={styles.chartInfo}>
-        <Text style={styles.chartName}>{item.name}</Text>
+        <Text style={styles.chartName}>{item.astral_map_name}</Text>
         <Text style={styles.chartDetails}>
-          {item.date} às {item.time}
+          {item.birthDate} às {item.birthTime}
         </Text>
       </View>
       <Icon name="chevron-right" size={24} color="#6D44FF" />
@@ -59,13 +79,22 @@ const SynastryScreen = () => {
       {/* Lista de Mapas */}
       <View style={styles.chartsSection}>
         <Text style={styles.sectionTitle}>Mapas Astrais Salvos</Text>
-        <FlatList
-          data={extraCharts}
-          renderItem={renderChartItem}
-          keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
-          style={styles.chartsList}
-        />
+        {isLoading ? (
+          <ActivityIndicator color="#6D44FF" size="large" />
+        ) : (
+          <FlatList
+            data={extraCharts}
+            renderItem={renderChartItem}
+            keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
+            style={styles.chartsList}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                Nenhum mapa astral adicional encontrado
+              </Text>
+            }
+          />
+        )}
       </View>
     </View>
   );
@@ -156,6 +185,12 @@ const styles = StyleSheet.create({
   },
   chartsList: {
     marginTop: 10,
+  },
+  emptyText: {
+    color: '#7A708E',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
   },
 });
 

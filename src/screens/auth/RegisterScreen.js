@@ -247,7 +247,7 @@ export default function RegisterScreen({ navigation }) {
           // Salvando dados usando o serviço
           await StorageService.saveUserData(userData);
           await StorageService.saveAccessToken(data.access_token);
-          await StorageService.saveAstralMap(data.astral_map);
+          await StorageService.saveAstralMaps(data.astral_maps);
 
           navigation.navigate('HomeScreen');
         }

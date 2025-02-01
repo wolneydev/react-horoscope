@@ -93,8 +93,7 @@ const CreateExtraChartScreen = () => {
       try {
         setIsLoading(true);
 
-        // Criptografa a senha antes de salvar o estado
-        const encryptedPassword = CryptoService.encrypt(password);
+        const accessToken = await StorageService.getAccessToken();
 
         const year = birthDate.getFullYear();
         const month = birthDate.getMonth() + 1;
@@ -103,15 +102,12 @@ const CreateExtraChartScreen = () => {
         const minute = birthTime.getMinutes();
 
         // Primeiro passo
-        setLoadingMessage('Iniciando sua jornada astral ...');
+        setLoadingMessage('Estabelecendo comunicação astral ...');
         
         const response = await api.post(
-          'auth/register',
+          'astralmap/create',
           {
             name: nome.trim(),
-            email: email.trim(),
-            password: password.trim(),
-            password_confirmation: password_confirmation.trim(),
             birth_city: city.trim(),
             birth_year: parseInt(year, 10),
             birth_month: parseInt(month, 10),
@@ -122,6 +118,7 @@ const CreateExtraChartScreen = () => {
           {
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
             },
           }
         );
@@ -130,32 +127,18 @@ const CreateExtraChartScreen = () => {
 
         if (status === 'success') {
           
-          // Preparando dados do usuário
-          const userData = {
-            name: data.name,
-            email: data.email,
-            email_verified_at: data.email_verified_at,
-            uuid: data.uuid,
-            encryptedPassword: encryptedPassword,
-            birthData: {
-              city: data.birth_city,
-              year: data.birth_year,
-              month: data.birth_month,
-              day: data.birth_day,
-              hour: data.birth_hour,
-              minute: data.birth_minute
-            }
-          };
-
           // Terceiro passo
-          setLoadingMessage('Gerando seu mapa astral ...');
+          setLoadingMessage('Gerando o mapa astral ...');
           
           // Salvando dados usando o serviço
-          await StorageService.saveUserData(userData);
-          await StorageService.saveAccessToken(data.access_token);
           await StorageService.saveAstralMap(data.astral_map);
 
-          navigation.navigate('HomeScreen');
+          if (data.astral_map) {
+            navigation.navigate('HomeScreen', { 
+              screen: 'Mapa Astral', 
+              params: { astralMap: data.astral_map } 
+            });
+          }
         }
       } catch (error) {
         console.error('Erro:', error);
@@ -177,38 +160,8 @@ const CreateExtraChartScreen = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
-
-  const animation = useRef(new Animated.Value(0)).current; // Initialize animated value
-  
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
-
-  const CustomButton = ({ title, onPress, color, disabled }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.buttonWrapper,
-        color === '#ff4444' && { 
-          backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-          borderColor: '#FFD700' 
-        },
-        disabled && { opacity: 0.5 }
-      ]}
-      disabled={disabled}
-    >
-      <View style={styles.buttonContent}>
-        <Text style={[
-          styles.buttonText,
-          color === '#ff4444' && { 
-            color: 'white',
-            textShadowColor: '#ff4444'
-          }
-        ]}>
-          {title}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   // Componente para mostrar mensagem de erro
   const ErrorMessage = ({ error }) => {
@@ -226,49 +179,61 @@ const CreateExtraChartScreen = () => {
         </Text>
 
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Icon name="person" size={20} color="#7A708E" />
-            <TextInput
-              style={styles.input}
-              placeholder="Nome completo"
-              placeholderTextColor="#7A708E"
-              value={nome}
-              onChangeText={setNome}
-            />
+          <View>
+            <View style={styles.inputContainer}>
+              <Icon name="person" size={20} color="#7A708E" />
+              <TextInput
+                style={styles.input}
+                placeholder="Nome completo"
+                placeholderTextColor="#7A708E"
+                value={nome}
+                onChangeText={setNome}
+              />
+            </View>
+            <ErrorMessage error={errors.nome} />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Icon name="location-city" size={20} color="#7A708E" />
-            <TextInput
-              style={styles.input}
-              placeholder="Cidade de nascimento"
-              placeholderTextColor="#7A708E"
-              value={city}
-              onChangeText={setCity}
-            />
+          <View>
+            <View style={styles.inputContainer}>
+              <Icon name="location-city" size={20} color="#7A708E" />
+              <TextInput
+                style={styles.input}
+                placeholder="Cidade de nascimento"
+                placeholderTextColor="#7A708E"
+                value={city}
+                onChangeText={setCity}
+              />
+            </View>
+            <ErrorMessage error={errors.city} />
           </View>
 
-          <TouchableOpacity 
-            style={styles.inputContainer} 
-            onPress={showDatePicker}
-          >
-            <Icon name="calendar-today" size={20} color="#7A708E" />
-            <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
-              {birthDate ? formatDate(birthDate) : "Data de nascimento"}
-            </Text>
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity 
+              style={styles.inputContainer} 
+              onPress={showDatePicker}
+            >
+              <Icon name="calendar-today" size={20} color="#7A708E" />
+              <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
+                {birthDate ? formatDate(birthDate) : "Data de nascimento"}
+              </Text>
+            </TouchableOpacity>
+            <ErrorMessage error={errors.birthDate} />
+          </View>
 
-          <TouchableOpacity 
-            style={styles.inputContainer}
-            onPress={showTimePicker}
-          >
-            <Icon name="access-time" size={20} color="#7A708E" />
-            <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
-              {birthTime ? formatTime(birthTime) : "Horário de nascimento"}
-            </Text>
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity 
+              style={styles.inputContainer}
+              onPress={showTimePicker}
+            >
+              <Icon name="access-time" size={20} color="#7A708E" />
+              <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
+                {birthTime ? formatTime(birthTime) : "Horário de nascimento"}
+              </Text>
+            </TouchableOpacity>
+            <ErrorMessage error={errors.birthTime} />
+          </View>
 
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
             <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
           </TouchableOpacity>
         </View>
@@ -363,8 +328,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ff4444',
     fontSize: 12,
-    marginTop: -8,
-    marginBottom: 8,
+    marginTop: 4,
     marginLeft: 10,
   },
 });
