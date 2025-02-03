@@ -3,7 +3,7 @@ import React from 'react';
 import "react-native-url-polyfill/auto";
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -11,6 +11,7 @@ import {
   View,
   Text,
   Image,
+  Alert,
 } from 'react-native';
 // Importando as telas
 import SplashScreen from './src/screens/SplashScreen';
@@ -75,6 +76,11 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="CreateExtraChartScreen"
+        component={CreateExtraChartScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="HomeScreen"
         component={AppDrawer}
         options={{ headerShown: false }}
@@ -84,10 +90,21 @@ function MainStack() {
         component={SynastryDesambiguationScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="CreateExtraChartScreen"
-        component={CreateExtraChartScreen}
-        options={{ headerShown: false }}
+    </Stack.Navigator>
+  );
+}
+
+// Criar um Stack Navigator para as telas de Sinastria
+function SinastriaStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen 
+        name="SynastryDesambiguation" 
+        component={SynastryDesambiguationScreen} 
+      />
+      <Stack.Screen 
+        name="CreateExtraChart" 
+        component={CreateExtraChartScreen} 
       />
     </Stack.Navigator>
   );
@@ -96,6 +113,8 @@ function MainStack() {
 function CustomDrawerContent(props) {
   const [userData, setUserData] = useState(null);
   const [zodiacSign, setZodiacSign] = useState("default");
+  const [isLoading, setIsLoading] = useState(false);
+  const currentRoute = props.state.routeNames[props.state.index];
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -168,6 +187,58 @@ function CustomDrawerContent(props) {
 
   console.log("Imagem carregada:", zodiacImages[zodiacSign]); // Debug
 
+  const handleLogout = async () => {
+    try {
+      // Mostra o loading imediatamente
+      setIsLoading(true);
+
+      // Simula um pequeno delay para mostrar o loading (opcional)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Limpa os dados do usuário
+      await StorageService.clearAll();
+
+      // Navega para a tela de login
+      props.navigation.reset({
+        index: 0,
+        routes: [{ name: 'IndexScreen' }],
+      });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      Alert.alert('Erro', 'Não foi possível fazer logout.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateExtraChart = () => {
+    // Verifica se já existe um mapa astral principal
+    StorageService.getMainAstralMap()
+      .then(mainMap => {
+        if (mainMap) {
+          // Se existe mapa principal, navega direto para criar mapa extra
+          props.navigation.navigate('CreateExtraChart');
+        } else {
+          // Se não existe mapa principal, mostra alerta
+          Alert.alert(
+            'Mapa Principal Necessário',
+            'Você precisa ter um mapa astral principal antes de criar um mapa extra.',
+            [
+              {
+                text: 'OK',
+                onPress: () => props.navigation.navigate('RegisterScreen'),
+                style: 'default'
+              }
+            ]
+          );
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao verificar mapa principal:', error);
+        Alert.alert('Erro', 'Não foi possível verificar seu mapa astral.');
+      });
+  };
+
   return (
     <DrawerContentScrollView {...props}>
       {/* Header com Avatar */}
@@ -175,7 +246,7 @@ function CustomDrawerContent(props) {
         <View style={styles.userInfo}>
           <View style={styles.avatarContainer}>
             <Image 
-              source={zodiacImages[zodiacSign]} // Usa a imagem correspondente ao signo
+              source={zodiacImages[zodiacSign]}
               style={styles.avatar}
             />
             <View style={styles.statusDot} />
@@ -187,8 +258,101 @@ function CustomDrawerContent(props) {
         </View>
       </View>
 
-      {/* Drawer Items */}
-      <DrawerItemList {...props} />
+      {/* Items padrão do Drawer */}
+      <View style={styles.drawerContent}>
+        <DrawerItem
+          label="Home"
+          icon={({ focused }) => (
+            <Icon name="home" color={currentRoute === 'Home' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Home')}
+          style={[
+            styles.drawerItem,
+            currentRoute === 'Home' && styles.drawerItemActive
+          ]}
+          labelStyle={[
+            styles.drawerLabel,
+            currentRoute === 'Home' && styles.drawerLabelActive
+          ]}
+        />
+
+        <DrawerItem
+          label="Mapa Astral"
+          icon={({ focused }) => (
+            <Icon name="stars" color={currentRoute === 'Mapa Astral' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Mapa Astral')}
+          style={[
+            styles.drawerItem,
+            currentRoute === 'Mapa Astral' && styles.drawerItemActive
+          ]}
+          labelStyle={[
+            styles.drawerLabel,
+            currentRoute === 'Mapa Astral' && styles.drawerLabelActive
+          ]}
+        />
+
+        {/* Grupo Sinastria */}
+        <View style={styles.drawerGroup}>
+          <DrawerItem
+            label="Sinastria"
+            icon={({ focused }) => (
+              <Icon name="favorite" color={currentRoute === 'Sinastria' ? '#FFFFFF' : '#7A708E'} size={24} />
+            )}
+            onPress={() => props.navigation.navigate('Sinastria')}
+            style={[
+              styles.drawerItem,
+              currentRoute === 'Sinastria' && styles.drawerItemActive
+            ]}
+            labelStyle={[
+              styles.drawerLabel,
+              currentRoute === 'Sinastria' && styles.drawerLabelActive
+            ]}
+          />
+          <DrawerItem
+            label="Mapa Extra"
+            icon={({ focused }) => (
+              <Icon name="add-circle-outline" color={currentRoute === 'CreateExtraChart' ? '#FFFFFF' : '#7A708E'} size={24} />
+            )}
+            onPress={handleCreateExtraChart}
+            style={[
+              styles.drawerItem,
+              styles.nestedItem,
+              currentRoute === 'CreateExtraChart' && styles.drawerItemActive
+            ]}
+            labelStyle={[
+              styles.drawerLabel,
+              currentRoute === 'CreateExtraChart' && styles.drawerLabelActive
+            ]}
+          />
+        </View>
+
+        <DrawerItem
+          label="Casas"
+          icon={({ focused }) => (
+            <Icon name="stars" color={currentRoute === 'Casas' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Casas')}
+          style={[
+            styles.drawerItem,
+            currentRoute === 'Casas' && styles.drawerItemActive
+          ]}
+          labelStyle={[
+            styles.drawerLabel,
+            currentRoute === 'Casas' && styles.drawerLabelActive
+          ]}
+        />
+
+        <DrawerItem
+          label="Sair"
+          icon={({ focused }) => (
+            <Icon name="logout" color={'#7A708E'} size={24} />
+          )}
+          onPress={props.handleLogout}
+          style={styles.drawerItem}
+          labelStyle={styles.drawerLabel}
+        />
+      </View>
     </DrawerContentScrollView>
   );
 }
@@ -216,15 +380,46 @@ function AppDrawer() {
       });
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      Alert.alert('Erro', 'Não foi possível fazer logout.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleCreateExtraChart = () => {
+    // Verifica se já existe um mapa astral principal
+    StorageService.getMainAstralMap()
+      .then(mainMap => {
+        if (mainMap) {
+          // Se existe mapa principal, navega direto para criar mapa extra
+          navigation.navigate('CreateExtraChart');
+        } else {
+          // Se não existe mapa principal, mostra alerta
+          Alert.alert(
+            'Mapa Principal Necessário',
+            'Você precisa ter um mapa astral principal antes de criar um mapa extra.',
+            [
+              {
+                text: 'OK',
+                onPress: () => navigation.navigate('RegisterScreen'),
+                style: 'default'
+              }
+            ]
+          );
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao verificar mapa principal:', error);
+        Alert.alert('Erro', 'Não foi possível verificar seu mapa astral.');
+      });
+  };
+
   return (
     <>
       <Drawer.Navigator
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
+        drawerContent={(props) => (
+          <CustomDrawerContent {...props} handleLogout={handleLogout} />
+        )}
         screenOptions={{
           headerStyle: { 
             backgroundColor: '#141527',
@@ -257,17 +452,37 @@ function AppDrawer() {
           component={AstralMapScreen}
           options={{
             drawerIcon: ({ color, size }) => (
-              <Icon name="agriculture" color={color} size={size} />
+              <Icon name="stars" color={color} size={size} />
             ),
           }}
         />
+
         <Drawer.Screen
           name="Sinastria"
-          component={SynastryDesambiguationScreen}
+          component={SinastriaStack}
           options={{
             drawerIcon: ({ color, size }) => (
-              <Icon name="stars" color={color} size={size} />
+              <Icon name="favorite" color={color} size={size} />
             ),
+            title: "Sinastria"
+          }}
+        />
+
+        <Drawer.Screen
+          name="Mapa Extra"
+          component={CreateExtraChartScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="favorite" color={color} size={size} />
+            ),
+            title: "Mapa Extra"
+          }}
+          listeners={{
+            drawerItemPress: (e) => {
+              // Previne navegação padrão
+              e.preventDefault();
+              handleCreateExtraChart();
+            }
           }}
         />
 
@@ -279,7 +494,8 @@ function AppDrawer() {
               <Icon name="stars" color={color} size={size} />
             ),
           }}
-        />        
+        />
+
         <Drawer.Screen
           name="Sair"
           component={EmptyComponent}
@@ -297,8 +513,7 @@ function AppDrawer() {
         />
       </Drawer.Navigator>
 
-      {/* Loading Overlay */}
-      {isLoading && <LoadingOverlay />}
+      {isLoading && <LoadingOverlay message="Saindo..." />}
     </>
   );
 }
@@ -366,6 +581,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  drawerContent: {
+    flex: 1,
+  },
+  drawerItem: {
+    borderRadius: 0,
+    marginHorizontal: 0,
+  },
+  drawerItemActive: {
+    backgroundColor: 'rgba(109, 68, 255, 0.2)',
+  },
+  drawerLabel: {
+    color: '#7A708E',
+    fontSize: 16,
+  },
+  drawerLabelActive: {
+    color: '#FFFFFF',
+  },
+  drawerGroup: {
+    marginLeft: 0,
+  },
+  nestedItem: {
+    marginLeft: 30,
+    opacity: 0.8,
   },
 });
 

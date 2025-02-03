@@ -31,7 +31,10 @@ const SynastryScreen = () => {
       style={styles.chartCard}
       onPress={() => {
         // Adicionar navegação para comparação de mapas
-        console.log('Selecionado mapa:', item);
+        navigation.navigate('HomeScreen', { 
+          screen: 'Mapa Astral', 
+          params: { astralMap: item } 
+        });
       }}
     >
       <View style={styles.chartIconContainer}>
@@ -112,7 +115,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.3)',
+    borderColor: 'rgba(32, 178, 170, 0.15)',
   },
   infoIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
@@ -136,8 +139,10 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6D44FF',
+    backgroundColor: 'rgba(109, 68, 255, 0.3)',
     padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.6)',
     borderRadius: 12,
     marginBottom: 20,
     justifyContent: 'center',

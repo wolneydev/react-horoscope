@@ -1,11 +1,33 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback, useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import SpinningMandala from '../Components/SpinningMandala';
+import StorageService from '../store/store';
+import LoadingOverlay from '../Components/LoadingOverlay';
 
 const GreetingsScreen = () => {
   const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
+
+  const checkUserLogin = async () => {
+    try {
+      const accessToken = await StorageService.getAccessToken();
+      const userData = await StorageService.getUserData();
+      
+      if (accessToken && userData) {
+        setIsLoading(true);
+        setLoadingMessage('Usuário já logado. Redirecionando ...');
+        // Se usuário já está logado, redireciona para home
+        navigation.replace('HomeScreen');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar login:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const CustomButton = ({ title, onPress, color, disabled }) => (
     <TouchableOpacity
@@ -39,6 +61,7 @@ const GreetingsScreen = () => {
   }, [navigation]);
 
   useEffect(() => {
+    checkUserLogin();
     const timer = setTimeout(() => {
       navigation.navigate('RegisterScreen');
     }, 4000);
@@ -61,6 +84,7 @@ const GreetingsScreen = () => {
   return (
     <View style={styles.container}>
       <AnimatedStars />
+      {isLoading && <LoadingOverlay message={loadingMessage} />}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>É aqui que começa sua jornada!</Text>
         <Text style={styles.sectionDescription}>

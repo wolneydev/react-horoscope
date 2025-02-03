@@ -99,8 +99,8 @@ const AstralMapScreen = ({ route }) => {
             style={styles.stickyButton} 
             onPress={() => navigation.navigate('CreateExtraChart')}
           >
-            <Icon name="add" size={24} color="#FFFFFF" />
-            <Text style={styles.stickyButtonText}>Criar Novo Mapa</Text>
+            <Icon name="favorite" size={24} color="#FFFFFF" />
+            <Text style={styles.stickyButtonText}>Verificar Compatibilidade Astral</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -119,7 +119,8 @@ const AstralMapScreen = ({ route }) => {
             <View style={styles.infoIconContainer}>
               <Icon name="auto-awesome" size={24} color="#6D44FF" />
             </View>
-            <Text style={styles.infoCardTitle}>Mapa Astral</Text>
+            <Text style={styles.infoCardTitle}>Mapa Astral de</Text>
+            <Text style={styles.infoCardName}>{astralMap.astral_map_name}</Text>
             <Text style={styles.infoCardDescription}>
               O mapa astral, ou carta natal, é um retrato do céu no momento exato do seu nascimento. 
               Ele revela suas características pessoais, talentos naturais e desafios de vida.
@@ -130,9 +131,6 @@ const AstralMapScreen = ({ route }) => {
             <View key={item.id} style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={styles.imageContainer}>
-                  <View style={styles.mandalaContainer}>
-                    <RightMandala />
-                  </View>
                   <Image source={imageMap[item.sign.name.toLowerCase()]} style={styles.image} />
                 </View>
                 <View style={styles.headerTexts}>
@@ -159,24 +157,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#141527',
   },
-
   mainContainer: {
     flex: 1,
   },
-
   mainContainerWithButton: {
     marginTop: 70,
   },
-
   scrollView: {
     flex: 1,
   },
-
   scrollViewContent: {
     padding: 20,
     paddingBottom: 40,
   },
-
   stickyButtonContainer: {
     position: 'absolute',
     top: 0,
@@ -189,53 +182,44 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(109, 68, 255, 0.2)',
   },
-
   card: {
-    backgroundColor: 'rgba(109, 68, 255, 0.1)',
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
     borderRadius: 15,
     padding: 20,
     marginBottom: 15,
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.3)',
   },
-
   content: {
     padding: 20,
   },
-
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   flatList: {
     flex: 1,
   },
-
   cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,    
+    alignItems: 'left',
+    marginBottom: 10,  
   },
-
   headerTexts: {
     flex: 1,
     justifyContent: 'center',
   },
-
   astroName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#FFD700',
     marginBottom: 2,
   },
-
   horoscopeName: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'lightblue',
   },
-
   explanation: {
     fontSize: 12,
     color: 'lightblue',
@@ -243,32 +227,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 20,
   },
-
   description: {
     fontSize: 14,
     color: '#fff',
     lineHeight: 20,
   },
-
   errorText: {
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
   },
-
   image: {
     width: 80,
     height: 80,
     borderRadius: 20,
+    
     marginRight: 10,
   },
-
   missingImageText: {
     color: 'white',
     fontSize: 14,
     flex: 1,
   },
-
   infoCard: {
     backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderWidth: 1,
@@ -277,7 +257,6 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 15,
   },
-
   infoIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
     padding: 8,
@@ -285,28 +264,24 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 10,
   },
-
   infoCardTitle: {
     color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-
   infoCardName: {
     color: '#FFD700',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-
   infoCardDescription: {
     color: '#bbb',
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 15,
   },
-
   stickyButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -316,24 +291,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-
   stickyButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   flatListContent: {
     paddingHorizontal: 20,
   },
-
   imageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-
-  mandalaContainer: {
-    padding: 10,
   },
 });
 

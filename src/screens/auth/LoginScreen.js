@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Text,
   TextInput,
@@ -6,22 +6,81 @@ import {
   StyleSheet,
   View,
   Alert,
-  ImageBackground,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
+import LoadingOverlay from '../../Components/LoadingOverlay';
 
 import api from '../../services/api';
 import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('dibs@gmail.com');
-  const [password, setPassword] = useState('12345678');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+  });
+
+  useEffect(() => {
+    checkUserLogin();
+  }, []);
+
+  const checkUserLogin = async () => {
+    try {
+      setLoading(true);
+      setLoadingMessage('Verificando logins anteriores ...');
+      const accessToken = await StorageService.getAccessToken();
+      const userData = await StorageService.getUserData();
+      
+      if (accessToken && userData) {
+        navigation.replace('HomeScreen');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar login:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateFields = () => {
+    let tempErrors = {};
+    let isValid = true;
+
+    // Validação do email
+    if (!email || !email.trim()) {
+      tempErrors.email = 'Email é obrigatório';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      tempErrors.email = 'Email inválido';
+      isValid = false;
+    }
+
+    // Validação da senha
+    if (!password || !password.trim()) {
+      tempErrors.password = 'Senha é obrigatória';
+      isValid = false;
+    } else if (password.length < 6) {
+      tempErrors.password = 'Senha deve ter no mínimo 6 caracteres';
+      isValid = false;
+    }
+
+    setErrors(tempErrors);
+    return isValid;
+  };
 
   const handleSubmit = async () => {
+    if (!validateFields()) {
+      return;
+    }
+
     try {
       setLoading(true);
       setLoadingMessage('Conectando...');
@@ -49,6 +108,7 @@ export default function LoginScreen({ navigation }) {
           name: data.name,
           email: data.email,
           uuid: data.uuid,
+          email_verified_at: data.email_verified_at,
           encryptedPassword,
           birthData: {
             city: data.birth_city,
@@ -62,10 +122,10 @@ export default function LoginScreen({ navigation }) {
 
         await StorageService.saveUserData(userData);
         await StorageService.saveAccessToken(data.access_token);
-        await StorageService.saveAstralMap(data.astral_map);
+        await StorageService.saveAstralMaps(data.astral_maps);
 
         setLoadingMessage('Entrando...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         navigation.replace('HomeScreen');
       }
@@ -78,67 +138,99 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const ErrorMessage = ({ error }) => {
+    if (!error) return null;
+    return <Text style={styles.errorText}>{error}</Text>;
+  };
+
   return (
     <View style={styles.container}>
       <AnimatedStars />
-      <View style={styles.section}>
-        <Text style={styles.sectionDescription}>
-          Bem-vindo(a) de volta ao seu destino astral!
-        </Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#7A708E"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={!loading}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor="#7A708E"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
-
-        <TouchableOpacity 
-          style={[styles.button, loading && styles.buttonDisabled]} 
-          onPress={handleSubmit} 
-          activeOpacity={0.7}
-          disabled={loading}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -500}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.buttonText}>
-            {loading ? 'Entrando...' : 'Entrar'}
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.content}>
+            <Text style={styles.title}>Bem-vindo(a) de volta!</Text>
+            <Text style={styles.subtitle}>
+              Acesse seu destino astral e descubra o que as estrelas reservam para você
+            </Text>
 
-        {loading && (
-          <>
-            <ActivityIndicator 
-              style={styles.loader} 
-              color="#FFD700" 
-              size="small" 
-            />
-            <Text style={styles.loadingText}>{loadingMessage}</Text>
-          </>
-        )}
+            <View style={styles.form}>
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="email" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#7A708E"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setErrors(prev => ({ ...prev, email: '' }));
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!loading}
+                  />
+                </View>
+                <ErrorMessage error={errors.email} />
+              </View>
 
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('RegisterScreen')}
-          style={styles.linkButton}
-          disabled={loading}
-        >
-          <Text style={styles.linkText}>
-            Ainda não tem uma conta? Cadastre-se
-          </Text>
-        </TouchableOpacity>
-      </View>
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="lock" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    placeholderTextColor="#7A708E"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setErrors(prev => ({ ...prev, password: '' }));
+                    }}
+                    secureTextEntry
+                    editable={!loading}
+                  />
+                </View>
+                <ErrorMessage error={errors.password} />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.buttonWrapper, loading && styles.buttonDisabled]} 
+                onPress={handleSubmit}
+                activeOpacity={0.7}
+                disabled={loading}
+              >
+                <View style={styles.buttonContent}>
+                  <Text style={styles.buttonText}>
+                    {loading ? 'Entrando...' : 'Entrar'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('RegisterScreen')}
+                style={styles.linkButton}
+                disabled={loading}
+              >
+                <Text style={styles.linkText}>
+                  Ainda não tem uma conta? <Text style={styles.linkTextHighlight}>Cadastre-se</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      {loading && <LoadingOverlay message={loadingMessage} />}
     </View>
   );
 }
@@ -146,86 +238,116 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1B29',
+    backgroundColor: '#141527',
   },
-  section: {
+  keyboardAvoidingView: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
   },
-  sectionDescription: {
-    fontSize: 18,
-    color: '#F9F8F8',
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 60,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 10,
+    textShadowColor: 'rgba(109, 68, 255, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7A708E',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
+  },
+  form: {
+    gap: 10,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    height: 55,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   input: {
-    backgroundColor: 'rgba(44, 40, 64, 0.8)',
-    borderWidth: 1,
-    borderColor: '#FFD700',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
+    flex: 1,
+    color: '#FFFFFF',
+    marginLeft: 10,
     fontSize: 16,
-    color: '#F9F8F8',
-    shadowColor: '#FFD700',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
   },
   button: {
-    backgroundColor: 'rgba(255, 215, 0, 0.9)',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: '#6D44FF',
+    borderRadius: 12,
+    height: 55,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 20,
-    marginBottom: 30,
-    shadowColor: '#FFD700',
+    shadowColor: '#6D44FF',
     shadowOffset: {
       width: 0,
       height: 0,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+    backgroundColor: '#4A4A4A',
   },
   buttonText: {
-    color: '#1E1B29',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
     fontSize: 16,
-    textShadowColor: 'rgba(255, 255, 255, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   linkButton: {
     alignItems: 'center',
-    padding: 10,
-  },
-  linkText: {
-    color: '#FFD700',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-    textShadowColor: '#FFD700',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  loader: {
+    padding: 15,
     marginTop: 10,
   },
-  loadingText: {
-    color: '#FFD700',
-    textAlign: 'center',
-    marginTop: 5,
+  linkText: {
+    color: '#7A708E',
     fontSize: 14,
-    textShadowColor: '#FFD700',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+  },
+  linkTextHighlight: {
+    color: '#6D44FF',
+    fontWeight: 'bold',
+  },
+  buttonWrapper: {
+    marginVertical: 5,
+    borderRadius: 12,
+    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
+    borderWidth: 1,
+    borderColor: 'white',
+    overflow: 'hidden',
+  },
+  buttonContent: {
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 10,
   },
 });

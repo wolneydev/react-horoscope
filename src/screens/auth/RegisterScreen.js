@@ -1,5 +1,6 @@
 // src/screens/auth/register/RegisterScreen.js
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Text,
   TextInput,
@@ -8,7 +9,8 @@ import {
   View,
   Platform,
   Alert,
-  Animated,
+  KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import api from '../../services/api';
@@ -30,10 +32,8 @@ export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('danielfreitas@gmail.com');
   const [password, setPassword] = useState('12345678');
   const [password_confirmation, setPasswordConfirmation] = useState('12345678');
-  const [isEmailRegistrationVisible, setEmailRegistrationVisibility] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-  const [showAdvanceButton, setShowAdvanceButton] = useState(true);
   const [errors, setErrors] = useState({
     nome: '',
     city: '',
@@ -46,37 +46,39 @@ export default function RegisterScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
 
-  const animation = useRef(new Animated.Value(0)).current; // Initialize animated value
-  
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
-  const CustomButton = ({ title, onPress, color, disabled }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.buttonWrapper,
-        color === '#ff4444' && { 
-          backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-          borderColor: '#FFD700' 
-        },
-        disabled && { opacity: 0.5 }
-      ]}
-      disabled={disabled}
-    >
-      <View style={styles.buttonContent}>
-        <Text style={[
-          styles.buttonText,
-          color === '#ff4444' && { 
-            color: 'white',
-            textShadowColor: '#ff4444'
-          }
-        ]}>
-          {title}
-        </Text>
-      </View>
-    </TouchableOpacity>
+  useEffect(() => {
+    checkUserLogin();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      checkUserLogin();
+    }, [])
   );
+
+  const checkUserLogin = async () => {
+    try {
+      const accessToken = await StorageService.getAccessToken();
+      const userData = await StorageService.getUserData();
+      console.log(accessToken, userData);
+      
+      if (accessToken && userData) {
+        setIsLoading(true);
+        setLoadingMessage('Usuário já logado. Redirecionando ...');
+        const timer = setTimeout(() => {
+          navigation.navigate('HomeScreen');
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar login:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Mostrar/ocultar modal de Data
   const showDatePicker = () => {
@@ -150,36 +152,27 @@ export default function RegisterScreen({ navigation }) {
       isValid = false;
     }
 
-    // Validações dos campos de email e senha quando visíveis
-    if (isEmailRegistrationVisible) {
-      // Validação do email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!email || !emailRegex.test(email)) {
-        tempErrors.email = 'Email inválido';
-        isValid = false;
-      }
+    // Validação do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      tempErrors.email = 'Email inválido';
+      isValid = false;
+    }
 
-      // Validação da senha
-      if (!password || password.length < 6) {
-        tempErrors.password = 'Senha deve ter pelo menos 6 caracteres';
-        isValid = false;
-      }
+    // Validação da senha
+    if (!password || password.length < 6) {
+      tempErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+      isValid = false;
+    }
 
-      // Validação da confirmação de senha
-      if (password !== password_confirmation) {
-        tempErrors.password_confirmation = 'As senhas não coincidem';
-        isValid = false;
-      }
+    // Validação da confirmação de senha
+    if (password !== password_confirmation) {
+      tempErrors.password_confirmation = 'As senhas não coincidem';
+      isValid = false;
     }
 
     setErrors(tempErrors);
     return isValid;
-  };
-
-  const handleAdvance = () => {
-    if (validateFields()) {
-      toggleEmailRegistration();
-    }
   };
 
   const handleSubmit = async () => {
@@ -260,26 +253,6 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  const toggleEmailRegistration = () => {
-    setEmailRegistrationVisibility(true);
-    setShowAdvanceButton(false);
-    Animated.timing(animation, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const animatedHeight = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 300], // Ajuste este valor conforme necessário
-  });
-
-  const animatedOpacity = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-  
   // Componente para mostrar mensagem de erro
   const ErrorMessage = ({ error }) => {
     if (!error) return null;
@@ -289,260 +262,270 @@ export default function RegisterScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {memoStars}
-      <View style={styles.section}>
-        
-        <Text style={styles.sectionDescription}>
-          Vamos precisar de alguns dados para criar seu mapa astral!
-        </Text>
-
-        <View style={styles.inputContainer}>
-          <Icon name="person" size={20} color="#7A708E" />
-          <TextInput
-            style={[styles.input, errors.nome && styles.inputError]}
-            placeholder="Informe o seu Nome"
-            placeholderTextColor="#7A708E"
-            value={nome}
-            onChangeText={(text) => {
-              setNome(text);
-              setErrors(prev => ({ ...prev, nome: '' }));
-            }}
-          />
-        </View>
-        <ErrorMessage error={errors.nome} />
-
-        <View style={styles.inputContainer}>
-          <Icon name="location-city" size={20} color="#7A708E" />
-          <TextInput
-            style={[styles.input, errors.city && styles.inputError]}
-            placeholder="Informe a cidade de nascimento"
-            placeholderTextColor="#7A708E"
-            value={city}
-            onChangeText={(text) => {
-              setCity(text);
-              setErrors(prev => ({ ...prev, city: '' }));
-            }}
-          />
-        </View>
-        <ErrorMessage error={errors.city} />
-
-        <TouchableOpacity 
-          style={[styles.inputContainer, errors.birthDate && styles.inputError]} 
-          onPress={showDatePicker}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -500}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          keyboardShouldPersistTaps="handled"
         >
-          <Icon name="calendar-today" size={20} color="#7A708E" />
-          <Text style={[
-            styles.dateButtonText,
-            !birthDate && styles.placeholderText
-          ]}>
-            {birthDate ? formatSelectedDate(birthDate) : "Selecionar a data de nascimento"}
-          </Text>
-        </TouchableOpacity>
-        <ErrorMessage error={errors.birthDate} />
-
-        <DateTimePickerModal
-          isVisible={isDatePickerVisible}
-          mode="date"
-          date={birthDate}
-          onConfirm={handleConfirmDate}
-          onCancel={hideDatePicker}
-          is24Hour={isAndroid}
-          buttonTextColorIOS="#6D44FF"
-          themeVariant="dark"
-          accentColor="#6D44FF"
-          textColor="#FFFFFF"
-        />
-
-        <TouchableOpacity 
-          style={[styles.inputContainer, errors.birthTime && styles.inputError]}
-          onPress={showTimePicker}
-        >
-          <Icon name="access-time" size={20} color="#7A708E" />
-          <Text style={[
-            styles.dateButtonText,
-            !birthTime && styles.placeholderText
-          ]}>
-            {birthTime ? formatSelectedTime(birthTime) : "Selecione o horário de nascimento"}
-          </Text>
-        </TouchableOpacity>
-        <ErrorMessage error={errors.birthTime} />
-
-        <DateTimePickerModal
-          isVisible={isTimePickerVisible}
-          mode="time"
-          date={birthTime}
-          onConfirm={handleConfirmTime}
-          onCancel={hideTimePicker}
-          is24Hour={isAndroid}
-          buttonTextColorIOS="#6D44FF"
-          themeVariant="dark"
-          accentColor="#6D44FF"
-          textColor="#FFFFFF"
-        />
-
-        <View style={styles.buttonContainer}>
-          {showAdvanceButton ? (
-            <CustomButton 
-              title="Avançar" 
-              onPress={handleAdvance}
-            />
-          ) : (
-            <Text style={styles.sectionDescription}>
-              Só mais uma etapa! Precisamos de seu e-mail para criar sua conta conosco!
+          <View style={styles.content}>
+            <Text style={styles.title}>Criar Conta</Text>
+            <Text style={styles.subtitle}>
+              Vamos precisar de alguns dados para criar seu mapa astral!
             </Text>
-          )}
-        </View>
 
-        {isEmailRegistrationVisible && (
-          <Animated.View 
-            style={[
-              styles.emailRegistration, 
-              { 
-                height: animatedHeight,
-                opacity: animatedOpacity 
-              }
-            ]}
-          >
-            <View style={styles.inputContainer}>
-              <Icon name="email" size={20} color="#7A708E" />
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="Informe E-mail"
-                placeholderTextColor="#7A708E"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setErrors(prev => ({ ...prev, email: '' }));
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-            <ErrorMessage error={errors.email} />
+            <View style={styles.form}>
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="person" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nome completo"
+                    placeholderTextColor="#7A708E"
+                    value={nome}
+                    onChangeText={(text) => {
+                      setNome(text);
+                      setErrors(prev => ({ ...prev, nome: '' }));
+                    }}
+                  />
+                </View>
+                <ErrorMessage error={errors.nome} />
+              </View>
 
-            <View style={styles.inputContainer}>
-              <Icon name="lock" size={20} color="#7A708E" />
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="Informe a senha"
-                placeholderTextColor="#7A708E"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setErrors(prev => ({ ...prev, password: '' }));
-                }}
-                secureTextEntry
-              />
-            </View>
-            <ErrorMessage error={errors.password} />
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="location-city" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Cidade de nascimento"
+                    placeholderTextColor="#7A708E"
+                    value={city}
+                    onChangeText={(text) => {
+                      setCity(text);
+                      setErrors(prev => ({ ...prev, city: '' }));
+                    }}
+                  />
+                </View>
+                <ErrorMessage error={errors.city} />
+              </View>
 
-            <View style={styles.inputContainer}>
-              <Icon name="lock-outline" size={20} color="#7A708E" />
-              <TextInput
-                style={[styles.input, errors.password_confirmation && styles.inputError]}
-                placeholder="Confirme a senha"
-                placeholderTextColor="#7A708E"
-                value={password_confirmation}
-                onChangeText={(text) => {
-                  setPasswordConfirmation(text);
-                  setErrors(prev => ({ ...prev, password_confirmation: '' }));
-                }}
-                secureTextEntry
-              />
-            </View>
-            <ErrorMessage error={errors.password_confirmation} />
+              <View>
+                <TouchableOpacity 
+                  style={styles.inputContainer} 
+                  onPress={showDatePicker}
+                >
+                  <Icon name="calendar-today" size={20} color="#7A708E" />
+                  <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
+                    {birthDate ? formatSelectedDate(birthDate) : "Data de nascimento"}
+                  </Text>
+                </TouchableOpacity>
+                <ErrorMessage error={errors.birthDate} />
+              </View>
 
-            <View style={styles.buttonContainer}>
-              <CustomButton 
-                title="Gerar meu Mapa Astral!" 
-                onPress={handleSubmit}
-              />
+              <View>
+                <TouchableOpacity 
+                  style={styles.inputContainer}
+                  onPress={showTimePicker}
+                >
+                  <Icon name="access-time" size={20} color="#7A708E" />
+                  <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
+                    {birthTime ? formatSelectedTime(birthTime) : "Horário de nascimento"}
+                  </Text>
+                </TouchableOpacity>
+                <ErrorMessage error={errors.birthTime} />
+              </View>
+
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="email" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="E-mail"
+                    placeholderTextColor="#7A708E"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setErrors(prev => ({ ...prev, email: '' }));
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+                <ErrorMessage error={errors.email} />
+              </View>
+
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="lock" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    placeholderTextColor="#7A708E"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setErrors(prev => ({ ...prev, password: '' }));
+                    }}
+                    secureTextEntry
+                  />
+                </View>
+                <ErrorMessage error={errors.password} />
+              </View>
+
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="lock-outline" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirmar senha"
+                    placeholderTextColor="#7A708E"
+                    value={password_confirmation}
+                    onChangeText={(text) => {
+                      setPasswordConfirmation(text);
+                      setErrors(prev => ({ ...prev, password_confirmation: '' }));
+                    }}
+                    secureTextEntry
+                  />
+                </View>
+                <ErrorMessage error={errors.password_confirmation} />
+              </View>
+
+              <TouchableOpacity style={styles.buttonWrapper} onPress={handleSubmit}>
+                <View style={styles.buttonContent}>
+                  <Text style={styles.buttonText}>Gerar meu Mapa Astral!</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('LoginScreen')}
+                style={styles.linkButton}
+              >
+                <Text style={styles.linkText}>
+                  Já tem uma conta? <Text style={styles.linkTextHighlight}>Faça login</Text>
+                </Text>
+              </TouchableOpacity>
+
             </View>
-          </Animated.View>
-        )}
-      </View>
-      
-      {/* Loading Overlay com mensagem */}
+
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={handleConfirmDate}
+              onCancel={hideDatePicker}
+              date={birthDate}
+              themeVariant="dark"
+            />
+
+            <DateTimePickerModal
+              isVisible={isTimePickerVisible}
+              mode="time"
+              onConfirm={handleConfirmTime}
+              onCancel={hideTimePicker}
+              date={birthTime}
+              themeVariant="dark"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       {isLoading && <LoadingOverlay message={loadingMessage} />}
     </View>
   );
 }
 
-// Estilos de tema noturno/astral:
 const styles = StyleSheet.create({
-  
   container: {
     flex: 1,
-    backgroundColor: '#1E1B29',
-  },  
-  section: {
-    marginTop: 80,
-    justifyContent: 'center',
-    padding: 20,
+    backgroundColor: '#141527',
   },
-  sectionDescription: {
-    marginTop: 20,
-    fontSize: 18,
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 40,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
     textAlign: 'center',
     color: '#E0E0E0',
     textShadowColor: 'gray',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
-    marginBottom: 20,
-  },
-  section30: {
-    flex: 0.3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    padding: 20,
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 22,
-    marginBottom: 16,
-    fontWeight: 'bold',
+    marginBottom: 30,
     textAlign: 'center',
-    color: '#F9F8F8', // Tom claro para contraste
   },
-  label: {
-    fontSize: 16,
-    color: '#C9BBCF', // Tom suave para textos
-    marginVertical: 8,
+  form: {
+    gap: 10,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(32, 178, 170, 0.15)', // Light Sea Green
-    borderColor: '#20B2AA',
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    height: 55,
     borderWidth: 1,
-    borderColor: '#fff',
-    borderRadius: 4,
-    marginBottom: 12,
-    paddingHorizontal: 10,
-    height: 50, // Altura fixa para manter consistência
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   input: {
     flex: 1,
-    padding: 10,
-    fontSize: 16,
-    color: '#F9F8F8',
-    marginLeft: 10, // Espaço entre o ícone e o texto
-  },
-  dateButtonText: {
-    flex: 1,
-    fontSize: 16,
+    color: '#FFFFFF',
     marginLeft: 10,
-    paddingVertical: 10,
-    color: '#F9F8F8', // Cor quando tem valor selecionado
+    fontSize: 16,
   },
-  placeholderText: {
-    color: '#7A708E', // Mesma cor do placeholderTextColor dos inputs
+  dateText: {
+    flex: 1,
+    color: '#FFFFFF',
+    marginLeft: 10,
+    fontSize: 16,
   },
-  buttonContainer: {
-    width: '100%',
+  placeholder: {
+    color: '#7A708E',
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(109, 68, 255, 0.15)',
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 10,
+  },
+  emailRegistration: {
+    gap: 10,
   },
   buttonWrapper: {
     marginVertical: 5,
@@ -566,30 +549,17 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 3,
   },
-  toggleButtonText: {
-    color: '#fff',
+  linkButton: {
+    alignItems: 'center',
+    padding: 15,
+    marginTop: 10,
   },
-  emailRegistration: {
-    overflow: 'hidden',
+  linkText: {
+    color: '#7A708E',
+    fontSize: 14,
   },
-  advanceText: {
-    color: '#FFD700', // Dourado para destaque
-    fontSize: 16,
-    textAlign: 'center',
-    marginVertical: 10,
-    fontWeight: '500',
-    textShadowColor: 'rgba(255, 215, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  errorText: {
-    color: '#ff4444',
-    fontSize: 12,
-    marginTop: -8,
-    marginBottom: 8,
-    marginLeft: 10,
-  },
-  inputError: {
-    borderColor: '#ff4444',
+  linkTextHighlight: {
+    color: '#6D44FF',
+    fontWeight: 'bold',
   },
 });

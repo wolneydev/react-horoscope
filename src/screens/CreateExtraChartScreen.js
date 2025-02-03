@@ -13,7 +13,6 @@ import {
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import api from '../services/api';
 import StorageService from '../store/store';
-import CryptoService from '../services/crypto';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LoadingOverlay from '../Components/LoadingOverlay';
@@ -184,7 +183,7 @@ const CreateExtraChartScreen = () => {
               <Icon name="person" size={20} color="#7A708E" />
               <TextInput
                 style={styles.input}
-                placeholder="Nome completo"
+                placeholder="Nome"
                 placeholderTextColor="#7A708E"
                 value={nome}
                 onChangeText={setNome}
@@ -285,7 +284,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   form: {
-    gap: 15,
+    gap: 10,
   },
   inputContainer: {
     flexDirection: 'row',

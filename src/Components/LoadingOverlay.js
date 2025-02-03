@@ -9,8 +9,12 @@ const CONTENT_WIDTH = width - 40; // 20px de padding de cada lado
 const LoadingOverlay = ({ message = 'Carregando ...' }) => (
   <View style={styles.overlay}>
     <View style={styles.content}>
-      <SpinningMandala />
-      <Text style={styles.message}>{message}</Text>
+      <View style={styles.loadingContainer}>
+        <View style={styles.mandalaContainer}>
+          <SpinningMandala />
+        </View>
+        <Text style={styles.message}>{message}</Text>
+      </View>
     </View>
   </View>
 );
@@ -19,18 +23,29 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(20, 21, 39, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', // Centraliza verticalmente
+    alignItems: 'center',     // Centraliza horizontalmente
     zIndex: 1000,
-    paddingHorizontal: 20, // Padding nas laterais
   },
   content: {
-    width: CONTENT_WIDTH, // Largura fixa
-    backgroundColor: 'rgba(109, 68, 255, 0.2)',
-    padding: 20,
+    width: CONTENT_WIDTH,
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    padding: 16,
     borderRadius: 15,
     borderWidth: 1,
     borderColor: 'white',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center', // Centraliza os itens internos
+    gap: 15,
+  },
+  mandalaContainer: {
+    width: 30,
+    height: 30,
+    marginTop: 20,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   message: {
@@ -39,9 +54,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
     fontSize: 16,
-    marginTop: 4,
     fontWeight: '500',
-    textAlign: 'center',    
   },
 });
 
