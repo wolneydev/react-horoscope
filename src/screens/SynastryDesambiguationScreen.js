@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import StorageService from '../store/store';
+import CustomButton from '../Components/CustomButton';
+import { formatNumber, formatBirthDate } from '../utils/helpers';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
@@ -30,7 +32,6 @@ const SynastryScreen = () => {
     <TouchableOpacity 
       style={styles.chartCard}
       onPress={() => {
-        // Adicionar navegação para comparação de mapas
         navigation.navigate('HomeScreen', { 
           screen: 'Mapa Astral', 
           params: { astralMap: item } 
@@ -43,7 +44,7 @@ const SynastryScreen = () => {
       <View style={styles.chartInfo}>
         <Text style={styles.chartName}>{item.astral_map_name}</Text>
         <Text style={styles.chartDetails}>
-          {item.birthDate} às {item.birthTime}
+          {item.birth_city}, {formatNumber(item.birth_day)}/{formatNumber(item.birth_month)}/{item.birth_year} às {formatNumber(item.birth_hour)}:{formatNumber(item.birth_minute)}
         </Text>
       </View>
       <Icon name="chevron-right" size={24} color="#6D44FF" />
@@ -57,47 +58,49 @@ const SynastryScreen = () => {
     <View style={styles.container}>
       {memoStars}
       
-      {/* Card Explicativo */}
-      <View style={styles.infoCard}>
-        <View style={styles.infoIconContainer}>
-          <Icon name="favorite" size={24} color="#6D44FF" />
+      <View style={styles.content}>
+        {/* Card Explicativo */}
+        <View style={styles.infoCard}>
+          <View style={styles.infoIconContainer}>
+            <Icon name="favorite" size={24} color="#6D44FF" />
+          </View>
+          <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
+          <Text style={styles.infoCardDescription}>
+            A sinastria é a arte de comparar dois mapas astrais para entender a 
+            dinâmica do relacionamento. Ela revela as harmonias, desafios e o 
+            potencial de crescimento entre duas pessoas.
+          </Text>
         </View>
-        <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
-        <Text style={styles.infoCardDescription}>
-          A sinastria é a arte de comparar dois mapas astrais para entender a 
-          dinâmica do relacionamento. Ela revela as harmonias, desafios e o 
-          potencial de crescimento entre duas pessoas.
-        </Text>
-      </View>
 
-      {/* Botão para Adicionar */}
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => navigation.navigate('CreateExtraChartScreen')}
-      >
-        <Icon name="add-circle" size={24} color="#FFFFFF" />
-        <Text style={styles.addButtonText}>Criar Novo Mapa Astral</Text>
-      </TouchableOpacity>
+        {/* Botão para Adicionar */}
+        <CustomButton
+          title="Criar Novo Mapa Astral"
+          onPress={() => navigation.navigate('CreateExtraChartScreen')}
+          style={styles.customButton}
+          textStyle={styles.customButtonText}
+          icon="add-circle-outline"
+        />
 
-      {/* Lista de Mapas */}
-      <View style={styles.chartsSection}>
-        <Text style={styles.sectionTitle}>Mapas Astrais Salvos</Text>
-        {isLoading ? (
-          <ActivityIndicator color="#6D44FF" size="large" />
-        ) : (
-          <FlatList
-            data={extraCharts}
-            renderItem={renderChartItem}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            style={styles.chartsList}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>
-                Nenhum mapa astral adicional encontrado
-              </Text>
-            }
-          />
-        )}
+        {/* Lista de Mapas */}
+        <View style={styles.chartsSection}>
+          <Text style={styles.sectionTitle}>Mapas Astrais Salvos</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#6D44FF" size="large" />
+          ) : (
+            <FlatList
+              data={extraCharts}
+              renderItem={renderChartItem}
+              keyExtractor={item => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.chartsList}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>
+                  Nenhum mapa astral adicional encontrado
+                </Text>
+              }
+            />
+          )}
+        </View>
       </View>
     </View>
   );
@@ -107,8 +110,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#141527',
+  },
+
+  content: {
+    flex: 1,
     padding: 20,
   },
+
   infoCard: {
     backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderRadius: 15,
@@ -117,6 +125,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(32, 178, 170, 0.15)',
   },
+
+  chartsSection: {
+    flex: 1, // Isso é importante para a FlatList se ajustar
+  },
+
+  chartsList: {
+    flexGrow: 1, // Permite que a lista cresça, mas mantém a rolagem
+    paddingBottom: 20, // Espaço extra no final da lista
+  },
+
   infoIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
     padding: 8,
@@ -136,19 +154,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 15,
   },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  customButton: {
     backgroundColor: 'rgba(109, 68, 255, 0.3)',
-    padding: 15,
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.6)',
-    borderRadius: 12,
     marginBottom: 20,
-    justifyContent: 'center',
-    gap: 10,
   },
-  addButtonText: {
+  customButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
@@ -187,9 +199,6 @@ const styles = StyleSheet.create({
     color: '#bbb',
     fontSize: 14,
     marginTop: 2,
-  },
-  chartsList: {
-    marginTop: 10,
   },
   emptyText: {
     color: '#7A708E',

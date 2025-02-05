@@ -252,8 +252,8 @@ function CustomDrawerContent(props) {
             <View style={styles.statusDot} />
           </View>
           <View style={styles.userTextInfo}>
-            <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
             <Text style={styles.userName}>{userData?.name || "Usuário"}</Text>
+            <Text style={styles.userEmail}>{userData?.email || ''}</Text>
           </View>
         </View>
       </View>
@@ -581,6 +581,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  userEmail: {
+    color: '#7A708E',
+    fontSize: 14,
   },
   drawerContent: {
     flex: 1,

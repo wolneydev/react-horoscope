@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     top: '1%', // Move as pétalas para o centro verticalmente
     left: '1000%', // Move as pétalas para o centro horizontalmente
     marginTop: -15, // Compensa a altura da pétala para centralizar
-    marginLeft: -55, // Compensa a largura da pétala para centralizar
+    marginLeft: -65, // Compensa a largura da pétala para centralizar
     shadowColor: 'gray', // Cor amarela para a sombra
     shadowOpacity: 0.7,
     shadowOffset: { width: 170, height: 0 },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     top: '1%', // Move as pétalas para o centro verticalmente
     left: '1000%', // Move as pétalas para o centro horizontalmente
     marginTop: -15, // Compensa a altura da pétala para centralizar
-    marginLeft: 55, // Compensa a largura da pétala para centralizar
+    marginLeft: 45, // Compensa a largura da pétala para centralizar
     shadowColor: 'gray', // Cor amarela para a sombra
     shadowOpacity: 0.7,
     shadowOffset: { width: 170, height: 0 },

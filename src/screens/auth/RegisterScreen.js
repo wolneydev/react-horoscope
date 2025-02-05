@@ -19,6 +19,7 @@ import CryptoService from '../../services/crypto';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LoadingOverlay from '../../Components/LoadingOverlay';
+import CustomButton from '../../Components/CustomButton';
 
 export default function RegisterScreen({ navigation }) {
   
@@ -396,11 +397,13 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.password_confirmation} />
               </View>
 
-              <TouchableOpacity style={styles.buttonWrapper} onPress={handleSubmit}>
-                <View style={styles.buttonContent}>
-                  <Text style={styles.buttonText}>Gerar meu Mapa Astral!</Text>
-                </View>
-              </TouchableOpacity>
+              <CustomButton
+                title="Gerar meu Mapa Astral!"
+                onPress={handleSubmit}
+                disabled={isLoading}
+                loading={isLoading}
+                style={styles.customButton}
+              />
 
               <TouchableOpacity 
                 onPress={() => navigation.navigate('LoginScreen')}
@@ -561,5 +564,8 @@ const styles = StyleSheet.create({
   linkTextHighlight: {
     color: '#6D44FF',
     fontWeight: 'bold',
+  },
+  customButton: {
+    marginVertical: 5,
   },
 });

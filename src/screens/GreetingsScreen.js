@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useCallback, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import SpinningMandala from '../Components/SpinningMandala';
 import StorageService from '../store/store';
 import LoadingOverlay from '../Components/LoadingOverlay';
+import CustomButton from '../Components/CustomButton';
+import Mandala from '../Components/Mandala';
 
 const GreetingsScreen = () => {
   const navigation = useNavigation();
@@ -29,37 +31,6 @@ const GreetingsScreen = () => {
     }
   };
 
-  const CustomButton = ({ title, onPress, color, disabled }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.buttonWrapper,
-        color === '#ff4444' && { 
-          backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-          borderColor: '#FFD700' 
-        },
-        disabled && { opacity: 0.5 }
-      ]}
-      disabled={disabled}
-    >
-      <View style={styles.buttonContent}>
-        <Text style={[
-          styles.buttonText,
-          color === '#ff4444' && { 
-            color: 'white',
-            textShadowColor: '#ff4444'
-          }
-        ]}>
-          {title}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const handleNavigation = useCallback((screen) => {
-    navigation.navigate(screen);
-  }, [navigation]);
-
   useEffect(() => {
     checkUserLogin();
     const timer = setTimeout(() => {
@@ -69,23 +40,12 @@ const GreetingsScreen = () => {
     return () => clearTimeout(timer); // Cleanup the timer on component unmount
   }, [navigation]);
 
-  // Memoize os botões
-  const renderButtons = useMemo(() => {
-    return (
-      <>
-        <CustomButton 
-          title="Começar" 
-          onPress={() => handleNavigation('RegisterScreen')} 
-        />
-      </>
-    );
-  }, []);
-
   return (
     <View style={styles.container}>
       <AnimatedStars />
       {isLoading && <LoadingOverlay message={loadingMessage} />}
       <View style={styles.section}>
+        <Mandala />
         <Text style={styles.sectionTitle}>É aqui que começa sua jornada!</Text>
         <Text style={styles.sectionDescription}>
           Vamos procurar seu par ideal com base no seu mapa astral!
@@ -95,16 +55,17 @@ const GreetingsScreen = () => {
         <SpinningMandala />
         <Text style={styles.sectionText}>Vamos te conhecer melhor!</Text>
 
-        <View style={styles.buttonContainer}>
-          {renderButtons}
-        </View>
-        </View>
+        <CustomButton 
+          title="Começar"
+          onPress={() => navigation.navigate('RegisterScreen')}
+          style={styles.customButton}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  
   container: {
     flex: 1,
     backgroundColor: '#1E1B29',
@@ -151,30 +112,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 5,
     marginBottom: 20,
   },
+  customButton: {
+    width: '100%',
+    marginVertical: 5,
+  },
   buttonContainer: {
     width: '100%',
-  },
-  buttonWrapper: {
-    marginVertical: 5,
-    borderRadius: 12,
-    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-  },
-  buttonContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    letterSpacing: 0.5,
-    textShadowColor: 'white',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
+    paddingHorizontal: 20,
   },
 });
 

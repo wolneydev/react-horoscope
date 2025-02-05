@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import SpinningMandala from '../Components/SpinningMandala';
@@ -14,8 +14,11 @@ const HomeScreen = () => {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const shakeAnimation = useRef(new Animated.Value(0)).current;
-  const [isDebugChecking, setIsDebugChecking] = useState(false);
   const autoCheckIntervalRef = useRef(null);
+  const [canResendEmail, setCanResendEmail] = useState(false);
+  const [resendCounter, setResendCounter] = useState(60);
+  const counterIntervalRef = useRef(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   const startShake = () => {
     Animated.sequence([
@@ -49,7 +52,7 @@ const HomeScreen = () => {
     }
 
     try {
-      setIsLoading(true);
+      //setIsLoading(true);
       const myAstralMap = await StorageService.getMyAstralMap();
 
       if (myAstralMap) {
@@ -64,75 +67,41 @@ const HomeScreen = () => {
     } catch (error) {
       console.error('Erro ao carregar mapa astral:', error);
       // Opcional: adicionar feedback visual para o usuário
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleVerifyEmail = () => {
-    // Implementar lógica para reenviar email de verificação
-    console.log('Reenviando email de verificação...');
-  };
+  const handleVerifyEmail = async () => {
+    if (!canResendEmail) return;
 
-  const debugForceVerification = async () => {
-    if (isDebugChecking) return; // Evita múltiplas verificações simultâneas
-    
     try {
-      setIsDebugChecking(true);
-      console.log('Iniciando verificação de debug...');
-
+      setIsLoading(true);
+      setLoadingMessage('Reenviando email de verificação...');
+      
       const token = await StorageService.getAccessToken();
       
-      // Executa verificação a cada 3 segundos por 5 vezes
-      let count = 0;
-      const debugInterval = setInterval(async () => {
-        try {
-          console.log(`Verificação ${count + 1} de 5`);
-          
-          // Faz requisição para verificar status do email
-          const response = await api.get('users/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          console.log('Resposta da API:', response.data);
-          console.log('Resposta da API:', response.data.data.email_verified_at);
-
-          if (response.data.data.email_verified_at) {
-            console.log('Email verificado com sucesso!');
-            
-            // Atualiza dados do usuário
-            const updatedUserData = {
-              ...userData,
-              email_verified_at: response.data.data.email_verified_at
-            };
-            
-            await StorageService.saveUserData(updatedUserData);
-            setUserData(updatedUserData);
-            
-            // Para a verificação
-            clearInterval(debugInterval);
-            setIsDebugChecking(false);
-            return;
-          }
-          
-          count++;
-          if (count >= 5) {
-            console.log('Limite de tentativas atingido');
-            clearInterval(debugInterval);
-            setIsDebugChecking(false);
-          }
-        } catch (error) {
-          console.error('Erro na verificação:', error);
-          clearInterval(debugInterval);
-          setIsDebugChecking(false);
+      await api.post('auth/resend-email-verification', { uuid: userData.uuid }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      }, 3000);
+      });
 
+      // Simula um pequeno delay para feedback visual
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoadingMessage('Email reenviado com sucesso!');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Reinicia o contador
+      startResendCounter();
+      
     } catch (error) {
-      console.error('Erro ao iniciar verificação de debug:', error);
-      setIsDebugChecking(false);
+      console.error('Erro ao reenviar email:', error);
+      Alert.alert(
+        'Erro',
+        'Não foi possível reenviar o email de verificação.'
+      );
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -217,6 +186,34 @@ const HomeScreen = () => {
     fetchUserData();
   }, []);
 
+  useEffect(() => {
+    // Inicia com botão desabilitado e contador
+    if (!userData?.email_verified_at) {
+      startResendCounter();
+    }
+    return () => {
+      if (counterIntervalRef.current) {
+        clearInterval(counterIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const startResendCounter = () => {
+    setCanResendEmail(false);
+    setResendCounter(60);
+    
+    counterIntervalRef.current = setInterval(() => {
+      setResendCounter((prev) => {
+        if (prev <= 1) {
+          clearInterval(counterIntervalRef.current);
+          setCanResendEmail(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
@@ -224,7 +221,7 @@ const HomeScreen = () => {
     <View style={styles.container}>
       
       {memoStars}
-      {isLoading && <LoadingOverlay />}
+      {isLoading && <LoadingOverlay message={loadingMessage} />}
       
       {/* Header com Avatar e Nome */}
       <View style={styles.header}>
@@ -249,41 +246,34 @@ const HomeScreen = () => {
         <Animated.View style={{ transform: [{ translateX: shakeAnimation }] }}>
           {/* Card de Verificação de Email */}
           {!userData?.email_verified_at && (
-            <>
-              <TouchableOpacity 
-                style={styles.warningCard}
-                onPress={handleVerifyEmail}
-              >
-                <View style={styles.warningIconContainer}>
-                  <Icon name="warning" size={24} color="#FFD700" />
-                </View>
-                <Text style={styles.warningCardTitle}>Verifique seu Email</Text>
-                <Text style={styles.warningCardDescription}>
-                  Enviamos um email para {userData?.email}.
-                </Text>
-                <Text style={styles.warningCardDescription}>
-                  Por favor, verifique sua caixa de entrada e siga as instruções para ativar sua conta.
-                </Text>
-                <Text style={styles.warningCardAction}>Reenviar email de verificação</Text>
-                <Icon name="arrow-forward" size={24} color="#FFD700" style={styles.cardIcon} />
-              </TouchableOpacity>
-
-              {/* Botão de Debug */}
-              {__DEV__ && (
-                <TouchableOpacity 
-                  style={[
-                    styles.debugButton,
-                    isDebugChecking && styles.debugButtonActive
-                  ]}
-                  onPress={debugForceVerification}
-                  disabled={isDebugChecking}
-                >
-                  <Text style={styles.debugButtonText}>
-                    {isDebugChecking ? 'Verificando...' : 'Debug: Testar Verificação'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </>
+            <TouchableOpacity 
+              style={[
+                styles.warningCard,
+                !canResendEmail && styles.warningCardDisabled
+              ]}
+              onPress={handleVerifyEmail}
+              disabled={!canResendEmail}
+            >
+              <View style={styles.warningIconContainer}>
+                <Icon name="warning" size={24} color="#FFD700" />
+              </View>
+              <Text style={styles.warningCardTitle}>Verifique seu Email</Text>
+              <Text style={styles.warningCardDescription}>
+                Enviamos um email para {userData?.email}.
+              </Text>
+              <Text style={styles.warningCardDescription}>
+                Por favor, verifique sua caixa de entrada e siga as instruções para ativar sua conta.
+              </Text>              
+              <Text style={[
+                styles.warningCardAction,
+                !canResendEmail && styles.warningCardActionDisabled
+              ]}>
+                {canResendEmail 
+                  ? 'Reenviar email de verificação'
+                  : `Aguarde ${resendCounter}s para reenviar`
+                }
+              </Text>
+            </TouchableOpacity>
           )}
         </Animated.View>
 
@@ -472,6 +462,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  warningCardDisabled: {
+    opacity: 0.7,
+  },
+  warningCardActionDisabled: {
+    opacity: 0.5,
+  },
+  resendingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 5,
   },
 });
 

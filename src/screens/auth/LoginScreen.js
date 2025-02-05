@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   View,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
 import LoadingOverlay from '../../Components/LoadingOverlay';
+import CustomButton from '../../Components/CustomButton';
 
 import api from '../../services/api';
 import StorageService from '../../store/store';
@@ -28,6 +28,9 @@ export default function LoginScreen({ navigation }) {
     email: '',
     password: '',
   });
+
+  // Memoize AnimatedStars para evitar re-renderização
+  const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useEffect(() => {
     checkUserLogin();
@@ -145,7 +148,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <AnimatedStars />
+      {memoStars}
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -179,7 +182,6 @@ export default function LoginScreen({ navigation }) {
                     }}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    editable={!loading}
                   />
                 </View>
                 <ErrorMessage error={errors.email} />
@@ -198,24 +200,18 @@ export default function LoginScreen({ navigation }) {
                       setErrors(prev => ({ ...prev, password: '' }));
                     }}
                     secureTextEntry
-                    editable={!loading}
                   />
                 </View>
                 <ErrorMessage error={errors.password} />
               </View>
 
-              <TouchableOpacity
-                style={[styles.buttonWrapper, loading && styles.buttonDisabled]} 
+              <CustomButton
+                title="Entrar"
                 onPress={handleSubmit}
-                activeOpacity={0.7}
                 disabled={loading}
-              >
-                <View style={styles.buttonContent}>
-                  <Text style={styles.buttonText}>
-                    {loading ? 'Entrando...' : 'Entrar'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+                loading={loading}
+                style={styles.customButton}
+              />
 
               <TouchableOpacity 
                 onPress={() => navigation.navigate('RegisterScreen')}
@@ -273,7 +269,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   form: {
-    gap: 10,
+    gap: 15,
+    marginTop: 30,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -291,31 +288,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
   },
-  button: {
-    backgroundColor: '#6D44FF',
-    borderRadius: 12,
-    height: 55,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    shadowColor: '#6D44FF',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-    backgroundColor: '#4A4A4A',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+  customButton: {
+    marginVertical: 5,
   },
   linkButton: {
     alignItems: 'center',
@@ -329,20 +303,6 @@ const styles = StyleSheet.create({
   linkTextHighlight: {
     color: '#6D44FF',
     fontWeight: 'bold',
-  },
-  buttonWrapper: {
-    marginVertical: 5,
-    borderRadius: 12,
-    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-  },
-  buttonContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   errorText: {
     color: '#ff4444',

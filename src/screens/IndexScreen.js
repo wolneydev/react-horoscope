@@ -6,33 +6,8 @@ import CryptoService from '../services/crypto';
 import api from '../services/api';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import Mandala from '../Components/Mandala';
-
-const CustomButton = ({ title, onPress, color, disabled }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[
-      styles.buttonWrapper,
-      color === '#ff4444' && { 
-        backgroundColor: '#141527', 
-        borderColor: '#FFD700' 
-      },
-      disabled && { opacity: 0.5 }
-    ]}
-    disabled={disabled}
-  >
-    <View style={styles.buttonContent}>
-      <Text style={[
-        styles.buttonText,
-        color === '#ff4444' && { 
-          color: 'white',
-          textShadowColor: '#ff4444'
-        }
-      ]}>
-        {title}
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
+import CustomButton from '../Components/CustomButton';
+import LoadingOverlay from '../Components/LoadingOverlay';
 
 const IndexScreen = () => {
   const navigation = useNavigation();
@@ -69,28 +44,6 @@ const IndexScreen = () => {
 
     initializeData();
   }, []);
-
-  const handleNavigation = (screen) => {
-    navigation.navigate(screen);
-  };
-
-  // Memoize os botões
-  const renderButtons = useMemo(() => {
-    return (
-      <>
-        <CustomButton 
-          title="Começar uma nova jornada astral" 
-          onPress={() => handleNavigation('GreetingsScreen')} 
-          disabled={loading}
-        />
-        <CustomButton 
-          title="Já tenho uma conta" 
-          onPress={() => handleNavigation('LoginScreen')} 
-          disabled={loading}
-        />          
-      </>
-    );
-  }, [userData, loading, loggingOut, handleNavigation]);
 
   const autoLogin = async (savedUserData) => {
     try {
@@ -144,10 +97,23 @@ const IndexScreen = () => {
         </View>
         <View style={styles.bottomSection}>
           <View style={styles.buttonContainer}>
-            {renderButtons}
+            <CustomButton 
+              title="Começar uma nova jornada astral"
+              onPress={() => navigation.navigate('GreetingsScreen')}
+              disabled={loading}
+              style={styles.customButton}
+            />
+            
+            <CustomButton 
+              title="Já tenho uma conta"
+              onPress={() => navigation.navigate('LoginScreen')}
+              disabled={loading}
+              style={styles.customButton}
+            />
           </View>
         </View>
       </View>
+      {loading && <LoadingOverlay message={loadingMessage} />}
     </View>
   );
 };
@@ -189,28 +155,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
+    gap: 10,
   },
-  buttonWrapper: {
+  customButton: {
     marginVertical: 5,
-    borderRadius: 12,
-    backgroundColor: 'rgba(109, 68, 255, 0.2)', 
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-  },
-  buttonContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    letterSpacing: 0.5,
-    textShadowColor: 'white',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
   },
   welcomeText: {
     fontSize: 12,

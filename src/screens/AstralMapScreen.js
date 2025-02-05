@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, BackHandler, Image, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, ActivityIndicator, Image, TouchableOpacity, ScrollView } from 'react-native';
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
-import RightMandala from '../Components/mandalas/RightMandala';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { formatBirthDate } from '../utils/helpers';
 
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
@@ -28,19 +28,6 @@ const AstralMapScreen = ({ route }) => {
   const [loading, setLoading] = useState(true);
 
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const backAction = () => {
-        navigation.navigate('HomeScreen');
-        return true;
-      };
-
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
-      return () => backHandler.remove();
-    }, [navigation])
-  );
 
   useEffect(() => {
     const loadAstralMap = async () => {
@@ -124,6 +111,9 @@ const AstralMapScreen = ({ route }) => {
             <Text style={styles.infoCardDescription}>
               O mapa astral, ou carta natal, é um retrato do céu no momento exato do seu nascimento. 
               Ele revela suas características pessoais, talentos naturais e desafios de vida.
+            </Text>
+            <Text style={styles.infoCardBirthData}>
+              {formatBirthDate(astralMap)}
             </Text>
           </View>
 
@@ -274,7 +264,20 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 8,
+    textShadowColor: 'rgba(255, 215, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  infoCardBirthData: {
+    color: '#FFD700',
+    fontSize: 14,
+    marginBottom: 15,
+    textAlign: 'right',
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(255, 215, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
   },
   infoCardDescription: {
     color: '#bbb',
