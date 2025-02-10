@@ -1,24 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  Button,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
+  FlatList,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import AnimatedStars from '../Components/animation/AnimatedStars';
 import api from '../services/api';
 
-export default function SynastryDesambiguationScreen({ route }) {
-  const [uuid1] = useState(route.params?.uuid1 || ''); // Recebe o uuid1 da tela anterior
-  const [uuid2, setUuid2] = useState('');
+export default function CompatibilityScreen({ route }) {
+  // Componente de fundo com estrelas
+  const memoizedStars = useMemo(() => <AnimatedStars />, []);
+
+  // Recebe os dois UUIDs via parâmetros da rota
+  const uuid1 = route.params?.uuid1 || '';
+  const uuid2 = route.params?.uuid2 || '';
+
   const [compatibilities, setCompatibilities] = useState([]);
-  const [averageCompatibility, setAverageCompatibility] = useState(null); // Estado para armazenar a compatibilidade média
+  const [averageCompatibility, setAverageCompatibility] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Função que busca as compatibilidades entre os dois UUIDs
@@ -27,16 +32,14 @@ export default function SynastryDesambiguationScreen({ route }) {
       alert('Por favor, insira o código correto');
       return;
     }
-
     setLoading(true);
     try {
       const response = await api.get('processcompatibilitiesmap', {
-        params: { uuid1, uuid2 }, // Enviando uuid1 e uuid2 na requisição
+        params: { uuid1, uuid2 },
       });
-
       const { compatibilidades, compatibilidade_media } = response.data.data;
       setCompatibilities(compatibilidades || []);
-      setAverageCompatibility(compatibilidade_media || null); // Armazena a compatibilidade média
+      setAverageCompatibility(compatibilidade_media || null);
     } catch (error) {
       console.error('Erro ao buscar compatibilidades:', error);
       alert('Erro ao buscar compatibilidades. Tente novamente.');
@@ -44,6 +47,13 @@ export default function SynastryDesambiguationScreen({ route }) {
       setLoading(false);
     }
   };
+
+  // Executa a busca assim que ambos os UUIDs estiverem disponíveis
+  useEffect(() => {
+    if (uuid1 && uuid2) {
+      fetchCompatibility();
+    }
+  }, [uuid1, uuid2]);
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
@@ -54,126 +64,144 @@ export default function SynastryDesambiguationScreen({ route }) {
         {item.signo1} x {item.signo2} - {item.compatibilidade}%
       </Text>
       <Text style={styles.details}>
-        Descrição: {item.descriptions} 
-      </Text>      
+        Descrição: {item.descriptions}
+      </Text>
     </View>
   );
 
   const renderFooter = () => (
     <View style={styles.footer}>
-      <Text style={styles.averageTitle}>Compatibilidade:  {averageCompatibility !== null
-          ? `${averageCompatibility.toFixed(2)}%`
-          : ''}</Text>
+      <Text style={styles.averageTitle}>
+        Compatibilidade: {averageCompatibility !== null ? `${averageCompatibility.toFixed(2)}%` : ''}
+      </Text>
     </View>
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.innerContainer}>
-          <Text style={styles.title}>Sinastria</Text>
+    <View style={styles.container}>
+      {memoizedStars}
+      <KeyboardAvoidingView
+        style={styles.mainContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
+            {/* Card explicativo */}
+            {/* <View style={styles.explanationCard}>
+              <Text style={styles.explanationTitle}>O que é Sinastria Astral?</Text>
+              <Text style={styles.explanationText}>
+                A sinastria astral é a análise comparativa dos mapas astrais de duas pessoas.
+                Ela identifica pontos fortes, desafios e a dinâmica entre as energias individuais,
+                revelando compatibilidades e influências que podem impactar relacionamentos.
+              </Text>
+            </View> */}
 
-          {/* Campo do UUID2 - Aqui o usuário digita o segundo UUID */}
-          <Text style={styles.label}>Cole ou digite o código do mapa da pessoa que deseja comparar</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Insira o código aqui"
-            placeholderTextColor="#aaa"
-            value={uuid2}
-            onChangeText={setUuid2}
-            keyboardType="default" // Se necessário, adicione um tipo específico de teclado
-          />
-
-          {/* Botão para buscar compatibilidade */}
-          <Button title="Ver Compatibilidade Astral" onPress={fetchCompatibility} />
-
-          {/* Loader de carregamento */}
-          {loading && <ActivityIndicator size="large" color="#FFD700" style={styles.loader} />}
-
-          {/* Lista de compatibilidades */}
-          <FlatList
-            data={compatibilities}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderItem}
-            style={styles.list}
-            ListFooterComponent={renderFooter} // Adiciona o componente de rodapé
-          />
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+            <Text style={styles.title}>Sinastria</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#FFD700" style={styles.loader} />
+            ) : (
+              <>
+                <FlatList
+                  data={compatibilities}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={renderItem}
+                  contentContainerStyle={styles.flatListContent}
+                />
+                {renderFooter()}
+              </>
+            )}
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#1E1B29',
+    backgroundColor: '#141527',
   },
-  innerContainer: {
+  mainContainer: {
     flex: 1,
-    justifyContent: 'space-between',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  explanationCard: {
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+  },
+  explanationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  explanationText: {
+    fontSize: 14,
+    color: '#fff',
+    lineHeight: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#FFFFFF',
     marginBottom: 16,
     textAlign: 'center',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'lightblue',
-    marginBottom: 16,
-    textAlign: 'center',
-  },  
-  input: {
-    backgroundColor: '#333',
-    color: '#FFF',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
   },
   loader: {
     marginVertical: 16,
   },
-  list: {
-    marginTop: 16,
+  flatListContent: {
+    paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#2E2B3A',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.3)',
   },
   entity: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFD700',
+    marginBottom: 8,
   },
   details: {
     fontSize: 14,
-    color: '#FFF',
+    color: '#fff',
+    lineHeight: 20,
   },
   footer: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: '#2E2B3A',
-    borderRadius: 8,
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.3)',
     alignItems: 'center',
   },
   averageTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFD700',
-    marginBottom: 8,
-  },
-  averageValue: {
-    fontSize: 16,
-    color: '#FFF',
   },
 });
+
+

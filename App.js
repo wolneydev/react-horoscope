@@ -23,12 +23,13 @@ import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import SynastryDesambiguationScreen from './src/screens/SynastryDesambiguationScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
+import CompatibilityScreen from './src/screens/CompatibilityScreen';
 import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
 import { useState, useRef, useEffect } from 'react';
-
+import { TouchableOpacity } from 'react-native';
 
 enableScreens(false);
 
@@ -60,6 +61,17 @@ function MainStack() {
         component={AstralMapScreen}
         options={{ headerShown: false }}
       />
+      <Drawer.Screen
+          name="CompatibilityScreen"
+        
+          component={CompatibilityScreen}
+          options={{
+            drawerLabel: 'Compatibilidade Astral',
+            drawerIcon: ({ color, size }) => (
+              <Icon name="arrow" color={color} size={size} />
+            ),
+          }}
+        />
       <Stack.Screen
         name="LoginScreen"
         component={LoginScreen}

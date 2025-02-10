@@ -25,6 +25,7 @@ const imageMap = {
 const AstralMapScreen = ({ route }) => {
   const navigation = useNavigation();
   const [astralMap, setAstralMap] = useState(null);
+  const [astralMap2, setAstralMap2] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
@@ -35,6 +36,7 @@ const AstralMapScreen = ({ route }) => {
         let mapData;
         if (route?.params?.astralMap) {
           mapData = route.params.astralMap;
+          setAstralMap2(mapData);
         } else {
           mapData = await StorageService.getMyAstralMap();
         }
@@ -52,6 +54,19 @@ const AstralMapScreen = ({ route }) => {
 
     loadAstralMap();
   }, [route?.params?.astralMap]);
+
+  // Função para navegar à tela de Compatibilidade passando os uuids
+  const handleCompatibilityPress = async () => {
+    try {
+      const astralMapData = await StorageService.getMyAstralMap();
+       navigation.navigate('CompatibilityScreen', { 
+        uuid1: astralMapData.uuid, 
+        uuid2: astralMap2.uuid
+      });
+    } catch (error) {
+      console.error('Erro ao obter usuário atual:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -84,7 +99,7 @@ const AstralMapScreen = ({ route }) => {
         <View style={styles.stickyButtonContainer}>
           <TouchableOpacity 
             style={styles.stickyButton} 
-            onPress={() => navigation.navigate('CreateExtraChart')}
+            onPress={handleCompatibilityPress}
           >
             <Icon name="favorite" size={24} color="#FFFFFF" />
             <Text style={styles.stickyButtonText}>Verificar Compatibilidade Astral</Text>
@@ -231,7 +246,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    
     marginRight: 10,
   },
   missingImageText: {
