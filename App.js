@@ -23,6 +23,7 @@ import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import SynastryDesambiguationScreen from './src/screens/SynastryDesambiguationScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
+import CreditsScreen from './src/screens/CreditsScreen';
 import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
@@ -88,6 +89,11 @@ function MainStack() {
       <Stack.Screen
         name="SynastryDesambiguationScreen"
         component={SynastryDesambiguationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreditsScreen"
+        component={CreditsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
@@ -290,6 +296,16 @@ function CustomDrawerContent(props) {
             styles.drawerLabel,
             currentRoute === 'Mapa Astral' && styles.drawerLabelActive
           ]}
+        />
+
+        <DrawerItem
+          label="Créditos"
+          icon={({ focused }) => (
+            <Icon name="stars" color={currentRoute === 'Créditos' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('CreditsScreen')}
+          style={[styles.drawerItem, currentRoute === 'Créditos' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Créditos' && styles.drawerLabelActive]}
         />
 
         {/* Grupo Sinastria */}
