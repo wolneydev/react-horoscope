@@ -5,6 +5,7 @@ import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatBirthDate } from '../utils/helpers';
+import CustomButton from '../Components/CustomButton';
 
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
@@ -97,13 +98,13 @@ const AstralMapScreen = ({ route }) => {
       {/* Botão Fixo */}
       {astralMap && !astralMap.is_my_astral_map && (
         <View style={styles.stickyButtonContainer}>
-          <TouchableOpacity 
-            style={styles.stickyButton} 
+          <CustomButton 
+            title="Verificar Compatibilidade Astral"
             onPress={handleCompatibilityPress}
-          >
-            <Icon name="favorite" size={24} color="#FFFFFF" />
-            <Text style={styles.stickyButtonText}>Verificar Compatibilidade Astral</Text>
-          </TouchableOpacity>
+            style={styles.stickyButton}
+            textStyle={styles.stickyButtonText}
+            icon="favorite"
+          />
         </View>
       )}
 
@@ -300,13 +301,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   stickyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6D44FF',
-    padding: 15,
-    borderRadius: 12,
-    gap: 8,
+    backgroundColor: 'rgba(109, 68, 255, 0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.6)',
   },
   stickyButtonText: {
     color: '#FFFFFF',

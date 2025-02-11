@@ -66,6 +66,7 @@ function MainStack() {
         
           component={CompatibilityScreen}
           options={{
+            headerShown: false,
             drawerLabel: 'Compatibilidade Astral',
             drawerIcon: ({ color, size }) => (
               <Icon name="arrow" color={color} size={size} />
