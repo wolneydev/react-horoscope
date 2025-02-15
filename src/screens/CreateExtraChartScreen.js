@@ -1,31 +1,82 @@
-// src/screens/auth/register/RegisterScreen.js
-import React, { useState, useRef, useMemo } from 'react';
+// src/screens/auth/register/CreateExtraChartScreen.js
+
+import React, { useState, useMemo } from 'react';
 import {
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   View,
-  Platform,
   Alert,
-  Animated,
+  FlatList,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 import api from '../services/api';
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import LoadingOverlay from '../Components/LoadingOverlay';
 import { useNavigation } from '@react-navigation/native';
 
+// Exemplo de import do seu JSON de cidades
+// Ajuste o path conforme seu projeto, caso tenha:
+import citiesBr from '../data/geo/citiesBr';
+
 const CreateExtraChartScreen = () => {
   const navigation = useNavigation();
+
+  // Campos existentes
   const [nome, setNome] = useState('');
-  const [city, setCity] = useState('');
   const [birthDate, setBirthDate] = useState(new Date());
   const [birthTime, setBirthTime] = useState(new Date());
+
+  // Estados para o picker
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+
+  // Estado da cidade (o que o usuário digita)
+  const [city, setCity] = useState('');
+
+  // Lista filtrada para o dropdown de sugestões
+  const [filteredCities, setFilteredCities] = useState([]);
+
+  // Estado para armazenar objeto selecionado da lista (opcional se quiser usar)
+  const [citySelected, setCitySelected] = useState(null);
+
+  // Estados adicionais para latitude, longitude e timezone
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [timezone, setTimezone] = useState('');
+
+  // Estados de erro e loading
+  const [errors, setErrors] = useState({
+    nome: '',
+    city: '',
+    birthDate: '',
+    birthTime: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
+
+  // Animação de fundo (memoizada)
+  const memoStars = useMemo(() => <AnimatedStars />, []);
+
+  // Componente de mensagem de erro
+  const ErrorMessage = ({ error }) => {
+    if (!error) return null;
+    return <Text style={styles.errorText}>{error}</Text>;
+  };
+
+  // --- Picker de Data e Hora ---
+  const showDatePicker = () => setDatePickerVisibility(true);
+  const hideDatePicker = () => setDatePickerVisibility(false);
+
+  const showTimePicker = () => setTimePickerVisibility(true);
+  const hideTimePicker = () => setTimePickerVisibility(false);
 
   const handleConfirmDate = (date) => {
     setBirthDate(date);
@@ -37,11 +88,7 @@ const CreateExtraChartScreen = () => {
     hideTimePicker();
   };
 
-  const showDatePicker = () => setDatePickerVisibility(true);
-  const hideDatePicker = () => setDatePickerVisibility(false);
-  const showTimePicker = () => setTimePickerVisibility(true);
-  const hideTimePicker = () => setTimePickerVisibility(false);
-
+  // Formatação de data/hora
   const formatDate = (date) => {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -55,29 +102,59 @@ const CreateExtraChartScreen = () => {
     return `${hours}:${minutes}`;
   };
 
+  // --- Funções de Busca e Seleção da Cidade ---
+  const handleSearchCity = (text) => {
+    setCity(text);
+
+    // Se o campo estiver vazio, limpa o dropdown
+    if (!text) {
+      setFilteredCities([]);
+      return;
+    }
+
+    // Filtra as cidades do JSON
+    const query = text.toLowerCase();
+    const results = citiesBr.cities
+      .filter((item) => item.city.toLowerCase().includes(query))
+      .slice(0, 10);
+
+    setFilteredCities(results);
+  };
+
+  const handleSelectCity = (item) => {
+    // Quando o usuário clica na sugestão
+    setCity(item.city); // apenas o nome da cidade no campo
+    setCitySelected(item);
+
+    // Se seu JSON tiver latitude/longitude/timezone:
+    setLatitude(String(item.latitude) || '');
+    setLongitude(String(item.longitude) || '');
+    setTimezone(item.timezone || '');
+
+    // Limpa a lista de sugestões
+    setFilteredCities([]);
+  };
+
+  // --- Validação ---
   const validateFields = () => {
     let tempErrors = {};
     let isValid = true;
 
-    // Validação do nome
     if (!nome || nome.trim().length < 3) {
       tempErrors.nome = 'Nome deve ter pelo menos 3 caracteres';
       isValid = false;
     }
 
-    // Validação da cidade
     if (!city || city.trim().length < 2) {
       tempErrors.city = 'Cidade é obrigatória';
       isValid = false;
     }
 
-    // Validação da data de nascimento
     if (!birthDate) {
       tempErrors.birthDate = 'Data de nascimento é obrigatória';
       isValid = false;
     }
 
-    // Validação da hora de nascimento
     if (!birthTime) {
       tempErrors.birthTime = 'Hora de nascimento é obrigatória';
       isValid = false;
@@ -87,12 +164,16 @@ const CreateExtraChartScreen = () => {
     return isValid;
   };
 
+  // --- Submit ---
   const handleSubmit = async () => {
     if (validateFields()) {
       try {
         setIsLoading(true);
 
         const accessToken = await StorageService.getAccessToken();
+
+        console.log('Token:', accessToken);
+        
 
         const year = birthDate.getFullYear();
         const month = birthDate.getMonth() + 1;
@@ -102,7 +183,7 @@ const CreateExtraChartScreen = () => {
 
         // Primeiro passo
         setLoadingMessage('Estabelecendo comunicação astral ...');
-        
+
         const response = await api.post(
           'astralmap/create',
           {
@@ -113,11 +194,16 @@ const CreateExtraChartScreen = () => {
             birth_day: parseInt(day, 10),
             birth_hour: parseInt(hour, 10),
             birth_minute: parseInt(minute, 10),
+
+            // Novos campos
+            birth_latitude: latitude ? parseFloat(latitude) : null,
+            birth_longitude: longitude ? parseFloat(longitude) : null,
+            birth_timezone: timezone || '',
           },
           {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`,
+              Authorization: `Bearer ${accessToken}`,
             },
           }
         );
@@ -125,17 +211,16 @@ const CreateExtraChartScreen = () => {
         const { status, data } = response.data;
 
         if (status === 'success') {
-          
           // Terceiro passo
           setLoadingMessage('Gerando o mapa astral ...');
-          
+
           // Salvando dados usando o serviço
           await StorageService.saveAstralMap(data.astral_map);
 
           if (data.astral_map) {
-            navigation.navigate('HomeScreen', { 
-              screen: 'Mapa Astral', 
-              params: { astralMap: data.astral_map } 
+            navigation.navigate('HomeScreen', {
+              screen: 'Mapa Astral',
+              params: { astralMap: data.astral_map },
             });
           }
         }
@@ -148,29 +233,11 @@ const CreateExtraChartScreen = () => {
     }
   };
 
-  const [errors, setErrors] = useState({
-    nome: '',
-    city: '',
-    birthDate: '',
-    birthTime: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
-  // Memoize AnimatedStars para evitar re-renderização
-  const memoStars = useMemo(() => <AnimatedStars />, []);
-
-  // Componente para mostrar mensagem de erro
-  const ErrorMessage = ({ error }) => {
-    if (!error) return null;
-    return <Text style={styles.errorText}>{error}</Text>;
-  };
 
   return (
     <View style={styles.container}>
       {memoStars}
+
       <View style={styles.content}>
         <Text style={styles.title}>Novo Mapa Astral</Text>
         <Text style={styles.subtitle}>
@@ -178,6 +245,7 @@ const CreateExtraChartScreen = () => {
         </Text>
 
         <View style={styles.form}>
+          {/* Campo Nome */}
           <View>
             <View style={styles.inputContainer}>
               <Icon name="person" size={20} color="#7A708E" />
@@ -192,51 +260,73 @@ const CreateExtraChartScreen = () => {
             <ErrorMessage error={errors.nome} />
           </View>
 
+          {/* Campo Cidade + Dropdown de sugestões */}
           <View>
             <View style={styles.inputContainer}>
               <Icon name="location-city" size={20} color="#7A708E" />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { marginLeft: 10 }]}
                 placeholder="Cidade de nascimento"
                 placeholderTextColor="#7A708E"
                 value={city}
-                onChangeText={setCity}
+                onChangeText={handleSearchCity}
               />
             </View>
+
+            {filteredCities.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                <FlatList
+                  data={filteredCities}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.suggestionItem}
+                      onPress={() => handleSelectCity(item)}
+                    >
+                      <Text style={styles.suggestionText}>
+                        {item.city}, {item.state}, {item.country}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            )}
             <ErrorMessage error={errors.city} />
           </View>
-
           <View>
-            <TouchableOpacity 
-              style={styles.inputContainer} 
+            <TouchableOpacity
+              style={styles.inputContainer}
               onPress={showDatePicker}
             >
               <Icon name="calendar-today" size={20} color="#7A708E" />
               <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
-                {birthDate ? formatDate(birthDate) : "Data de nascimento"}
+                {birthDate ? formatDate(birthDate) : 'Data de nascimento'}
               </Text>
             </TouchableOpacity>
             <ErrorMessage error={errors.birthDate} />
           </View>
 
+          {/* Hora de nascimento */}
           <View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.inputContainer}
               onPress={showTimePicker}
             >
               <Icon name="access-time" size={20} color="#7A708E" />
               <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
-                {birthTime ? formatTime(birthTime) : "Horário de nascimento"}
+                {birthTime ? formatTime(birthTime) : 'Horário de nascimento'}
               </Text>
             </TouchableOpacity>
             <ErrorMessage error={errors.birthTime} />
           </View>
 
+          {/* Botão de Envio */}
           <TouchableOpacity style={styles.button} onPress={handleSubmit}>
             <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
           </TouchableOpacity>
         </View>
 
+        {/* DateTimePickers */}
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
           mode="date"
@@ -244,7 +334,6 @@ const CreateExtraChartScreen = () => {
           onCancel={hideDatePicker}
           date={birthDate}
         />
-
         <DateTimePickerModal
           isVisible={isTimePickerVisible}
           mode="time"
@@ -253,12 +342,14 @@ const CreateExtraChartScreen = () => {
           date={birthTime}
         />
       </View>
-      
-      {/* Loading Overlay com mensagem */}
+
+      {/* Loading Overlay */}
       {isLoading && <LoadingOverlay message={loadingMessage} />}
     </View>
   );
 };
+
+export default CreateExtraChartScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -280,7 +371,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#7A708E',
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: 'center',
   },
   form: {
@@ -292,9 +383,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(32, 178, 170, 0.15)',
     borderRadius: 12,
     paddingHorizontal: 15,
-    height: 55,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 5,
+    height: 55,
   },
   input: {
     flex: 1,
@@ -330,6 +422,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginLeft: 10,
   },
+  /** Estilos do dropdown de cidades */
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 60, // Ajuste conforme sua UI
+    left: 45,
+    right: 0,
+    backgroundColor: '#fff',
+    zIndex: 999,
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+  },
+  suggestionItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  suggestionText: {
+    color: '#000',
+  },
 });
-
-export default CreateExtraChartScreen;
