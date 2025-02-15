@@ -88,6 +88,7 @@ export default function CompatibilityScreen({ route }) {
   const [compatibilities, setCompatibilities] = useState([]);
   const [averageCompatibility, setAverageCompatibility] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Função que busca as compatibilidades entre os dois UUIDs
   const fetchCompatibility = async () => {
@@ -114,6 +115,8 @@ export default function CompatibilityScreen({ route }) {
   // Executa a busca assim que ambos os UUIDs estiverem disponíveis
   useEffect(() => {
     if (uuid1 && uuid2) {
+      console.log('uuid1:', uuid1);
+      console.log('uuid2:', uuid2);
       fetchCompatibility();
     }
   }, [uuid1, uuid2]);
@@ -127,19 +130,31 @@ export default function CompatibilityScreen({ route }) {
   };
 
   const getCompatibilityText = (value) => {
+    if (value >= 90) {
+      return "União Celestial! Uma conexão extraordinariamente rara e poderosa. Existe uma sintonia natural tão profunda que parece predestinada. Esta combinação tem potencial para uma relação transformadora e duradoura, com grande capacidade de evolução mútua.";
+    }
     if (value >= 80) {
-      return "Conexão Excepcional! Existe uma harmonia natural e profunda entre vocês. Esta é uma combinação rara e especial, com grande potencial para um relacionamento duradouro e significativo.";
+      return "Conexão Excepcional! Existe uma harmonia natural e profunda entre vocês. Esta é uma combinação especial, com grande potencial para um relacionamento significativo e enriquecedor. As energias se complementam de maneira muito positiva.";
+    }
+    if (value >= 70) {
+      return "Sintonia Elevada! A compatibilidade entre vocês é muito favorável, indicando uma conexão forte e promissora. Compartilham valores similares e têm potencial para crescer juntos, apoiando um ao outro em suas jornadas.";
     }
     if (value >= 60) {
-      return "Ótima Compatibilidade! Vocês têm uma conexão muito positiva, com bom entendimento mútuo e potencial para crescimento conjunto. As diferenças tendem a se complementar.";
+      return "Ótima Compatibilidade! Vocês têm uma conexão positiva, com bom entendimento mútuo e potencial para desenvolvimento conjunto. As diferenças tendem a se complementar, criando uma dinâmica interessante e construtiva.";
+    }
+    if (value >= 50) {
+      return "Compatibilidade Favorável. Existe um bom equilíbrio entre semelhanças e diferenças. Com comunicação e compreensão, podem construir uma relação sólida e gratificante, aprendendo muito um com o outro.";
     }
     if (value >= 40) {
-      return "Compatibilidade Moderada. Existem áreas de harmonia e desafios a serem trabalhados. Com diálogo e compreensão, podem desenvolver uma relação equilibrada.";
+      return "Compatibilidade Moderada. Existem áreas de harmonia e desafios a serem trabalhados. Com diálogo, paciência e compreensão mútua, podem desenvolver uma relação equilibrada e crescer juntos.";
+    }
+    if (value >= 30) {
+      return "Compatibilidade Desafiadora. Há aspectos importantes que precisam de atenção e trabalho. A relação exigirá esforço mútuo, mas pode ser enriquecedora se houver disposição para aprender com as diferenças.";
     }
     if (value >= 20) {
-      return "Compatibilidade Desafiadora. Há aspectos que precisam de atenção e trabalho. A relação exigirá esforço mútuo para superar as diferenças naturais.";
+      return "Compatibilidade Complexa. Existem desafios significativos que precisarão ser enfrentados. Será necessário muito diálogo, compreensão e disposição para adaptar-se. O crescimento pessoal pode ser intenso.";
     }
-    return "Compatibilidade Complexa. Existem desafios significativos na relação. Será necessário muito diálogo e compreensão para harmonizar as diferenças.";
+    return "Compatibilidade Muito Desafiadora. A relação apresenta aspectos bastante complexos que demandarão grande esforço de ambas as partes. Se houver real interesse, será preciso muito trabalho, paciência e compreensão para harmonizar as diferenças.";
   };
 
   const getAstroImage = (astralEntity) => {
@@ -150,21 +165,27 @@ export default function CompatibilityScreen({ route }) {
   const renderHeader = () => (
     <>
       <View style={styles.infoCard}>
-        <View style={styles.infoIconContainer}>
-          <Icon name="favorite" size={24} color="#6D44FF" />
+        <View style={styles.infoHeader}>
+          <View>
+            <View style={styles.titleContainer}>
+              <View style={styles.infoIconContainer}>
+                <Icon name="favorite" size={24} color="#6D44FF" />
+              </View>
+              <Text style={styles.averageTitle}>
+                Compatibilidade Total
+              </Text>
+            </View>
+            <Text style={[
+              styles.averageValue,
+              averageCompatibility && {
+                color: getCompatibilityColor(averageCompatibility),
+                textShadowColor: `${getCompatibilityColor(averageCompatibility)}50`
+              }
+            ]}>
+              {averageCompatibility !== null ? `${averageCompatibility.toFixed(2)}%` : ''}
+            </Text>
+          </View>
         </View>
-        <Text style={styles.averageTitle}>
-          Compatibilidade Total
-        </Text>
-        <Text style={[
-          styles.averageValue,
-          averageCompatibility && {
-            color: getCompatibilityColor(averageCompatibility),
-            textShadowColor: `${getCompatibilityColor(averageCompatibility)}50`
-          }
-        ]}>
-          {averageCompatibility !== null ? `${averageCompatibility.toFixed(2)}%` : ''}
-        </Text>
         {averageCompatibility !== null && (
           <Text style={styles.infoDescription}>
             {getCompatibilityText(averageCompatibility)}
@@ -172,9 +193,40 @@ export default function CompatibilityScreen({ route }) {
         )}
       </View>
 
-      <View style={styles.headerContainer}>
-        <Text style={styles.sectionTitle}>Aspectos Analisados</Text>
-      </View>
+      <TouchableOpacity 
+        style={styles.infoCard} 
+        onPress={() => setIsExpanded(!isExpanded)}
+      >
+        <View style={styles.infoHeader}>
+          <View style={styles.titleContainer}>
+            <View style={styles.infoIconContainer}>
+              <Icon name="help-outline" size={24} color="#6D44FF" />
+            </View>
+            <Text style={styles.infoTitle}>Como funciona?</Text>
+            <Icon 
+              name={isExpanded ? "expand-less" : "expand-more"} 
+              size={24} 
+              color="#6D44FF" 
+            />
+          </View>
+        </View>
+        {isExpanded && (
+          <View>
+            <Text style={styles.infoDescription}>
+              A compatibilidade total é uma medida de quão bem os dois indivíduos se encaixam em termos de personalidade, valores e expectativas.
+            </Text>
+            <Text style={styles.infoDescription}>
+              Ela é calculada com base em vários aspectos astrológicos, como signos, planetas e ascendentes. É uma média ponderada de todos os aspectos analisados.
+            </Text>
+            <Text style={styles.infoDescription}>
+              Um valor alto indica uma boa compatibilidade, enquanto um valor baixo pode sugerir desafios e dificuldades.
+            </Text>
+            <Text style={styles.infoDescription}>
+              Abaixo estão os aspectos analisados para o cálculo da compatibilidade total.
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </>
   );
 
@@ -196,19 +248,17 @@ export default function CompatibilityScreen({ route }) {
             {item.signo1} × {item.signo2}
           </Text>
         </View>
+        <Text style={[
+          styles.compatibilityValue,
+          { 
+            color: getCompatibilityColor(item.compatibilidade),
+            textShadowColor: `${getCompatibilityColor(item.compatibilidade)}50`
+          }
+        ]}>
+          {item.compatibilidade}%
+        </Text>
       </View>
       <View style={styles.cardContent}>
-        <Text style={styles.compatibility}>
-          <Text style={[
-            styles.compatibilityValue,
-            { 
-              color: getCompatibilityColor(item.compatibilidade),
-              textShadowColor: `${getCompatibilityColor(item.compatibilidade)}50`
-            }
-          ]}>
-            {item.compatibilidade}%
-          </Text>  de compatibilidade.
-        </Text>
         <Text style={styles.description}>
           {item.descriptions}
         </Text>
@@ -273,27 +323,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.3)',
   },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   infoIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
     padding: 8,
     borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
+    marginRight: 12,
   },
   infoTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 8,
-    textShadowColor: 'rgba(255, 215, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    flex: 1,
+    fontSize: 18,
+    color: '#FFFFFF',
   },
   infoDescription: {
     fontSize: 15,
     color: '#FFFFFF',
     opacity: 0.8,
     lineHeight: 22,
+    marginTop: 12,
   },
   sectionTitle: {
     fontSize: 20,
@@ -331,27 +385,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(109, 68, 255, 0.2)',
-    backgroundColor: 'rgba(109, 68, 255, 0.05)',
   },
   cardHeaderText: {
     flex: 1,
     justifyContent: 'center',
   },
   cardImageContainer: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 20,
-    marginRight: 12,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255, 215, 0, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
+    marginRight: 10,
   },
   astroImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 20,
+    marginRight: 10,
   },
   cardContent: {
     padding: 16,
@@ -368,10 +417,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   compatibilityValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+    backgroundColor: 'rgba(109, 68, 255, 0.15)',
+    borderRadius: 10,
+    padding: 10,
+    marginLeft: 10,
   },
   signs: {
     fontSize: 14,
@@ -396,7 +449,6 @@ const styles = StyleSheet.create({
   averageTitle: {
     fontSize: 18,
     color: '#FFFFFF',
-    marginBottom: 8,
   },
   averageValue: {
     fontSize: 32,
