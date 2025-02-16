@@ -25,6 +25,8 @@ import SynastryDesambiguationScreen from './src/screens/SynastryDesambiguationSc
 import GreetingsScreen from './src/screens/GreetingsScreen';
 import CompatibilityScreen from './src/screens/CompatibilityScreen';
 import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/auth/ResetPasswordScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
@@ -101,6 +103,16 @@ function MainStack() {
       <Stack.Screen
         name="SynastryDesambiguationScreen"
         component={SynastryDesambiguationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPasswordScreen"
+        component={ForgotPasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ResetPasswordScreen"
+        component={ResetPasswordScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

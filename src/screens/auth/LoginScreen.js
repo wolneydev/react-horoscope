@@ -214,6 +214,14 @@ export default function LoginScreen({ navigation }) {
               />
 
               <TouchableOpacity 
+                onPress={() => navigation.navigate('ForgotPasswordScreen')}
+                style={styles.forgotPasswordButton}
+                disabled={loading}
+              >
+                <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
                 onPress={() => navigation.navigate('RegisterScreen')}
                 style={styles.linkButton}
                 disabled={loading}
@@ -291,10 +299,17 @@ const styles = StyleSheet.create({
   customButton: {
     marginVertical: 5,
   },
+  forgotPasswordButton: {
+    marginTop: 20,
+    alignItems: 'center',    
+  },
+  forgotPasswordText: {
+    color: '#6D44FF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   linkButton: {
-    alignItems: 'center',
-    padding: 15,
-    marginTop: 10,
+    alignItems: 'center',    
   },
   linkText: {
     color: '#7A708E',

@@ -78,7 +78,6 @@ export default function CompatibilityScreen({ route }) {
   ];
 
   const navigation = useNavigation();
-  // Componente de fundo com estrelas
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
 
   // Recebe os dois UUIDs via parâmetros da rota

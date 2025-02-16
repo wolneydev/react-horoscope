@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.0",
-    "@react-native-clipboard/clipboard": "^1.16.1",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/drawer": "^7.1.1",
@@ -20,6 +19,7 @@
     "axios": "^1.7.9",
     "expo": "^52.0.23",
     "expo-apple-authentication": "~7.1.2",
+    "expo-clipboard": "~7.0.1",
     "react": "18.3.1",
     "react-native": "0.76.5",
     "react-native-clipboard": "^0.0.5",
