@@ -5,6 +5,7 @@ import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatBirthDate } from '../utils/helpers';
+import CustomButton from '../Components/CustomButton';
 
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
@@ -25,6 +26,7 @@ const imageMap = {
 const AstralMapScreen = ({ route }) => {
   const navigation = useNavigation();
   const [astralMap, setAstralMap] = useState(null);
+  const [astralMap2, setAstralMap2] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
@@ -35,6 +37,7 @@ const AstralMapScreen = ({ route }) => {
         let mapData;
         if (route?.params?.astralMap) {
           mapData = route.params.astralMap;
+          setAstralMap2(mapData);
         } else {
           mapData = await StorageService.getMyAstralMap();
         }
@@ -52,6 +55,19 @@ const AstralMapScreen = ({ route }) => {
 
     loadAstralMap();
   }, [route?.params?.astralMap]);
+
+  // Função para navegar à tela de Compatibilidade passando os uuids
+  const handleCompatibilityPress = async () => {
+    try {
+      const astralMapData = await StorageService.getMyAstralMap();
+       navigation.navigate('CompatibilityScreen', { 
+        uuid1: astralMapData.uuid, 
+        uuid2: astralMap2.uuid
+      });
+    } catch (error) {
+      console.error('Erro ao obter usuário atual:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -82,13 +98,13 @@ const AstralMapScreen = ({ route }) => {
       {/* Botão Fixo */}
       {astralMap && !astralMap.is_my_astral_map && (
         <View style={styles.stickyButtonContainer}>
-          <TouchableOpacity 
-            style={styles.stickyButton} 
-            onPress={() => navigation.navigate('CreateExtraChart')}
-          >
-            <Icon name="favorite" size={24} color="#FFFFFF" />
-            <Text style={styles.stickyButtonText}>Verificar Compatibilidade Astral</Text>
-          </TouchableOpacity>
+          <CustomButton 
+            title="Verificar Compatibilidade Astral"
+            onPress={handleCompatibilityPress}
+            style={styles.stickyButton}
+            textStyle={styles.stickyButtonText}
+            icon="favorite"
+          />
         </View>
       )}
 
@@ -231,7 +247,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    
     marginRight: 10,
   },
   missingImageText: {
@@ -286,13 +301,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   stickyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6D44FF',
-    padding: 15,
-    borderRadius: 12,
-    gap: 8,
+    backgroundColor: 'rgba(109, 68, 255, 0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.6)',
   },
   stickyButtonText: {
     color: '#FFFFFF',

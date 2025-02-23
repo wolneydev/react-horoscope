@@ -23,13 +23,16 @@ import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import SynastryDesambiguationScreen from './src/screens/SynastryDesambiguationScreen';
 import GreetingsScreen from './src/screens/GreetingsScreen';
+import CompatibilityScreen from './src/screens/CompatibilityScreen';
 import CreditsScreen from './src/screens/CreditsScreen';
 import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/auth/ResetPasswordScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
 import { useState, useRef, useEffect } from 'react';
-
+import { TouchableOpacity } from 'react-native';
 
 enableScreens(false);
 
@@ -61,6 +64,18 @@ function MainStack() {
         component={AstralMapScreen}
         options={{ headerShown: false }}
       />
+      <Drawer.Screen
+          name="CompatibilityScreen"
+        
+          component={CompatibilityScreen}
+          options={{
+            headerShown: false,
+            drawerLabel: 'Compatibilidade Astral',
+            drawerIcon: ({ color, size }) => (
+              <Icon name="arrow" color={color} size={size} />
+            ),
+          }}
+        />
       <Stack.Screen
         name="LoginScreen"
         component={LoginScreen}
@@ -89,6 +104,16 @@ function MainStack() {
       <Stack.Screen
         name="SynastryDesambiguationScreen"
         component={SynastryDesambiguationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPasswordScreen"
+        component={ForgotPasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ResetPasswordScreen"
+        component={ResetPasswordScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
