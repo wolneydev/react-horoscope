@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import api from '../services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import StorageService from '../store/store';
 
 export default function CompatibilityScreen({ route }) {
 
@@ -91,15 +92,32 @@ export default function CompatibilityScreen({ route }) {
 
   // Função que busca as compatibilidades entre os dois UUIDs
   const fetchCompatibility = async () => {
+    console.log('Buscando compatibilidades...');
     if (!uuid1 || !uuid2) {
       alert('Por favor, insira o código correto');
       return;
     }
     setLoading(true);
     try {
-      const response = await api.get('processcompatibilitiesmap', {
-        params: { uuid1, uuid2 },
-      });
+
+      const accessToken = await StorageService.getAccessToken();
+
+      console.log('Token:', accessToken);
+      
+      const response = await api.post(
+        'synastry',
+        {
+          map1_uuid: uuid1,
+          map2_uuid: uuid2,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
       const { compatibilidades, compatibilidade_media } = response.data.data;
       setCompatibilities(compatibilidades || []);
       setAverageCompatibility(compatibilidade_media || null);
@@ -114,8 +132,6 @@ export default function CompatibilityScreen({ route }) {
   // Executa a busca assim que ambos os UUIDs estiverem disponíveis
   useEffect(() => {
     if (uuid1 && uuid2) {
-      console.log('uuid1:', uuid1);
-      console.log('uuid2:', uuid2);
       fetchCompatibility();
     }
   }, [uuid1, uuid2]);
@@ -218,6 +234,19 @@ export default function CompatibilityScreen({ route }) {
               Ela é calculada com base em vários aspectos astrológicos, como signos, planetas e ascendentes. É uma média ponderada de todos os aspectos analisados.
             </Text>
             <Text style={styles.infoDescription}>
+              Utilizamos também, os algoritmos de Sinastria. Para tanto a compatibilidade é calculada através de 3 fatores principais:
+            </Text>
+            <Text style={styles.infoDescriptionList}>
+              - Aspectos (40% do total): Analisa os ângulos entre os planetas de ambos os mapas astrais, onde Conjunção, Sextil e Trígono são considerados aspectos positivos, enquanto Quadratura e Oposição são considerados aspectos desafiadores;
+              - Elementos (30% do total) e; Casas (30% do total).              
+            </Text>
+            <Text style={styles.infoDescriptionList}>
+              - Elementos (30% do total): Avalia a compatibilidade entre Fogo, Terra, Ar e Água, onde a presença de elementos semelhantes ou complementares é considerada positiva enquanto elementos opostos podem indicar desafios e;
+            </Text>
+            <Text style={styles.infoDescriptionList}>
+              - Casas (30% do total).: Analisa o posicionamento entre as casas astrológicas de ambos os mapas astrais, com foco nas áreas de vida que são mais relevantes para a relação - 1 (identidade), 7 (relacionamentos) e 10 (status).
+            </Text>
+            <Text style={styles.infoDescription}>
               Um valor alto indica uma boa compatibilidade, enquanto um valor baixo pode sugerir desafios e dificuldades.
             </Text>
             <Text style={styles.infoDescription}>
@@ -243,19 +272,21 @@ export default function CompatibilityScreen({ route }) {
           <Text style={styles.entity}>
             {item.astral_entity || 'Entidade não definida'}
           </Text>
-          <Text style={styles.signs}>
-            {item.signo1} × {item.signo2}
-          </Text>
+          <View style={styles.signsContainer}>
+            <Text style={styles.signs}>
+              {item.signo1} × {item.signo2} | 
+            </Text>
+            <Text style={[
+              styles.compatibilityValue,
+              { 
+                color: getCompatibilityColor(item.compatibilidade),
+                textShadowColor: `${getCompatibilityColor(item.compatibilidade)}50`
+              }
+            ]}>
+              {item.compatibilidade}%
+            </Text>
+          </View>
         </View>
-        <Text style={[
-          styles.compatibilityValue,
-          { 
-            color: getCompatibilityColor(item.compatibilidade),
-            textShadowColor: `${getCompatibilityColor(item.compatibilidade)}50`
-          }
-        ]}>
-          {item.compatibilidade}%
-        </Text>
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.description}>
@@ -348,6 +379,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 12,
   },
+  infoDescriptionList: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    opacity: 0.8,
+    lineHeight: 22,
+    marginTop: 12,
+    marginLeft: 20,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -416,14 +455,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   compatibilityValue: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
-    backgroundColor: 'rgba(109, 68, 255, 0.15)',
-    borderRadius: 10,
-    padding: 10,
-    marginLeft: 10,
+    marginLeft: 4,
+  },
+  signsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   signs: {
     fontSize: 14,
