@@ -1,9 +1,8 @@
 // src/screens/auth/register/RegisterScreen.js
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   View,
@@ -11,23 +10,26 @@ import {
   Alert,
   KeyboardAvoidingView,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 import api from '../../services/api';
 import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import LoadingOverlay from '../../Components/LoadingOverlay';
 import CustomButton from '../../Components/CustomButton';
+import CityAutoComplete from '../../Components/CityAutoComplete';
 
 export default function RegisterScreen({ navigation }) {
-  
-  const isAndroid = Platform.OS === 'android';
-  const isIOS = Platform.OS === 'ios';
-
   const [nome, setNome] = useState('Itu Assis');
-  const [city, setCity] = useState('Itu');
+  // Removido o uso direto do campo city no TextInput; agora usamos o autocomplete
+  const [city, setCity] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+
   const [birthDate, setBirthDate] = useState(new Date());
   const [birthTime, setBirthTime] = useState(new Date());
   const [email, setEmail] = useState('danielfreitas@gmail.com');
@@ -47,7 +49,6 @@ export default function RegisterScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
 
-  // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useEffect(() => {
@@ -64,8 +65,7 @@ export default function RegisterScreen({ navigation }) {
     try {
       const accessToken = await StorageService.getAccessToken();
       const userData = await StorageService.getUserData();
-      console.log(accessToken, userData);
-      
+
       if (accessToken && userData) {
         setIsLoading(true);
         setLoadingMessage('Usuário já logado. Redirecionando ...');
@@ -97,19 +97,16 @@ export default function RegisterScreen({ navigation }) {
     setTimePickerVisibility(false);
   };
 
-  // Callback ao confirmar a data
   const handleConfirmDate = (selectedDate) => {
     setBirthDate(selectedDate);
     hideDatePicker();
   };
 
-  // Callback ao confirmar a hora
   const handleConfirmTime = (selectedTime) => {
     setBirthTime(selectedTime);
     hideTimePicker();
   };
 
-  // Formatação simples
   const formatSelectedDate = (date) => {
     if (!date) return '';
     const day = date.getDate();
@@ -181,7 +178,6 @@ export default function RegisterScreen({ navigation }) {
       try {
         setIsLoading(true);
 
-        // Criptografa a senha antes de salvar o estado
         const encryptedPassword = CryptoService.encrypt(password);
 
         const year = birthDate.getFullYear();
@@ -190,7 +186,6 @@ export default function RegisterScreen({ navigation }) {
         const hour = birthTime.getHours();
         const minute = birthTime.getMinutes();
 
-        // Primeiro passo
         setLoadingMessage('Iniciando sua jornada astral ...');
         
         const response = await api.post(
@@ -206,6 +201,9 @@ export default function RegisterScreen({ navigation }) {
             birth_day: parseInt(day, 10),
             birth_hour: parseInt(hour, 10),
             birth_minute: parseInt(minute, 10),
+            // Se sua API também estiver esperando as coordenadas no cadastro, inclua-as:
+            birth_latitude: latitude ? parseFloat(latitude) : null,
+            birth_longitude: longitude ? parseFloat(longitude) : null,
           },
           {
             headers: {
@@ -217,7 +215,6 @@ export default function RegisterScreen({ navigation }) {
         const { status, data } = response.data;
 
         if (status === 'success') {
-          
           // Preparando dados do usuário
           const userData = {
             name: data.name,
@@ -231,14 +228,14 @@ export default function RegisterScreen({ navigation }) {
               month: data.birth_month,
               day: data.birth_day,
               hour: data.birth_hour,
-              minute: data.birth_minute
-            }
+              minute: data.birth_minute,
+              latitude: latitude,
+              longitude: longitude,
+            },
           };
 
-          // Terceiro passo
           setLoadingMessage('Gerando seu mapa astral ...');
           
-          // Salvando dados usando o serviço
           await StorageService.saveUserData(userData);
           await StorageService.saveAccessToken(data.access_token);
           await StorageService.saveAstralMaps(data.astral_maps);
@@ -263,12 +260,12 @@ export default function RegisterScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {memoStars}
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -500}
       >
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={false}
@@ -282,6 +279,7 @@ export default function RegisterScreen({ navigation }) {
             </Text>
 
             <View style={styles.form}>
+              {/* NOME */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="person" size={20} color="#7A708E" />
@@ -292,30 +290,33 @@ export default function RegisterScreen({ navigation }) {
                     value={nome}
                     onChangeText={(text) => {
                       setNome(text);
-                      setErrors(prev => ({ ...prev, nome: '' }));
+                      setErrors((prev) => ({ ...prev, nome: '' }));
                     }}
                   />
                 </View>
                 <ErrorMessage error={errors.nome} />
               </View>
 
+              {/* CIDADE (Substituído por CityAutoComplete) */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="location-city" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Cidade de nascimento"
+                  <CityAutoComplete
+                    // Passamos a mesma cor de placeholder, se desejar
                     placeholderTextColor="#7A708E"
-                    value={city}
-                    onChangeText={(text) => {
-                      setCity(text);
-                      setErrors(prev => ({ ...prev, city: '' }));
+                    onCitySelected={(cityObj) => {
+                      setCity(cityObj.city);
+                      setLatitude(cityObj.latitude);
+                      setLongitude(cityObj.longitude);
+                      setErrors((prev) => ({ ...prev, city: '' }));
                     }}
+                    style={styles.input}
                   />
                 </View>
                 <ErrorMessage error={errors.city} />
               </View>
 
+              {/* DATA DE NASCIMENTO */}
               <View>
                 <TouchableOpacity 
                   style={styles.inputContainer} 
@@ -329,6 +330,7 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.birthDate} />
               </View>
 
+              {/* HORA DE NASCIMENTO */}
               <View>
                 <TouchableOpacity 
                   style={styles.inputContainer}
@@ -342,6 +344,7 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.birthTime} />
               </View>
 
+              {/* EMAIL */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="email" size={20} color="#7A708E" />
@@ -352,7 +355,7 @@ export default function RegisterScreen({ navigation }) {
                     value={email}
                     onChangeText={(text) => {
                       setEmail(text);
-                      setErrors(prev => ({ ...prev, email: '' }));
+                      setErrors((prev) => ({ ...prev, email: '' }));
                     }}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -361,6 +364,7 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.email} />
               </View>
 
+              {/* SENHA */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="lock" size={20} color="#7A708E" />
@@ -371,7 +375,7 @@ export default function RegisterScreen({ navigation }) {
                     value={password}
                     onChangeText={(text) => {
                       setPassword(text);
-                      setErrors(prev => ({ ...prev, password: '' }));
+                      setErrors((prev) => ({ ...prev, password: '' }));
                     }}
                     secureTextEntry
                   />
@@ -379,6 +383,7 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.password} />
               </View>
 
+              {/* CONFIRMAR SENHA */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="lock-outline" size={20} color="#7A708E" />
@@ -389,7 +394,7 @@ export default function RegisterScreen({ navigation }) {
                     value={password_confirmation}
                     onChangeText={(text) => {
                       setPasswordConfirmation(text);
-                      setErrors(prev => ({ ...prev, password_confirmation: '' }));
+                      setErrors((prev) => ({ ...prev, password_confirmation: '' }));
                     }}
                     secureTextEntry
                   />
@@ -413,7 +418,6 @@ export default function RegisterScreen({ navigation }) {
                   Já tem uma conta? <Text style={styles.linkTextHighlight}>Faça login</Text>
                 </Text>
               </TouchableOpacity>
-
             </View>
 
             <DateTimePickerModal
@@ -436,6 +440,7 @@ export default function RegisterScreen({ navigation }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
       {isLoading && <LoadingOverlay message={loadingMessage} />}
     </View>
   );
@@ -490,6 +495,7 @@ const styles = StyleSheet.create({
     height: 55,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 0,
   },
   input: {
     flex: 1,
@@ -506,51 +512,11 @@ const styles = StyleSheet.create({
   placeholder: {
     color: '#7A708E',
   },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(109, 68, 255, 0.15)',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#FFD700',
-    borderRadius: 12,
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   errorText: {
     color: '#ff4444',
     fontSize: 12,
     marginTop: 4,
     marginLeft: 10,
-  },
-  emailRegistration: {
-    gap: 10,
-  },
-  buttonWrapper: {
-    marginVertical: 5,
-    borderRadius: 12,
-    backgroundColor: 'rgba(109, 68, 255, 0.15)', 
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-  },
-  buttonContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    letterSpacing: 0.5,
-    textShadowColor: 'white',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
   },
   linkButton: {
     alignItems: 'center',

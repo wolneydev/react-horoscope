@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(109, 68, 255, 0.2)',
   },
   card: {
-    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderRadius: 15,
     padding: 20,
     marginBottom: 15,
@@ -255,9 +255,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoCard: {
-    backgroundColor: 'rgba(109, 68, 255, 0.1)',
+    backgroundColor: '#121629',
     borderWidth: 1,
-    borderColor: 'rgba(32, 178, 170, 0.15)',
+    borderColor: '#272343',
     borderRadius: 15,
     padding: 20,
     marginBottom: 15,
