@@ -1,4 +1,5 @@
 // src/screens/auth/register/RegisterScreen.js
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -14,6 +15,7 @@ import {
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import * as Location from 'expo-location'; // <--- BIBLIOTECA EXPO-LOCATION
 
 import api from '../../services/api';
 import StorageService from '../../store/store';
@@ -24,17 +26,26 @@ import CustomButton from '../../Components/CustomButton';
 import CityAutoComplete from '../../Components/CityAutoComplete';
 
 export default function RegisterScreen({ navigation }) {
-  const [nome, setNome] = useState('Itu Assis');
-  // Removido o uso direto do campo city no TextInput; agora usamos o autocomplete
-  const [city, setCity] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  // Inputs de texto
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [password_confirmation, setPasswordConfirmation] = useState('');
 
+  // Cidade de nascimento (via AutoComplete)
+  const [birthCity, setBirthCity] = useState('');
+  const [birthLatitude, setBirthLatitude] = useState('');
+  const [birthLongitude, setBirthLongitude] = useState('');
+
+  // Localização atual do usuário
+  const [currentLatitude, setCurrentLatitude] = useState('');
+  const [currentLongitude, setCurrentLongitude] = useState('');
+
+  // Data e hora de nascimento
   const [birthDate, setBirthDate] = useState(new Date());
   const [birthTime, setBirthTime] = useState(new Date());
-  const [email, setEmail] = useState('danielfreitas@gmail.com');
-  const [password, setPassword] = useState('12345678');
-  const [password_confirmation, setPasswordConfirmation] = useState('12345678');
+
+  // Estados de UI
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   const [errors, setErrors] = useState({
@@ -49,10 +60,13 @@ export default function RegisterScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
 
+  // Animação
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useEffect(() => {
     checkUserLogin();
+    requestLocationAsync(); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useFocusEffect(
@@ -60,6 +74,29 @@ export default function RegisterScreen({ navigation }) {
       checkUserLogin();
     }, [])
   );
+
+  /**
+   * Solicita permissão de localização e captura a localização atual do usuário (Expo).
+   */
+  const requestLocationAsync = async () => {
+    try {
+      // Pede permissão de localização
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Não foi possível obter sua localização!');
+        return;
+      }
+      // Se concedida, obtém localização atual
+      const currentPosition = await Location.getCurrentPositionAsync({});
+      console.info('currentPosition');
+      console.log(currentPosition.coords.latitude.toString());
+      console.log(currentPosition.coords.longitude.toString());
+      setCurrentLatitude(currentPosition.coords.latitude.toString());
+      setCurrentLongitude(currentPosition.coords.longitude.toString());
+    } catch (err) {
+      console.warn('Erro ao requisitar/obter localização:', err);
+    }
+  };
 
   const checkUserLogin = async () => {
     try {
@@ -81,21 +118,14 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Mostrar/ocultar modal de Data
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
+  // ----------------------------------------------------------------------
+  // DatePicker e TimePicker
+  // ----------------------------------------------------------------------
+  const showDatePicker = () => setDatePickerVisibility(true);
+  const hideDatePicker = () => setDatePickerVisibility(false);
 
-  // Mostrar/ocultar modal de Hora
-  const showTimePicker = () => {
-    setTimePickerVisibility(true);
-  };
-  const hideTimePicker = () => {
-    setTimePickerVisibility(false);
-  };
+  const showTimePicker = () => setTimePickerVisibility(true);
+  const hideTimePicker = () => setTimePickerVisibility(false);
 
   const handleConfirmDate = (selectedDate) => {
     setBirthDate(selectedDate);
@@ -107,6 +137,7 @@ export default function RegisterScreen({ navigation }) {
     hideTimePicker();
   };
 
+  // Formatação
   const formatSelectedDate = (date) => {
     if (!date) return '';
     const day = date.getDate();
@@ -122,48 +153,44 @@ export default function RegisterScreen({ navigation }) {
     return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
   };
 
+  // ----------------------------------------------------------------------
+  // Validação
+  // ----------------------------------------------------------------------
   const validateFields = () => {
     let tempErrors = {};
     let isValid = true;
 
-    // Validação do nome
     if (!nome || nome.trim().length < 3) {
       tempErrors.nome = 'Nome deve ter pelo menos 3 caracteres';
       isValid = false;
     }
 
-    // Validação da cidade
-    if (!city || city.trim().length < 2) {
-      tempErrors.city = 'Cidade é obrigatória';
+    if (!birthCity || birthCity.trim().length < 2) {
+      tempErrors.city = 'Cidade de nascimento é obrigatória';
       isValid = false;
     }
 
-    // Validação da data de nascimento
     if (!birthDate) {
       tempErrors.birthDate = 'Data de nascimento é obrigatória';
       isValid = false;
     }
 
-    // Validação da hora de nascimento
     if (!birthTime) {
       tempErrors.birthTime = 'Hora de nascimento é obrigatória';
       isValid = false;
     }
 
-    // Validação do email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
       tempErrors.email = 'Email inválido';
       isValid = false;
     }
 
-    // Validação da senha
     if (!password || password.length < 6) {
       tempErrors.password = 'Senha deve ter pelo menos 6 caracteres';
       isValid = false;
     }
 
-    // Validação da confirmação de senha
     if (password !== password_confirmation) {
       tempErrors.password_confirmation = 'As senhas não coincidem';
       isValid = false;
@@ -173,6 +200,9 @@ export default function RegisterScreen({ navigation }) {
     return isValid;
   };
 
+  // ----------------------------------------------------------------------
+  // Envio do formulário
+  // ----------------------------------------------------------------------
   const handleSubmit = async () => {
     if (validateFields()) {
       try {
@@ -187,7 +217,8 @@ export default function RegisterScreen({ navigation }) {
         const minute = birthTime.getMinutes();
 
         setLoadingMessage('Iniciando sua jornada astral ...');
-        
+
+        // Ajuste os nomes de campos conforme sua API espera
         const response = await api.post(
           'auth/register',
           {
@@ -195,15 +226,22 @@ export default function RegisterScreen({ navigation }) {
             email: email.trim(),
             password: password.trim(),
             password_confirmation: password_confirmation.trim(),
-            birth_city: city.trim(),
+
+            // Dados de nascimento
+            birth_city: birthCity.trim(),
             birth_year: parseInt(year, 10),
             birth_month: parseInt(month, 10),
             birth_day: parseInt(day, 10),
             birth_hour: parseInt(hour, 10),
             birth_minute: parseInt(minute, 10),
-            // Se sua API também estiver esperando as coordenadas no cadastro, inclua-as:
-            birth_latitude: latitude ? parseFloat(latitude) : null,
-            birth_longitude: longitude ? parseFloat(longitude) : null,
+
+            // Coordenadas de nascimento (via autocomplete)
+            birth_latitude: birthLatitude ? parseFloat(birthLatitude) : null,
+            birth_longitude: birthLongitude ? parseFloat(birthLongitude) : null,
+
+            // Coordenadas de localização atual (via expo-location)
+            current_latitude: currentLatitude ? parseFloat(currentLatitude) : null,
+            current_longitude: currentLongitude ? parseFloat(currentLongitude) : null,
           },
           {
             headers: {
@@ -215,13 +253,15 @@ export default function RegisterScreen({ navigation }) {
         const { status, data } = response.data;
 
         if (status === 'success') {
-          // Preparando dados do usuário
+          // Preparando dados do usuário para salvar localmente
           const userData = {
             name: data.name,
             email: data.email,
             email_verified_at: data.email_verified_at,
             uuid: data.uuid,
             encryptedPassword: encryptedPassword,
+
+            // Dados de nascimento salvos no backend
             birthData: {
               city: data.birth_city,
               year: data.birth_year,
@@ -229,13 +269,19 @@ export default function RegisterScreen({ navigation }) {
               day: data.birth_day,
               hour: data.birth_hour,
               minute: data.birth_minute,
-              latitude: latitude,
-              longitude: longitude,
+              latitude: data.birth_latitude,
+              longitude: data.birth_longitude,
+            },
+
+            // Localização atual do usuário
+            currentLocation: {
+              latitude: currentLatitude,
+              longitude: currentLongitude,
             },
           };
 
           setLoadingMessage('Gerando seu mapa astral ...');
-          
+
           await StorageService.saveUserData(userData);
           await StorageService.saveAccessToken(data.access_token);
           await StorageService.saveAstralMaps(data.astral_maps);
@@ -251,7 +297,6 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Componente para mostrar mensagem de erro
   const ErrorMessage = ({ error }) => {
     if (!error) return null;
     return <Text style={styles.errorText}>{error}</Text>;
@@ -269,17 +314,17 @@ export default function RegisterScreen({ navigation }) {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={false}
-          bounces={true}
+          bounces
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
             <Text style={styles.title}>Criar Conta</Text>
             <Text style={styles.subtitle}>
-              Vamos precisar de alguns dados para criar seu mapa astral!
+              Precisamos de alguns dados para criar seu mapa astral!
             </Text>
 
             <View style={styles.form}>
-              {/* NOME */}
+              {/* Nome */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="person" size={20} color="#7A708E" />
@@ -297,17 +342,16 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.nome} />
               </View>
 
-              {/* CIDADE (Substituído por CityAutoComplete) */}
+              {/* Cidade de nascimento e coordenadas de nascimento via CityAutoComplete */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="location-city" size={20} color="#7A708E" />
                   <CityAutoComplete
-                    // Passamos a mesma cor de placeholder, se desejar
                     placeholderTextColor="#7A708E"
                     onCitySelected={(cityObj) => {
-                      setCity(cityObj.city);
-                      setLatitude(cityObj.latitude);
-                      setLongitude(cityObj.longitude);
+                      setBirthCity(cityObj.city);
+                      setBirthLatitude(cityObj.latitude);
+                      setBirthLongitude(cityObj.longitude);
                       setErrors((prev) => ({ ...prev, city: '' }));
                     }}
                     style={styles.input}
@@ -316,35 +360,39 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.city} />
               </View>
 
-              {/* DATA DE NASCIMENTO */}
+              {/* Data de nascimento */}
               <View>
-                <TouchableOpacity 
-                  style={styles.inputContainer} 
+                <TouchableOpacity
+                  style={styles.inputContainer}
                   onPress={showDatePicker}
                 >
                   <Icon name="calendar-today" size={20} color="#7A708E" />
                   <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
-                    {birthDate ? formatSelectedDate(birthDate) : "Data de nascimento"}
+                    {birthDate
+                      ? formatSelectedDate(birthDate)
+                      : 'Data de nascimento'}
                   </Text>
                 </TouchableOpacity>
                 <ErrorMessage error={errors.birthDate} />
               </View>
 
-              {/* HORA DE NASCIMENTO */}
+              {/* Hora de nascimento */}
               <View>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={showTimePicker}
                 >
                   <Icon name="access-time" size={20} color="#7A708E" />
                   <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
-                    {birthTime ? formatSelectedTime(birthTime) : "Horário de nascimento"}
+                    {birthTime
+                      ? formatSelectedTime(birthTime)
+                      : 'Horário de nascimento'}
                   </Text>
                 </TouchableOpacity>
                 <ErrorMessage error={errors.birthTime} />
               </View>
 
-              {/* EMAIL */}
+              {/* Email */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="email" size={20} color="#7A708E" />
@@ -364,7 +412,7 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.email} />
               </View>
 
-              {/* SENHA */}
+              {/* Senha */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="lock" size={20} color="#7A708E" />
@@ -383,7 +431,7 @@ export default function RegisterScreen({ navigation }) {
                 <ErrorMessage error={errors.password} />
               </View>
 
-              {/* CONFIRMAR SENHA */}
+              {/* Confirmar senha */}
               <View>
                 <View style={styles.inputContainer}>
                   <Icon name="lock-outline" size={20} color="#7A708E" />
@@ -394,7 +442,10 @@ export default function RegisterScreen({ navigation }) {
                     value={password_confirmation}
                     onChangeText={(text) => {
                       setPasswordConfirmation(text);
-                      setErrors((prev) => ({ ...prev, password_confirmation: '' }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        password_confirmation: '',
+                      }));
                     }}
                     secureTextEntry
                   />
@@ -410,12 +461,13 @@ export default function RegisterScreen({ navigation }) {
                 style={styles.customButton}
               />
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => navigation.navigate('LoginScreen')}
                 style={styles.linkButton}
               >
                 <Text style={styles.linkText}>
-                  Já tem uma conta? <Text style={styles.linkTextHighlight}>Faça login</Text>
+                  Já tem uma conta?{' '}
+                  <Text style={styles.linkTextHighlight}>Faça login</Text>
                 </Text>
               </TouchableOpacity>
             </View>
@@ -481,7 +533,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
     marginBottom: 30,
-    textAlign: 'center',
   },
   form: {
     gap: 10,
