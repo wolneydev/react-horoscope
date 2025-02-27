@@ -11,29 +11,28 @@ import {
   Alert,
   KeyboardAvoidingView,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Location from 'expo-location'; // <--- BIBLIOTECA EXPO-LOCATION
 
-import api from '../../../services/api';
-import StorageService from '../../../store/store';
-import CryptoService from '../../../services/crypto';
-import AnimatedStars from '../../../Components/animation/AnimatedStars';
-import LoadingOverlay from '../../../Components/LoadingOverlay';
-
-// Importamos nossos novos componentes
-import RegisterHeader from '../../../Components/register/RegisterHeader';
-import RegisterForm from '../../../Components/register/RegisterForm';
+import api from '../../services/api';
+import StorageService from '../../store/store';
+import CryptoService from '../../services/crypto';
+import AnimatedStars from '../../Components/animation/AnimatedStars';
+import LoadingOverlay from '../../Components/LoadingOverlay';
+import CustomButton from '../../Components/CustomButton';
+import CityAutoComplete from '../../Components/CityAutoComplete';
 
 export default function RegisterScreen({ navigation }) {
   // Inputs de texto
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [password_confirmation, setPasswordConfirmation] = useState('');
 
-  // Cidade de nascimento
+  // Cidade de nascimento (via AutoComplete)
   const [birthCity, setBirthCity] = useState('');
   const [birthLatitude, setBirthLatitude] = useState('');
   const [birthLongitude, setBirthLongitude] = useState('');
@@ -42,7 +41,7 @@ export default function RegisterScreen({ navigation }) {
   const [currentLatitude, setCurrentLatitude] = useState('');
   const [currentLongitude, setCurrentLongitude] = useState('');
 
-  // Data/Hora de nascimento
+  // Data e hora de nascimento
   const [birthDate, setBirthDate] = useState(new Date());
   const [birthTime, setBirthTime] = useState(new Date());
 
@@ -76,17 +75,22 @@ export default function RegisterScreen({ navigation }) {
     }, [])
   );
 
-  // --------------------------------------------------------------------------------
-  // Lógica de localização
-  // --------------------------------------------------------------------------------
+  /**
+   * Solicita permissão de localização e captura a localização atual do usuário (Expo).
+   */
   const requestLocationAsync = async () => {
     try {
+      // Pede permissão de localização
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permissão negada', 'Não foi possível obter sua localização!');
         return;
       }
+      // Se concedida, obtém localização atual
       const currentPosition = await Location.getCurrentPositionAsync({});
+      console.info('currentPosition');
+      console.log(currentPosition.coords.latitude.toString());
+      console.log(currentPosition.coords.longitude.toString());
       setCurrentLatitude(currentPosition.coords.latitude.toString());
       setCurrentLongitude(currentPosition.coords.longitude.toString());
     } catch (err) {
@@ -94,7 +98,6 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Verificação de login
   const checkUserLogin = async () => {
     try {
       const accessToken = await StorageService.getAccessToken();
@@ -115,9 +118,9 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // --------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------
   // DatePicker e TimePicker
-  // --------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------
   const showDatePicker = () => setDatePickerVisibility(true);
   const hideDatePicker = () => setDatePickerVisibility(false);
 
@@ -127,15 +130,14 @@ export default function RegisterScreen({ navigation }) {
   const handleConfirmDate = (selectedDate) => {
     setBirthDate(selectedDate);
     hideDatePicker();
-    setErrors((prev) => ({ ...prev, birthDate: '' }));
   };
 
   const handleConfirmTime = (selectedTime) => {
     setBirthTime(selectedTime);
     hideTimePicker();
-    setErrors((prev) => ({ ...prev, birthTime: '' }));
   };
 
+  // Formatação
   const formatSelectedDate = (date) => {
     if (!date) return '';
     const day = date.getDate();
@@ -151,9 +153,9 @@ export default function RegisterScreen({ navigation }) {
     return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
   };
 
-  // --------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------
   // Validação
-  // --------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------
   const validateFields = () => {
     let tempErrors = {};
     let isValid = true;
@@ -189,7 +191,7 @@ export default function RegisterScreen({ navigation }) {
       isValid = false;
     }
 
-    if (password !== passwordConfirmation) {
+    if (password !== password_confirmation) {
       tempErrors.password_confirmation = 'As senhas não coincidem';
       isValid = false;
     }
@@ -198,14 +200,13 @@ export default function RegisterScreen({ navigation }) {
     return isValid;
   };
 
-  // --------------------------------------------------------------------------------
-  // Submissão do formulário
-  // --------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------
+  // Envio do formulário
+  // ----------------------------------------------------------------------
   const handleSubmit = async () => {
     if (validateFields()) {
       try {
         setIsLoading(true);
-        setLoadingMessage('Iniciando sua jornada astral ...');
 
         const encryptedPassword = CryptoService.encrypt(password);
 
@@ -215,14 +216,16 @@ export default function RegisterScreen({ navigation }) {
         const hour = birthTime.getHours();
         const minute = birthTime.getMinutes();
 
-        // Chamada à API
+        setLoadingMessage('Iniciando sua jornada astral ...');
+
+        // Ajuste os nomes de campos conforme sua API espera
         const response = await api.post(
           'auth/register',
           {
             name: nome.trim(),
             email: email.trim(),
             password: password.trim(),
-            password_confirmation: passwordConfirmation.trim(),
+            password_confirmation: password_confirmation.trim(),
 
             // Dados de nascimento
             birth_city: birthCity.trim(),
@@ -232,16 +235,18 @@ export default function RegisterScreen({ navigation }) {
             birth_hour: parseInt(hour, 10),
             birth_minute: parseInt(minute, 10),
 
-            // Coordenadas de nascimento
+            // Coordenadas de nascimento (via autocomplete)
             birth_latitude: birthLatitude ? parseFloat(birthLatitude) : null,
             birth_longitude: birthLongitude ? parseFloat(birthLongitude) : null,
 
-            // Localização atual
+            // Coordenadas de localização atual (via expo-location)
             current_latitude: currentLatitude ? parseFloat(currentLatitude) : null,
             current_longitude: currentLongitude ? parseFloat(currentLongitude) : null,
           },
           {
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+            },
           }
         );
 
@@ -256,7 +261,7 @@ export default function RegisterScreen({ navigation }) {
             uuid: data.uuid,
             encryptedPassword: encryptedPassword,
 
-            // Dados de nascimento
+            // Dados de nascimento salvos no backend
             birthData: {
               city: data.birth_city,
               year: data.birth_year,
@@ -267,7 +272,8 @@ export default function RegisterScreen({ navigation }) {
               latitude: data.birth_latitude,
               longitude: data.birth_longitude,
             },
-            // Localização atual
+
+            // Localização atual do usuário
             currentLocation: {
               latitude: currentLatitude,
               longitude: currentLongitude,
@@ -291,9 +297,9 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Navegar para login
-  const handleNavigateToLogin = () => {
-    navigation.navigate('LoginScreen');
+  const ErrorMessage = ({ error }) => {
+    if (!error) return null;
+    return <Text style={styles.errorText}>{error}</Text>;
   };
 
   return (
@@ -312,54 +318,160 @@ export default function RegisterScreen({ navigation }) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            {/* Componente de Cabeçalho */}
-            <RegisterHeader />
+            <Text style={styles.title}>Criar Conta</Text>
+            <Text style={styles.subtitle}>
+              Precisamos de alguns dados para criar seu mapa astral!
+            </Text>
 
-            {/* Componente de Formulário */}
-            <RegisterForm
-              nome={nome}
-              setNome={(text) => {
-                setNome(text);
-                setErrors((prev) => ({ ...prev, nome: '' }));
-              }}
-              email={email}
-              setEmail={(text) => {
-                setEmail(text);
-                setErrors((prev) => ({ ...prev, email: '' }));
-              }}
-              password={password}
-              setPassword={(text) => {
-                setPassword(text);
-                setErrors((prev) => ({ ...prev, password: '' }));
-              }}
-              passwordConfirmation={passwordConfirmation}
-              setPasswordConfirmation={(text) => {
-                setPasswordConfirmation(text);
-                setErrors((prev) => ({
-                  ...prev,
-                  password_confirmation: '',
-                }));
-              }}
-              birthCity={birthCity}
-              setBirthCity={(city) => {
-                setBirthCity(city);
-                setErrors((prev) => ({ ...prev, city: '' }));
-              }}
-              setBirthLatitude={setBirthLatitude}
-              setBirthLongitude={setBirthLongitude}
-              birthDate={birthDate}
-              birthTime={birthTime}
-              showDatePicker={showDatePicker}
-              showTimePicker={showTimePicker}
-              formatSelectedDate={formatSelectedDate}
-              formatSelectedTime={formatSelectedTime}
-              errors={errors}
-              isLoading={isLoading}
-              onSubmit={handleSubmit}
-              onNavigateToLogin={handleNavigateToLogin}
-            />
-            
-            {/* DatePickers e TimePickers */}
+            <View style={styles.form}>
+              {/* Nome */}
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="person" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nome completo"
+                    placeholderTextColor="#7A708E"
+                    value={nome}
+                    onChangeText={(text) => {
+                      setNome(text);
+                      setErrors((prev) => ({ ...prev, nome: '' }));
+                    }}
+                  />
+                </View>
+                <ErrorMessage error={errors.nome} />
+              </View>
+
+              {/* Cidade de nascimento e coordenadas de nascimento via CityAutoComplete */}
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="location-city" size={20} color="#7A708E" />
+                  <CityAutoComplete
+                    placeholderTextColor="#7A708E"
+                    onCitySelected={(cityObj) => {
+                      setBirthCity(cityObj.city);
+                      setBirthLatitude(cityObj.latitude);
+                      setBirthLongitude(cityObj.longitude);
+                      setErrors((prev) => ({ ...prev, city: '' }));
+                    }}
+                    style={styles.input}
+                  />
+                </View>
+                <ErrorMessage error={errors.city} />
+              </View>
+
+              {/* Data de nascimento */}
+              <View>
+                <TouchableOpacity
+                  style={styles.inputContainer}
+                  onPress={showDatePicker}
+                >
+                  <Icon name="calendar-today" size={20} color="#7A708E" />
+                  <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
+                    {birthDate
+                      ? formatSelectedDate(birthDate)
+                      : 'Data de nascimento'}
+                  </Text>
+                </TouchableOpacity>
+                <ErrorMessage error={errors.birthDate} />
+              </View>
+
+              {/* Hora de nascimento */}
+              <View>
+                <TouchableOpacity
+                  style={styles.inputContainer}
+                  onPress={showTimePicker}
+                >
+                  <Icon name="access-time" size={20} color="#7A708E" />
+                  <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
+                    {birthTime
+                      ? formatSelectedTime(birthTime)
+                      : 'Horário de nascimento'}
+                  </Text>
+                </TouchableOpacity>
+                <ErrorMessage error={errors.birthTime} />
+              </View>
+
+              {/* Email */}
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="email" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="E-mail"
+                    placeholderTextColor="#7A708E"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setErrors((prev) => ({ ...prev, email: '' }));
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+                <ErrorMessage error={errors.email} />
+              </View>
+
+              {/* Senha */}
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="lock" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    placeholderTextColor="#7A708E"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setErrors((prev) => ({ ...prev, password: '' }));
+                    }}
+                    secureTextEntry
+                  />
+                </View>
+                <ErrorMessage error={errors.password} />
+              </View>
+
+              {/* Confirmar senha */}
+              <View>
+                <View style={styles.inputContainer}>
+                  <Icon name="lock-outline" size={20} color="#7A708E" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirmar senha"
+                    placeholderTextColor="#7A708E"
+                    value={password_confirmation}
+                    onChangeText={(text) => {
+                      setPasswordConfirmation(text);
+                      setErrors((prev) => ({
+                        ...prev,
+                        password_confirmation: '',
+                      }));
+                    }}
+                    secureTextEntry
+                  />
+                </View>
+                <ErrorMessage error={errors.password_confirmation} />
+              </View>
+
+              <CustomButton
+                title="Gerar meu Mapa Astral!"
+                onPress={handleSubmit}
+                disabled={isLoading}
+                loading={isLoading}
+                style={styles.customButton}
+              />
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('LoginScreen')}
+                style={styles.linkButton}
+              >
+                <Text style={styles.linkText}>
+                  Já tem uma conta?{' '}
+                  <Text style={styles.linkTextHighlight}>Faça login</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <DateTimePickerModal
               isVisible={isDatePickerVisible}
               mode="date"
@@ -386,7 +498,6 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-// Estilos específicos da tela
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -406,5 +517,72 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     paddingTop: 40,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#E0E0E0',
+    textShadowColor: 'gray',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
+    marginBottom: 30,
+  },
+  form: {
+    gap: 10,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    height: 55,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 0,
+  },
+  input: {
+    flex: 1,
+    color: '#FFFFFF',
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  dateText: {
+    flex: 1,
+    color: '#FFFFFF',
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  placeholder: {
+    color: '#7A708E',
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 10,
+  },
+  linkButton: {
+    alignItems: 'center',
+    padding: 15,
+    marginTop: 10,
+  },
+  linkText: {
+    color: '#7A708E',
+    fontSize: 14,
+  },
+  linkTextHighlight: {
+    color: '#6D44FF',
+    fontWeight: 'bold',
+  },
+  customButton: {
+    marginVertical: 5,
   },
 });
