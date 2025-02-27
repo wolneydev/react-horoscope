@@ -16,8 +16,8 @@ import StorageService from '../store/store';
 
 // Novos componentes refatorados
 import NavigationHeader from '../Components/NavigationHeader';
-import CompatibilityHeader from '../Components/CompatibilityHeader';
-import CompatibilityItem from '../Components/CompatibilityItem';
+import CompatibilityHeader from '../Components/compatibility/CompatibilityHeader';
+import CompatibilityItem from '../Components/compatibility/CompatibilityItem';
 
 export default function CompatibilityScreen({ route }) {
   const navigation = useNavigation();

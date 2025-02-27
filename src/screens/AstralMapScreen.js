@@ -13,8 +13,8 @@ import AnimatedStars from '../Components/animation/AnimatedStars';
 import CustomButton from '../Components/CustomButton';
 
 // Componentes refatorados
-import InfoCard from '../Components/InfoCard';
-import AstralEntityCard from '../Components/AstralEntityCard';
+import InfoCard from '../Components/astralmap/InfoCard';
+import AstralEntityCard from '../Components/astralmap/AstralEntityCard';
 
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
