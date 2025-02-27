@@ -1,11 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, StyleSheet, ActivityIndicator, Image, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView
+} from 'react-native';
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { formatBirthDate } from '../utils/helpers';
 import CustomButton from '../Components/CustomButton';
+
+// Componentes refatorados
+import InfoCard from '../Components/InfoCard';
+import AstralEntityCard from '../Components/AstralEntityCard';
 
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
@@ -29,6 +38,7 @@ const AstralMapScreen = ({ route }) => {
   const [astralMap2, setAstralMap2] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Usamos useMemo para não recriar a animação constantemente
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
 
   useEffect(() => {
@@ -60,9 +70,9 @@ const AstralMapScreen = ({ route }) => {
   const handleCompatibilityPress = async () => {
     try {
       const astralMapData = await StorageService.getMyAstralMap();
-       navigation.navigate('CompatibilityScreen', { 
-        uuid1: astralMapData.uuid, 
-        uuid2: astralMap2.uuid
+      navigation.navigate('CompatibilityScreen', {
+        uuid1: astralMapData.uuid,
+        uuid2: astralMap2.uuid,
       });
     } catch (error) {
       console.error('Erro ao obter usuário atual:', error);
@@ -94,11 +104,11 @@ const AstralMapScreen = ({ route }) => {
   return (
     <View style={styles.container}>
       {memoizedStars}
-      
-      {/* Botão Fixo */}
+
+      {/* Botão Fixo (só exibe se não for o meu próprio mapa astral) */}
       {astralMap && !astralMap.is_my_astral_map && (
         <View style={styles.stickyButtonContainer}>
-          <CustomButton 
+          <CustomButton
             title="Verificar Compatibilidade Astral"
             onPress={handleCompatibilityPress}
             style={styles.stickyButton}
@@ -112,51 +122,30 @@ const AstralMapScreen = ({ route }) => {
         styles.mainContainer,
         (!astralMap?.is_my_astral_map) && styles.mainContainerWithButton
       ]}>
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
-          <View style={styles.infoCard}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="auto-awesome" size={24} color="#6D44FF" />
-            </View>
-            <Text style={styles.infoCardTitle}>Mapa Astral de</Text>
-            <Text style={styles.infoCardName}>{astralMap.astral_map_name}</Text>
-            <Text style={styles.infoCardDescription}>
-              O mapa astral, ou carta natal, é um retrato do céu no momento exato do seu nascimento. 
-              Ele revela suas características pessoais, talentos naturais e desafios de vida.
-            </Text>
-            <Text style={styles.infoCardBirthData}>
-              {formatBirthDate(astralMap)}
-            </Text>
-          </View>
+          {/* Componente InfoCard */}
+          <InfoCard astralMap={astralMap} />
 
+          {/* Lista de entidades astrais (usando AstralEntityCard) */}
           {astralMap?.astral_entities?.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={styles.imageContainer}>
-                  <Image source={imageMap[item.sign.name.toLowerCase()]} style={styles.image} />
-                </View>
-                <View style={styles.headerTexts}>
-                  <Text style={styles.astroName}>{item.astral_entity.name}</Text>
-                  <Text style={styles.horoscopeName}>
-                    {item.sign.name} - {item.degree}º
-                  </Text>
-                </View>
-              </View>
-              {item.astral_entity.explanation && (
-                <Text style={styles.explanation}>{item.astral_entity.explanation}</Text>
-              )}
-              <Text style={styles.description}>{item.description}</Text>
-            </View>
+            <AstralEntityCard
+              key={item.id}
+              item={item}
+              imageMap={imageMap}
+            />
           ))}
         </ScrollView>
       </View>
     </View>
   );
 };
+
+export default AstralMapScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -188,118 +177,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(109, 68, 255, 0.2)',
   },
-  card: {
-    backgroundColor: 'rgba(109, 68, 255, 0.1)',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.3)',
-  },
-  content: {
-    padding: 20,
-  },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  flatList: {
-    flex: 1,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'left',
-    marginBottom: 10,  
-  },
-  headerTexts: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  astroName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFD700',
-    marginBottom: 2,
-  },
-  horoscopeName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'lightblue',
-  },
-  explanation: {
-    fontSize: 12,
-    color: 'lightblue',
-    fontStyle: 'italic',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  description: {
-    fontSize: 14,
-    color: '#fff',
-    lineHeight: 20,
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  missingImageText: {
-    color: 'white',
-    fontSize: 14,
-    flex: 1,
-  },
-  infoCard: {
-    backgroundColor: '#121629',
-    borderWidth: 1,
-    borderColor: '#272343',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
-  },
-  infoIconContainer: {
-    backgroundColor: 'rgba(109, 68, 255, 0.2)',
-    padding: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  infoCardTitle: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  infoCardName: {
-    color: '#FFD700',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textShadowColor: 'rgba(255, 215, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  infoCardBirthData: {
-    color: '#FFD700',
-    fontSize: 14,
-    marginBottom: 15,
-    textAlign: 'right',
-    fontStyle: 'italic',
-    textShadowColor: 'rgba(255, 215, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 5,
-  },
-  infoCardDescription: {
-    color: '#bbb',
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 15,
-  },
   stickyButton: {
     backgroundColor: 'rgba(109, 68, 255, 0.3)',
     borderWidth: 1,
@@ -310,13 +187,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  flatListContent: {
-    paddingHorizontal: 20,
+  content: {
+    padding: 20,
   },
-  imageContainer: {
-    flexDirection: 'row',
+  centerContent: {
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  errorText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });
-
-export default AstralMapScreen;
