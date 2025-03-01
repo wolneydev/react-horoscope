@@ -175,6 +175,36 @@ class StorageService {
       return false;
     }
   }
+
+  async getExtraMapsMaxNumber() {
+    try {
+      const userData = await this.getUserData();
+      return userData.extra_maps_max_number;
+    } catch (error) {
+      console.error('Erro ao obter contagem de mapas extras:', error);
+      return 0;
+    }
+  }
+
+  async setExtraMapsMaxNumber(maxNumber) {
+    try {
+      const userData = await this.getUserData();
+      userData.extra_maps_max_number = maxNumber;
+      await this.saveUserData(userData);
+    } catch (error) {
+      console.error('Erro ao definir contagem de mapas extras:', error);
+    }
+  }
+
+  async getExtraMapsUsed() {
+    try {
+      const extraMaps = await this.getExtraCharts();
+      return extraMaps.length;
+    } catch (error) {
+      console.error('Erro ao obter mapas extras:', error);
+      return 0;
+    }
+  }
 }
 
 export default new StorageService();

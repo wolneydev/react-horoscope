@@ -27,11 +27,13 @@ import CompatibilityScreen from './src/screens/CompatibilityScreen';
 import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/auth/ResetPasswordScreen';
+import MyAccountScreen from './src/screens/MyAccountScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
 import { useState, useRef, useEffect } from 'react';
 import { TouchableOpacity } from 'react-native';
+import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
 
 enableScreens(false);
 
@@ -113,6 +115,11 @@ function MainStack() {
       <Stack.Screen
         name="ResetPasswordScreen"
         component={ResetPasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MyAccountScreen"
+        component={MyAccountScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
@@ -317,6 +324,36 @@ function CustomDrawerContent(props) {
           ]}
         />
 
+        <DrawerItem
+          label="Minha Conta"
+          icon={({ focused }) => (
+            <Icon name="stars" color={currentRoute === 'Minha Conta' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Minha Conta')}
+          style={[styles.drawerItem, currentRoute === 'Minha Conta' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Minha Conta' && styles.drawerLabelActive]}
+        />
+
+        <DrawerItem
+          label="Minhas Compras"
+          icon={({ focused }) => (
+            <Icon 
+              name="shopping-cart" 
+              color={currentRoute === 'Minhas Compras' ? '#FFFFFF' : '#7A708E'} 
+              size={24} 
+            />
+          )}
+          onPress={() => props.navigation.navigate('Minhas Compras')}
+          style={[
+            styles.drawerItem,
+            currentRoute === 'Minhas Compras' && styles.drawerItemActive
+          ]}
+          labelStyle={[
+            styles.drawerLabel,
+            currentRoute === 'Minhas Compras' && styles.drawerLabelActive
+          ]}
+        />
+
         {/* Grupo Sinastria */}
         <View style={styles.drawerGroup}>
           <DrawerItem
@@ -517,6 +554,26 @@ function AppDrawer() {
           options={{
             drawerIcon: ({ color, size }) => (
               <Icon name="stars" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Drawer.Screen
+          name="Minha Conta"
+          component={MyAccountScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="stars" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Drawer.Screen
+          name="Minhas Compras"
+          component={MyPurchasesScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="shopping-cart" color={color} size={size} />
             ),
           }}
         />
