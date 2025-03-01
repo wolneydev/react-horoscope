@@ -21,6 +21,7 @@ class StripeService {
 
   static async processPayment(amount, order_id, product_slug) {
     try {
+      console.log('processPayment', amount, order_id, product_slug);
       centavosAmount = amount * 100;
 
       const accessToken = await StorageService.getAccessToken();

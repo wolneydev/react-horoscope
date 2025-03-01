@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import StripeService from '../services/StripeService';
 
-const BuyCreditsButton = ({ 
+const BuyExtraMapsButton = ({ 
   label,
   amount, 
-  credits, 
   onSuccess,
   onStartProcessing,
   onEndProcessing,
@@ -19,11 +18,10 @@ const BuyCreditsButton = ({
     try {
       onStartProcessing && onStartProcessing();
       
-      const result = await StripeService.processPayment(amount, credits, product_slug);
+      const result = await StripeService.processPayment(amount, null, product_slug);
       console.log('result', result);
       if (result.success) {
-        Alert.alert('Sucesso', 'Créditos comprados com sucesso!');
-        onSuccess(credits);
+        onSuccess && onSuccess();
       }
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
@@ -61,4 +59,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BuyCreditsButton; 
+export default BuyExtraMapsButton; 

@@ -81,11 +81,9 @@ const MyPurchasesScreen = () => {
       const result = await StripeService.reProcessPayment(order.total_amount, order.id);
       
       if (result.success) {
-        //await updateUserCredits(credits); // Atualiza créditos do usuário
         onSuccess?.(result);
         Alert.alert(
-          'Sucesso!', 
-          `${credits} créditos foram adicionados à sua conta!`
+          'Sucesso! créditos foram adicionados à sua conta!'
         );
       }
     } catch (error) {

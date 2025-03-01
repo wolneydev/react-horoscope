@@ -5,9 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import StorageService from '../store/store';
 import CustomButton from '../Components/CustomButton';
-import BuyCreditsButton from '../Components/BuyCreditsButton';
+import BuyExtraMapsButton from '../Components/BuyExtraMapsButton';
 import StripeService from '../services/StripeService';
 import { formatNumber } from '../utils/helpers';
+import api from '../services/api';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
@@ -18,6 +19,7 @@ const SynastryScreen = () => {
   const [maxExtraMaps, setMaxExtraMaps] = useState(1);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAnyProcessing, setIsAnyProcessing] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
@@ -27,10 +29,8 @@ const SynastryScreen = () => {
 
   const initializeScreen = async () => {
     try {
-      let userData = await StorageService.getUserData();
-      console.log('userData', userData.uuid);      
-      await StripeService.initializeStripe();
       await loadChartInfo();
+      await StripeService.initializeStripe();
       setIsInitialized(true);
     } catch (error) {
       console.error('Erro ao inicializar tela:', error);
@@ -64,22 +64,43 @@ const SynastryScreen = () => {
     }
   };
 
-  const handlePurchaseSuccess = async (credits) => {
-    try {
-      await StorageService.updateUserCredits(credits);
-      setShowCreditsModal(false);
-      navigation.navigate('CreateExtraChartScreen');
-    } catch (error) {
-      console.error('Erro ao atualizar créditos:', error);
-    }
-  };
+  const handlePurchaseSuccess = async () => {
+    console.log('Iniciando verificação de atualização de número de mapas extras');
 
-  const handlePurchaseStart = () => {
-    setIsAnyProcessing(true);
-  };
+    // Função para verificar os mapas extras
+    const checkMaxExtraMaps = async () => {
+      try {
+        const token = await StorageService.getAccessToken();
+        const userData = await StorageService.getUserData();
+        const response = await api.get(`users/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-  const handlePurchaseEnd = () => {
-    setIsAnyProcessing(false);
+        console.log('response', response.data.data);
+        
+        return response.data.data.extra_maps_max_number;
+      } catch (error) {
+        console.error('Erro ao verificar mapas extras:', error);
+        return null;
+      }
+    };
+
+    // Verifica a cada 2 segundos até confirmar atualização
+    const initialMapsNumber = await StorageService.getExtraMapsMaxNumber();
+    const interval = setInterval(async () => {
+      const currentMapsNumber = await checkMaxExtraMaps();
+      console.log('Verificando mapas extras:', currentMapsNumber, 'inicial:', initialMapsNumber);
+      
+      if (currentMapsNumber > initialMapsNumber) {
+        StorageService.setExtraMapsMaxNumber(currentMapsNumber);
+        clearInterval(interval);
+        setMaxExtraMaps(currentMapsNumber);
+      }
+    }, 2000);
+
+    
   };
 
   const renderChartItem = ({ item }) => (
@@ -110,41 +131,49 @@ const SynastryScreen = () => {
       {memoStars}
       
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.extraMapsText}>
-            Mapas Extras: {extraMapsUsed}/{maxExtraMaps}
-          </Text>
-        </View>
-
         <View style={styles.infoCard}>
-          <View style={styles.infoIconContainer}>
-            <Icon name="favorite" size={24} color="#6D44FF" />
+          <View style={styles.infoCardHeader}>
+            <View style={styles.infoIconContainer}>
+              <Icon name="favorite" size={24} color="#6D44FF" />
+            </View>
+            <View style={styles.titleContainer}>
+              <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
+              {isInitialized && (
+                <Text style={styles.extraMapsText}>
+                  Mapas Extras: {extraMapsUsed}/{maxExtraMaps}
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity 
+              onPress={() => setIsInfoExpanded(!isInfoExpanded)}
+              style={styles.expandButton}
+            >
+              <Icon 
+                name={isInfoExpanded ? "keyboard-arrow-up" : "help-outline"} 
+                size={24} 
+                color="#7A708E" 
+              />
+            </TouchableOpacity>
           </View>
-          <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
-          <Text style={styles.infoCardDescription}>
-            A sinastria é a arte de comparar dois mapas astrais para entender a 
-            dinâmica do relacionamento. Ela revela as harmonias, desafios e o 
-            potencial de crescimento entre duas pessoas.
-          </Text>
-          <Text style={styles.infoCardDescription}>
-            Adicione novos mapas e verifique, através da sinastria, a compatibilidade deles com o seu mapa.
-          </Text>
-        </View>
 
-        <CustomButton
-          title="Criar Novo Mapa Astral"
-          onPress={handleCreateChart}
-          style={[
-            styles.customButton,
-            !isInitialized && styles.disabledButton
-          ]}
-          textStyle={styles.customButtonText}
-          icon="add-circle-outline"
-          disabled={!isInitialized}
-        />
+          {isInfoExpanded && (
+            <View style={styles.expandedInfo}>
+              <Text style={styles.infoCardDescription}>
+                A sinastria é a arte de comparar dois mapas astrais para entender a 
+                dinâmica do relacionamento. Ela revela as harmonias, desafios e o 
+                potencial de crescimento entre duas pessoas.
+              </Text>
+              <Text style={styles.infoCardDescription}>
+                Adicione novos mapas e verifique, através da sinastria, a compatibilidade deles com o seu mapa.
+              </Text>
+              <Text style={styles.infoCardDescription}>
+                Inicialmente você possui 1 mapa extra disponível. Adquira mais mapas para continuar gerando comparações.
+              </Text>
+            </View>
+          )}
+        </View>
 
         <View style={styles.chartsSection}>
-          <Text style={styles.sectionTitle}>Mapas Astrais Salvos</Text>
           {isLoading ? (
             <ActivityIndicator color="#6D44FF" size="large" />
           ) : (
@@ -162,6 +191,18 @@ const SynastryScreen = () => {
             />
           )}
         </View>
+
+        <CustomButton
+          title="Criar Novo Mapa Astral"
+          onPress={handleCreateChart}
+          style={[
+            styles.customButton,
+            !isInitialized && styles.disabledButton
+          ]}
+          textStyle={styles.customButtonText}
+          icon="add-circle-outline"
+          disabled={!isInitialized}
+        />
       </View>
 
       <Modal
@@ -179,10 +220,9 @@ const SynastryScreen = () => {
             </Text>
 
             <View style={styles.creditsOptions}>
-              <BuyCreditsButton
+              <BuyExtraMapsButton
                 amount={10.00}
                 product_slug={'extra_map'}
-                credits={1}
                 onSuccess={handlePurchaseSuccess}
                 onStartProcessing={() => setIsAnyProcessing(true)}
                 onEndProcessing={() => setIsAnyProcessing(false)}
@@ -197,10 +237,9 @@ const SynastryScreen = () => {
               />
 
               <View style={styles.discountContainer}>
-                <BuyCreditsButton
+                <BuyExtraMapsButton
                   amount={18.00}
                   product_slug={'two_extra_map_pack'}
-                  credits={2}
                   onSuccess={handlePurchaseSuccess}
                   onStartProcessing={() => setIsAnyProcessing(true)}
                   onEndProcessing={() => setIsAnyProcessing(false)}
@@ -220,10 +259,9 @@ const SynastryScreen = () => {
               </View>
 
               <View style={styles.bestValueContainer}>
-                <BuyCreditsButton
+                <BuyExtraMapsButton
                   amount={40.00}
                   product_slug={'five_extra_map_pack'}
-                  credits={5}
                   onSuccess={handlePurchaseSuccess}
                   onStartProcessing={() => setIsAnyProcessing(true)}
                   onEndProcessing={() => setIsAnyProcessing(false)}
@@ -299,11 +337,24 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 10,
   },
+  infoCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  titleContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
   infoCardTitle: {
     color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 4,
+  },
+  extraMapsText: {
+    color: '#7A708E',
+    fontSize: 14,
   },
   infoCardDescription: {
     color: '#bbb',
@@ -368,11 +419,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: 20,
     marginBottom: 10,
-  },
-  extraMapsText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    opacity: 0.9,
   },
   modalOverlay: {
     flex: 1,
@@ -488,6 +534,15 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     opacity: 0.7,
+  },
+  expandButton: {
+    padding: 8,
+  },
+  expandedInfo: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(109, 68, 255, 0.2)',
   },
 });
 
