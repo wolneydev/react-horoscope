@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import SpinningMandala from '../Components/SpinningMandala';
 import LoadingOverlay from '../Components/LoadingOverlay';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
 
-const HomeScreen = () => {
+const MyAccountScreen = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,8 +19,6 @@ const HomeScreen = () => {
   const [resendCounter, setResendCounter] = useState(60);
   const counterIntervalRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [showSuccess, setShowSuccess] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const startShake = () => {
     Animated.sequence([
@@ -199,24 +198,6 @@ const HomeScreen = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (userData?.email_verified_at) {
-      // Inicia com opacidade 1
-      fadeAnim.setValue(1);
-      
-      // Aguarda 2 segundos antes de iniciar o fade out
-      const timer = setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 1000, // duração da animação em ms
-          useNativeDriver: true,
-        }).start(() => setShowSuccess(false));
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [userData?.email_verified_at]);
-
   const startResendCounter = () => {
     setCanResendEmail(false);
     setResendCounter(60);
@@ -297,10 +278,14 @@ const HomeScreen = () => {
         </Animated.View>
 
         {/* Card de Verificação de Email */}
-        {userData?.email_verified_at && showSuccess && (
-          <Animated.View style={[styles.successMailVerificationCard, { opacity: fadeAnim }]}>
-            <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
-          </Animated.View>
+        {userData?.email_verified_at && (
+          <>
+            <TouchableOpacity 
+              style={styles.successMailVerificationCard}
+            >
+              <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         {/* Mapa Astral Card */}        
@@ -311,21 +296,8 @@ const HomeScreen = () => {
           ]}
           onPress={() => handleCardPress('Mapa Astral')}
         >
-          <Text style={styles.cardTitle}>Mapa Astral</Text>
+          <Text style={styles.cardTitle}>Mapa Astrolal</Text>
           <Text style={styles.cardDescription}>Veja seu mapa astral completo</Text>
-          <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
-        </TouchableOpacity>        
-
-        {/* Sinastria Card */}
-        <TouchableOpacity 
-          style={[
-            styles.card,
-            !userData?.email_verified_at && styles.disabledCard
-          ]}
-          onPress={() => handleCardPress('Sinastria')}
-        >
-          <Text style={styles.cardTitle}>Sinastria</Text>
-          <Text style={styles.cardDescription}>Compare mapas astrais e descubra compatibilidades</Text>
           <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
         </TouchableOpacity>
       </View>
@@ -492,4 +464,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default MyAccountScreen;

@@ -1,49 +1,64 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
-import CustomButton from './CustomButton';
+import { Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import StripeService from '../services/StripeService';
 
 const BuyCreditsButton = ({ 
+  label,
   amount, 
   credits, 
-  onSuccess, 
-  style 
+  onSuccess,
+  onStartProcessing,
+  onEndProcessing,
+  product_slug,
+  style,
+  disabled
 }) => {
-  const [loading, setLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleBuyCredits = async () => {
+  const handlePress = async () => {
     try {
-      setLoading(true);
-      const result = await StripeService.processPayment(amount, credits);
+      onStartProcessing && onStartProcessing();
       
+      const result = await StripeService.processPayment(amount, credits, product_slug);
+      console.log('result', result);
       if (result.success) {
-        //await updateUserCredits(credits); // Atualiza créditos do usuário
-        onSuccess?.(result);
-        Alert.alert(
-          'Sucesso!', 
-          `${credits} créditos foram adicionados à sua conta!`
-        );
+        Alert.alert('Sucesso', 'Créditos comprados com sucesso!');
+        onSuccess(credits);
       }
     } catch (error) {
-      console.error('Erro na compra de créditos:', error);
-      Alert.alert(
-        'Erro',
-        'Não foi possível processar seu pagamento. Tente novamente.'
-      );
+      console.error('Erro ao processar pagamento:', error);
+      Alert.alert('Erro', 'Ocorreu um erro ao processar o pagamento. Tente novamente mais tarde.');
     } finally {
-      setLoading(false);
+      onEndProcessing && onEndProcessing();
     }
   };
 
   return (
-    <CustomButton
-      title={`${credits} Créditos por R$ ${amount.toFixed(2)}`}
-      onPress={handleBuyCredits}
-      loading={loading}
-      style={style}
-      icon="stars"
-    />
+    <TouchableOpacity
+      style={[
+        styles.button,
+        style,
+        (disabled || isProcessing) && styles.disabledButton
+      ]}
+      onPress={handlePress}
+      disabled={disabled || isProcessing}
+    >
+      {label}
+    </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+});
 
 export default BuyCreditsButton; 

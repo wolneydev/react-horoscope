@@ -225,6 +225,7 @@ export default function RegisterScreen({ navigation }) {
             email_verified_at: data.email_verified_at,
             uuid: data.uuid,
             encryptedPassword: encryptedPassword,
+            extra_maps_max_number: data.extra_maps_max_number,
             birthData: {
               city: data.birth_city,
               year: data.birth_year,

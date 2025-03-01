@@ -113,6 +113,7 @@ export default function LoginScreen({ navigation }) {
           uuid: data.uuid,
           email_verified_at: data.email_verified_at,
           encryptedPassword,
+          extra_maps_max_number: data.extra_maps_max_number,
           birthData: {
             city: data.birth_city,
             year: data.birth_year,
