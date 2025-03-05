@@ -1,8 +1,7 @@
 // src/screens/auth/register/RegisterScreen.js
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import {
+import { 
   Text,
   TouchableOpacity,
   StyleSheet,
@@ -12,10 +11,13 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   TextInput,
+  PermissionsAndroid
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import * as Location from 'expo-location'; // <--- BIBLIOTECA EXPO-LOCATION
+// ---- REMOVIDO: import * as Location from 'expo-location'; // <--- BIBLIOTECA EXPO-LOCATION
+import Geolocation from 'react-native-geolocation-service'; // <--- IMPORTAÇÃO DA BIBLIOTECA NATIVA
 
 import api from '../../services/api';
 import StorageService from '../../store/store';
@@ -76,26 +78,65 @@ export default function RegisterScreen({ navigation }) {
   );
 
   /**
-   * Solicita permissão de localização e captura a localização atual do usuário (Expo).
+   * Solicita a permissão de localização e, se concedida, obtém a localização atual usando
+   * react-native-geolocation-service.
    */
   const requestLocationAsync = async () => {
     try {
-      // Pede permissão de localização
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      // Verifica se estamos em Android e solicitamos permissão (no iOS costuma ser automático).
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
         Alert.alert('Permissão negada', 'Não foi possível obter sua localização!');
         return;
       }
+
       // Se concedida, obtém localização atual
-      const currentPosition = await Location.getCurrentPositionAsync({});
-      console.info('currentPosition');
-      console.log(currentPosition.coords.latitude.toString());
-      console.log(currentPosition.coords.longitude.toString());
-      setCurrentLatitude(currentPosition.coords.latitude.toString());
-      setCurrentLongitude(currentPosition.coords.longitude.toString());
+      Geolocation.getCurrentPosition(
+        (position) => {
+          console.info('Localização atual obtida com sucesso.');
+          console.log('Latitude: ', position.coords.latitude);
+          console.log('Longitude: ', position.coords.longitude);
+          setCurrentLatitude(position.coords.latitude.toString());
+          setCurrentLongitude(position.coords.longitude.toString());
+        },
+        (error) => {
+          console.warn('Erro ao obter localização:', error);
+          Alert.alert('Erro', 'Não foi possível obter sua localização');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+        }
+      );
     } catch (err) {
       console.warn('Erro ao requisitar/obter localização:', err);
     }
+  };
+
+  /**
+   * Solicita permissão de localização no Android. No iOS, o Geolocation getCurrentPosition
+   * já solicita automaticamente. Para um controle mais granular no iOS, considere usar
+   * react-native-permissions.
+   */
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Permissão de Localização',
+            message: 'Precisamos de acesso à sua localização para gerar o mapa astral.',
+            buttonPositive: 'OK',
+          }
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn('requestLocationPermission error:', err);
+        return false;
+      }
+    }
+    return true; // iOS ou outras plataformas
   };
 
   const checkUserLogin = async () => {
@@ -143,14 +184,14 @@ export default function RegisterScreen({ navigation }) {
     const day = date.getDate();
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return  `${day}/${month}/${year} `;
   };
 
   const formatSelectedTime = (date) => {
     if (!date) return '';
     const hours = date.getHours();
     const minutes = date.getMinutes();
-    return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+    return  `${hours}:${minutes < 10 ? '0' + minutes : minutes} `
   };
 
   // ----------------------------------------------------------------------
@@ -239,7 +280,7 @@ export default function RegisterScreen({ navigation }) {
             birth_latitude: birthLatitude ? parseFloat(birthLatitude) : null,
             birth_longitude: birthLongitude ? parseFloat(birthLongitude) : null,
 
-            // Coordenadas de localização atual (via expo-location)
+            // Coordenadas de localização atual (obtidas via react-native-geolocation-service)
             current_latitude: currentLatitude ? parseFloat(currentLatitude) : null,
             current_longitude: currentLongitude ? parseFloat(currentLongitude) : null,
           },
@@ -585,3 +626,5 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
 });
+
+
