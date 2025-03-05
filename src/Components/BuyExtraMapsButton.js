@@ -6,6 +6,7 @@ const BuyExtraMapsButton = ({
   label,
   amount, 
   onSuccess,
+  onCancel,
   onStartProcessing,
   onEndProcessing,
   product_slug,
@@ -22,6 +23,8 @@ const BuyExtraMapsButton = ({
       console.log('result', result);
       if (result.success) {
         onSuccess && onSuccess();
+      } else {
+        onCancel && onCancel();        
       }
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);

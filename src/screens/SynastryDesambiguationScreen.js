@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Modal, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
@@ -99,8 +99,11 @@ const SynastryScreen = () => {
         setMaxExtraMaps(currentMapsNumber);
       }
     }, 2000);
+  };
 
-    
+  const handlePurchaseCancel = () => {
+    console.log('Falha na compra de mapas extras');
+    Alert.alert('Erro', 'Cancelado pelo usuário. Caso tenha acontecido uma falha no pagamento, acesse seu registro de compras para ver mais detalhes e tentar novamente.');
   };
 
   const renderChartItem = ({ item }) => (
@@ -224,6 +227,7 @@ const SynastryScreen = () => {
                 amount={10.00}
                 product_slug={'extra_map'}
                 onSuccess={handlePurchaseSuccess}
+                onCancel={handlePurchaseCancel}
                 onStartProcessing={() => setIsAnyProcessing(true)}
                 onEndProcessing={() => setIsAnyProcessing(false)}
                 style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
@@ -241,6 +245,7 @@ const SynastryScreen = () => {
                   amount={18.00}
                   product_slug={'two_extra_map_pack'}
                   onSuccess={handlePurchaseSuccess}
+                  onCancel={handlePurchaseCancel}
                   onStartProcessing={() => setIsAnyProcessing(true)}
                   onEndProcessing={() => setIsAnyProcessing(false)}
                   style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
@@ -263,6 +268,7 @@ const SynastryScreen = () => {
                   amount={40.00}
                   product_slug={'five_extra_map_pack'}
                   onSuccess={handlePurchaseSuccess}
+                  onCancel={handlePurchaseCancel}
                   onStartProcessing={() => setIsAnyProcessing(true)}
                   onEndProcessing={() => setIsAnyProcessing(false)}
                   style={[
