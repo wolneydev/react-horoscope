@@ -34,7 +34,7 @@ import StorageService from './src/store/store';
 import { useState, useRef, useEffect } from 'react';
 import { TouchableOpacity } from 'react-native';
 import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
-
+import { PrivacyPolicyScreen, TermsOfUseScreen } from './src/screens/TermsScreen';
 enableScreens(false);
 
 const Stack = createStackNavigator();
@@ -54,6 +54,27 @@ function MainStack() {
         name="IndexScreen"
         options={{ headerShown: false }}
       />
+        {/* Tela de Termos de Uso */}
+        <Stack.Screen
+          name="TermsOfUseScreen"
+          component={TermsOfUseScreen}
+          options={{
+            title: 'Termos de Uso',
+            headerStyle: { backgroundColor: '#141527' },
+            headerTintColor: '#fff',
+          }}
+        />
+
+        {/* Tela de Política de Privacidade */}
+        <Stack.Screen
+          name="PrivacyPolicyScreen"
+          component={PrivacyPolicyScreen}
+          options={{
+            title: 'Política de Privacidade',
+            headerStyle: { backgroundColor: '#141527' },
+            headerTintColor: '#fff',
+          }}
+        />      
       <Stack.Screen
         component={HousesScreen}
         name="HousesScreen"
