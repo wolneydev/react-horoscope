@@ -24,7 +24,7 @@ const BuyExtraMapsButton = ({
       if (result.success) {
         onSuccess && onSuccess();
       } else {
-        onCancel && onCancel();        
+        onCancel && onCancel(result.message);        
       }
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);

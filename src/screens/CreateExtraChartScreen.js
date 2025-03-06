@@ -214,9 +214,6 @@ const CreateExtraChartScreen = () => {
           // Terceiro passo
           setLoadingMessage('Gerando o mapa astral ...');
 
-          // Salvando dados usando o serviço
-          await StorageService.saveAstralMap(data.astral_map);
-
           if (data.astral_map) {
             navigation.navigate('HomeScreen', {
               screen: 'Mapa Astral',

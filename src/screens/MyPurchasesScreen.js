@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import api from '../services/api';
 import StorageService from '../store/store';
@@ -8,27 +8,21 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import StripeService from '../services/StripeService';
-import { Alert } from 'react-native';
+import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
 
 const MyPurchasesScreen = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [failMessage, setFailMessage] = useState(null);
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useFocusEffect(
     useCallback(() => {
       loadOrders();
-
-      const intervalId = setInterval(() => {
-        loadOrders();
-      }, 30000);
-
-      return () => {
-        clearInterval(intervalId);
-      };
     }, [])
   );
 
@@ -42,7 +36,8 @@ const MyPurchasesScreen = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      setOrders(response.data.data);
+      const filteredOrders = response.data.data.filter(order => order.status.name !== 'Cancelada');
+      setOrders(filteredOrders);
     } catch (error) {
       console.error('Erro ao carregar compras:', error);
     } finally {
@@ -77,24 +72,38 @@ const MyPurchasesScreen = () => {
   const handleRetryPayment = async (order) => {
     try {
       setLoading(true);
-      console.log('order:', order);
       const result = await StripeService.reProcessPayment(order.total_amount, order.id);
-      
+
       if (result.success) {
-        onSuccess?.(result);
-        Alert.alert(
-          'Sucesso! créditos foram adicionados à sua conta!'
-        );
+        setShowSuccessPopup(true);
+        setTimeout(() => {
+          setShowSuccessPopup(false);
+        }, 4000);
+      } else {
+        setFailMessage(result.message);        
+        setShowErrorPopup(true);
+        setTimeout(() => {
+          handleCloseErrorPopup();
+        }, 7000);
       }
+
+      loadOrders();
+
     } catch (error) {
       console.error('Erro na compra de créditos:', error);
-      Alert.alert(
-        'Erro',
-        'Não foi possível processar seu pagamento. Tente novamente.'
-      );
+      setFailMessage('Não foi possível processar seu pagamento. Tente novamente.');
+      setShowErrorPopup(true);
+      setTimeout(() => {
+        handleCloseErrorPopup();
+      }, 7000);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseErrorPopup = () => {
+    setFailMessage(null);
+    setShowErrorPopup(false);
   };
 
   const getLastFailedMessage = (paymentIntents) => {
@@ -228,6 +237,24 @@ const MyPurchasesScreen = () => {
           <ActivityIndicator size="large" color="#6D44FF" />
         </View>
       )}
+
+      <BuyMapsPopupMessage
+        visible={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        type="success"
+        title="Compra Realizada!"
+        message="Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!"
+      />
+
+      <BuyMapsPopupMessage
+        visible={showErrorPopup}
+        onClose={() => handleCloseErrorPopup()}
+        type="error"
+        title="Erro na Compra!"
+        message="Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida."
+        errorTitle="Último retorno da operadora:"
+        errorMessage={failMessage}
+      />
     </View>
   );
 };
@@ -407,4 +434,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyPurchasesScreen; 
+export default MyPurchasesScreen;

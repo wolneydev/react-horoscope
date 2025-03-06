@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Modal, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,8 @@ import BuyExtraMapsButton from '../Components/BuyExtraMapsButton';
 import StripeService from '../services/StripeService';
 import { formatNumber } from '../utils/helpers';
 import api from '../services/api';
+import { useFocusEffect } from '@react-navigation/native';
+import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
@@ -20,16 +22,22 @@ const SynastryScreen = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAnyProcessing, setIsAnyProcessing] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [failMessage, setFailMessage] = useState(null);
 
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
-  useEffect(() => {
-    initializeScreen();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      initializeScreen();
+    }, [])
+  );
 
   const initializeScreen = async () => {
     try {
-      await loadChartInfo();
+      await refreshUserData();
+      //await loadChartInfo();
       await StripeService.initializeStripe();
       setIsInitialized(true);
     } catch (error) {
@@ -37,19 +45,36 @@ const SynastryScreen = () => {
     }
   };
 
-  const loadChartInfo = async () => {
+  const refreshUserData = async () => {
     try {
-      const used = await StorageService.getExtraMapsUsed();
-      const max = await StorageService.getExtraMapsMaxNumber();
-      const charts = await StorageService.getExtraCharts();
+      const token = await StorageService.getAccessToken();
+
+      const response = await api.get(`users/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const { status, data } = response.data;
+
+      if (status === 'success') {
+        // Preparando dados do usuário para salvar localmente
+        const userData = {
+          extra_maps_max_number: data.extra_maps_max_number,
+        };
+
+        await StorageService.saveAstralMaps(data.astral_maps);
+        await StorageService.setExtraMapsMaxNumber(userData.extra_maps_max_number);
+
+        setExtraMapsUsed(await StorageService.getExtraMapsUsed());
+        setMaxExtraMaps(await StorageService.getExtraMapsMaxNumber());
+        setExtraCharts(await StorageService.getExtraCharts());
+        setIsLoading(false);
+      }
       
-      setExtraMapsUsed(used);
-      setMaxExtraMaps(max);
-      setExtraCharts(charts || []);
-      setIsLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar informações dos mapas:', error);
-      setIsLoading(false);
+      console.error('Erro ao verificar dados do usuário (users/me)', error);
+      return null;
     }
   };
 
@@ -65,6 +90,8 @@ const SynastryScreen = () => {
   };
 
   const handlePurchaseSuccess = async () => {
+    setShowSuccessPopup(true);
+    setIsLoading(true);
     console.log('Iniciando verificação de atualização de número de mapas extras');
 
     // Função para verificar os mapas extras
@@ -78,8 +105,6 @@ const SynastryScreen = () => {
           }
         });
 
-        console.log('response', response.data.data);
-        
         return response.data.data.extra_maps_max_number;
       } catch (error) {
         console.error('Erro ao verificar mapas extras:', error);
@@ -89,6 +114,7 @@ const SynastryScreen = () => {
 
     // Verifica a cada 2 segundos até confirmar atualização
     const initialMapsNumber = await StorageService.getExtraMapsMaxNumber();
+    
     const interval = setInterval(async () => {
       const currentMapsNumber = await checkMaxExtraMaps();
       console.log('Verificando mapas extras:', currentMapsNumber, 'inicial:', initialMapsNumber);
@@ -97,13 +123,31 @@ const SynastryScreen = () => {
         StorageService.setExtraMapsMaxNumber(currentMapsNumber);
         clearInterval(interval);
         setMaxExtraMaps(currentMapsNumber);
+        setIsLoading(false);
+        
+        // Esconder o popup após 3 segundos
+        setTimeout(() => {
+          setShowSuccessPopup(false);
+        }, 3000);
       }
     }, 2000);
+
+    setShowCreditsModal(false);
   };
 
-  const handlePurchaseCancel = () => {
-    console.log('Falha na compra de mapas extras');
-    Alert.alert('Erro', 'Cancelado pelo usuário. Caso tenha acontecido uma falha no pagamento, acesse seu registro de compras para ver mais detalhes e tentar novamente.');
+  const handlePurchaseCancel = (failMessage) => {
+    if (failMessage) {
+      setFailMessage(failMessage);
+      setShowErrorPopup(true);
+      setTimeout(() => {
+        handleCloseErrorPopup();
+      }, 7000);
+    }
+  };
+
+  const handleCloseErrorPopup = () => {
+    setFailMessage(null);
+    setShowErrorPopup(false);
   };
 
   const renderChartItem = ({ item }) => (
@@ -205,7 +249,7 @@ const SynastryScreen = () => {
           textStyle={styles.customButtonText}
           icon="add-circle-outline"
           disabled={!isInitialized}
-        />
+        />        
       </View>
 
       <Modal
@@ -303,6 +347,24 @@ const SynastryScreen = () => {
           </View>
         </View>
       </Modal>
+
+      <BuyMapsPopupMessage
+        visible={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        type="success"
+        title="Compra Realizada!"
+        message="Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!"
+      />
+
+      <BuyMapsPopupMessage
+        visible={showErrorPopup}
+        onClose={() => handleCloseErrorPopup()}
+        type="error"
+        title="Erro na Compra!"
+        message="Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida. Caso queira mais informações sobre esta transação, acesse o menu 'Minhas Compras'."
+        errorTitle="Retorno da operadora:"
+        errorMessage={failMessage}
+      />
     </View>
   );
 };
@@ -372,7 +434,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(109, 68, 255, 0.3)',
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.6)',
-    marginBottom: 20,
   },
   customButtonText: {
     color: '#FFFFFF',
@@ -549,7 +610,7 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     borderTopWidth: 1,
     borderTopColor: 'rgba(109, 68, 255, 0.2)',
-  },
+  },  
 });
 
 export default SynastryScreen;

@@ -117,6 +117,7 @@ class StripeService {
 
           return {
             success: false,
+            message: response.data.data.paymentIntentErrorMessage
           };
         }
 
@@ -228,7 +229,7 @@ class StripeService {
         if (presentError.code === 'Canceled') {
           console.log('Pagamento cancelado pelo usuário');
 
-          // 1. Criar intent de pagamento no backend
+          // 1. Cancelar intent de pagamento no backend
           const response = await api.post('orders/cancel-payment',
             {
               paymentIntentId: id,
@@ -242,9 +243,11 @@ class StripeService {
             }
           );
 
+          console.log('response', response.data);
+
           return {
             success: false,
-            credits: credits
+            message: response.data.data.paymentIntentErrorMessage
           };
         }
 
@@ -254,7 +257,6 @@ class StripeService {
       // 4. Pagamento bem-sucedido
       return {
         success: true,
-        credits: credits
       };
 
     } catch (error) {
