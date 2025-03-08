@@ -1,102 +1,121 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { COLORS, SPACING, FONTS, SHADOWS } from '../styles/theme';
 
-const BuyMapsPopupMessage = ({ visible, onClose, type, title, message, errorTitle, errorMessage }) => {
-  const iconProps = type === 'success' 
-    ? { name: 'check-circle', color: '#4CAF50' }
-    : { name: 'error', color: '#FF4444' };
-
-  const styles = type === 'success' ? successStyles : errorStyles;
-
+const BuyMapsPopupMessage = ({ 
+  visible, 
+  onClose, 
+  type = 'success', 
+  title, 
+  message,
+  errorTitle,
+  errorMessage
+}) => {
+  const isSuccess = type === 'success';
+  
+  const iconName = isSuccess ? 'check-circle' : 'error';
+  const iconColor = isSuccess ? COLORS.SUCCESS : COLORS.ERROR;
+  const borderColor = isSuccess ? COLORS.SUCCESS : COLORS.ERROR;
+  const shadowColor = isSuccess ? COLORS.SUCCESS : COLORS.ERROR;
+  
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
     >
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        activeOpacity={1} 
-        onPressOut={onClose}
-      >
-        <View style={styles.modalContent}>
-          <Icon name={iconProps.name} size={60} color={iconProps.color} style={styles.icon} />
-          <Text style={styles.modalTitle}>{title}</Text>
-          {errorMessage && <Text style={styles.modalErrorTitle}>{errorTitle}</Text>}
-          {errorMessage && <Text style={styles.modalErrorText}>{errorMessage}</Text>}
-          {message && <Text style={styles.modalText}>{message}</Text>}
+      <View style={styles.modalOverlay}>
+        <View style={[
+          styles.modalContent,
+          { borderColor, shadowColor }
+        ]}>
+          <Icon name={iconName} size={60} color={iconColor} style={styles.icon} />
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.message}>{message}</Text>
+          
+          {errorTitle && errorMessage && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorTitle}>{errorTitle}</Text>
+              <Text style={styles.errorMessage}>{errorMessage}</Text>
+            </View>
+          )}
+          
+          {onClose && (
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={onClose}
+            >
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 };
 
-const baseStyles = {
+const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: SPACING.LARGE,
   },
   modalContent: {
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
     borderRadius: 15,
-    borderWidth: 2,
-    padding: 25,
+    padding: SPACING.XLARGE,
     width: '80%',
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    ...SHADOWS.MEDIUM,
+    elevation: 10,
   },
   icon: {
-    marginBottom: 15,
+    marginBottom: SPACING.LARGE,
   },
-  modalTitle: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+  title: {
+    fontSize: FONTS.SIZES.XXLARGE,
+    color: COLORS.TEXT_PRIMARY,
+    fontWeight: FONTS.WEIGHTS.BOLD,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.MEDIUM,
   },
-  modalText: {
-    fontSize: 16,
-    color: '#FFFFFF',
+  message: {
+    fontSize: FONTS.SIZES.MEDIUM,
+    color: COLORS.TEXT_PRIMARY,
     textAlign: 'center',
+    marginBottom: SPACING.LARGE,
   },
-  modalErrorTitle: {
-    fontSize: 16,
-    color: '#FF4444',
-    fontWeight: 'bold',
-    textAlign: 'center',
+  errorContainer: {
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    padding: SPACING.MEDIUM,
+    borderRadius: 8,
+    width: '100%',
+    marginBottom: SPACING.LARGE,
   },
-  modalErrorText: {
-    fontSize: 14,
-    color: '#FF4444',
-    textAlign: 'center',
-    marginBottom: 10,
+  errorTitle: {
+    fontSize: FONTS.SIZES.SMALL,
+    color: COLORS.ERROR,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    marginBottom: SPACING.TINY,
   },
-};
-
-const successStyles = StyleSheet.create({
-  ...baseStyles,
-  modalContent: {
-    ...baseStyles.modalContent,
-    borderColor: '#4CAF50',
-    shadowColor: '#4CAF50',
+  errorMessage: {
+    fontSize: FONTS.SIZES.SMALL,
+    color: COLORS.ERROR,
   },
-});
-
-const errorStyles = StyleSheet.create({
-  ...baseStyles,
-  modalContent: {
-    ...baseStyles.modalContent,
-    borderColor: '#FF4444',
-    shadowColor: '#FF4444',
+  closeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: SPACING.MEDIUM,
+    paddingHorizontal: SPACING.XLARGE,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    fontWeight: FONTS.WEIGHTS.MEDIUM,
   },
 });
 

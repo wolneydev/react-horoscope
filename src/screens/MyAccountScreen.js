@@ -8,6 +8,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
+import EmailVerificationCard from '../Components/EmailVerificationCard';
+import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 
 const MyAccountScreen = () => {
   const navigation = useNavigation();
@@ -21,6 +24,7 @@ const MyAccountScreen = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
 
   const startShake = () => {
+    console.log('Iniciando animação de shake no MyAccountScreen');
     Animated.sequence([
       Animated.timing(shakeAnimation, {
         toValue: 10,
@@ -242,51 +246,13 @@ const MyAccountScreen = () => {
 
       {/* Cards de Navegação */}
       <View style={styles.cardsContainer}>
-
-        <Animated.View style={{ transform: [{ translateX: shakeAnimation }] }}>
-          {/* Card de Verificação de Email */}
-          {!userData?.email_verified_at && (
-            <TouchableOpacity 
-              style={[
-                styles.warningCard,
-                !canResendEmail && styles.warningCardDisabled
-              ]}
-              onPress={handleVerifyEmail}
-              disabled={!canResendEmail}
-            >
-              <View style={styles.warningIconContainer}>
-                <Icon name="warning" size={24} color="#FFD700" />
-              </View>
-              <Text style={styles.warningCardTitle}>Verifique seu Email</Text>
-              <Text style={styles.warningCardDescription}>
-                Enviamos um email para {userData?.email}.
-              </Text>
-              <Text style={styles.warningCardDescription}>
-                Por favor, verifique sua caixa de entrada e siga as instruções para ativar sua conta.
-              </Text>              
-              <Text style={[
-                styles.warningCardAction,
-                !canResendEmail && styles.warningCardActionDisabled
-              ]}>
-                {canResendEmail 
-                  ? 'Reenviar email de verificação'
-                  : `Aguarde ${resendCounter}s para reenviar`
-                }
-              </Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-
-        {/* Card de Verificação de Email */}
-        {userData?.email_verified_at && (
-          <>
-            <TouchableOpacity 
-              style={styles.successMailVerificationCard}
-            >
-              <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
-            </TouchableOpacity>
-          </>
-        )}
+        <EmailVerificationCard 
+          userData={userData}
+          canResendEmail={canResendEmail}
+          resendCounter={resendCounter}
+          handleVerifyEmail={handleVerifyEmail}
+          shakeAnimation={shakeAnimation}
+        />
 
         {/* Mapa Astral Card */}        
         <TouchableOpacity 
@@ -296,10 +262,19 @@ const MyAccountScreen = () => {
           ]}
           onPress={() => handleCardPress('Mapa Astral')}
         >
-          <Text style={styles.cardTitle}>Mapa Astrolal</Text>
+          <Text style={styles.cardTitle}>Mapa Astral</Text>
           <Text style={styles.cardDescription}>Veja seu mapa astral completo</Text>
           <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
         </TouchableOpacity>
+
+        {/* Sinastria Card */}
+        <ScreenMenuItemCard 
+          title="Sinastria"
+          description="Compare mapas astrais e descubra compatibilidades"
+          icon="arrow-forward"
+          disabled={!userData?.email_verified_at}
+          onPress={() => handleCardPress('Sinastria')}
+        />
       </View>
     </View>
   );

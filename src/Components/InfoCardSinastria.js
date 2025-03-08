@@ -1,21 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { formatNumber } from '../../utils/helpers';
-import { COLORS, SPACING, FONTS, CARD_STYLES } from '../../styles/theme';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 
-const InfoCard = ({ astralMap }) => {
-  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-
+const InfoCardSinastria = ({ isInitialized, extraMapsUsed, maxExtraMaps, isInfoExpanded, setIsInfoExpanded }) => {
   return (
     <View style={styles.infoCard}>
       <View style={styles.infoCardHeader}>
         <View style={styles.infoIconContainer}>
-          <Icon name="auto-awesome" size={24} color={COLORS.PRIMARY} />
+          <Icon name="favorite" size={24} color={COLORS.PRIMARY} />
         </View>
         <View style={styles.titleContainer}>
-          <Text style={styles.infoCardTitle}>Mapa Astral de</Text>
-          <Text style={styles.infoCardName}>{astralMap.astral_map_name}</Text>
+          <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
+          {isInitialized && (
+            <Text style={styles.extraMapsText}>
+              Mapas Extras: {extraMapsUsed}/{maxExtraMaps}
+            </Text>
+          )}
         </View>
         <TouchableOpacity 
           onPress={() => setIsInfoExpanded(!isInfoExpanded)}
@@ -32,13 +33,16 @@ const InfoCard = ({ astralMap }) => {
       {isInfoExpanded && (
         <View style={styles.expandedInfo}>
           <Text style={styles.infoCardDescription}>
-            O mapa astral, ou carta natal, é um retrato do céu no momento exato do seu nascimento. Ele revela suas características pessoais, talentos naturais e desafios de vida.
+            A sinastria é a arte de comparar dois mapas astrais para entender a 
+            dinâmica do relacionamento. Ela revela as harmonias, desafios e o 
+            potencial de crescimento entre duas pessoas.
           </Text>
-          <View style={styles.infoCardBirthData}>
-            <Text style={styles.infoCardData}>Local de Nascimento: {astralMap.birth_city}</Text>
-            <Text style={styles.infoCardData}>Data de Nascimento: {formatNumber(astralMap.birth_day)}/{formatNumber(astralMap.birth_month)}/{astralMap.birth_year}</Text>
-            <Text style={styles.infoCardData}>Horário de Nascimento: {formatNumber(astralMap.birth_hour)}:{formatNumber(astralMap.birth_minute)}</Text>
-          </View>
+          <Text style={styles.infoCardDescription}>
+            Adicione novos mapas e verifique, através da sinastria, a compatibilidade deles com o seu mapa.
+          </Text>
+          <Text style={styles.infoCardDescription}>
+            Inicialmente você possui 1 mapa extra disponível. Adquira mais mapas para continuar gerando comparações.
+          </Text>
         </View>
       )}
     </View>
@@ -48,11 +52,11 @@ const InfoCard = ({ astralMap }) => {
 const styles = StyleSheet.create({
   infoCard: {
     backgroundColor: COLORS.BACKGROUND_DARK,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
     borderRadius: 15,
     padding: SPACING.LARGE,
     marginBottom: SPACING.LARGE,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
   },
   infoCardHeader: {
     flexDirection: 'row',
@@ -76,31 +80,15 @@ const styles = StyleSheet.create({
     fontWeight: FONTS.WEIGHTS.BOLD,
     marginBottom: SPACING.TINY,
   },
-  infoCardName: {
-    color: COLORS.HIGHLIGHT,
-    fontSize: FONTS.SIZES.XLARGE,
-    fontWeight: FONTS.WEIGHTS.BOLD,
-    textShadowColor: 'rgba(255, 215, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  infoCardBirthData: {
-    alignSelf: 'flex-end',
-    marginTop: SPACING.MEDIUM,
+  extraMapsText: {
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.SMALL,
   },
   infoCardDescription: {
     color: COLORS.TEXT_SECONDARY,
     fontSize: FONTS.SIZES.SMALL,
     lineHeight: 22,
-    marginBottom: SPACING.MEDIUM,
-    textAlign: 'left',
-  },
-  infoCardData: {
-    color: COLORS.TEXT_SECONDARY,
-    fontSize: FONTS.SIZES.SMALL,
-    lineHeight: 22,
-    textAlign: 'right',
-    fontStyle: 'italic',
+    marginBottom: SPACING.LARGE,
   },
   expandButton: {
     padding: SPACING.SMALL,
@@ -113,4 +101,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InfoCard;
+export default InfoCardSinastria;

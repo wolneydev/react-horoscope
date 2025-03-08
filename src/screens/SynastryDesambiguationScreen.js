@@ -11,6 +11,8 @@ import { formatNumber } from '../utils/helpers';
 import api from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
 import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
+import InfoCardSinastria from '../Components/InfoCardSinastria';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
@@ -178,51 +180,16 @@ const SynastryScreen = () => {
       {memoStars}
       
       <View style={styles.content}>
-        <View style={styles.infoCard}>
-          <View style={styles.infoCardHeader}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="favorite" size={24} color="#6D44FF" />
-            </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
-              {isInitialized && (
-                <Text style={styles.extraMapsText}>
-                  Mapas Extras: {extraMapsUsed}/{maxExtraMaps}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity 
-              onPress={() => setIsInfoExpanded(!isInfoExpanded)}
-              style={styles.expandButton}
-            >
-              <Icon 
-                name={isInfoExpanded ? "keyboard-arrow-up" : "help-outline"} 
-                size={24} 
-                color="#7A708E" 
-              />
-            </TouchableOpacity>
-          </View>
-
-          {isInfoExpanded && (
-            <View style={styles.expandedInfo}>
-              <Text style={styles.infoCardDescription}>
-                A sinastria é a arte de comparar dois mapas astrais para entender a 
-                dinâmica do relacionamento. Ela revela as harmonias, desafios e o 
-                potencial de crescimento entre duas pessoas.
-              </Text>
-              <Text style={styles.infoCardDescription}>
-                Adicione novos mapas e verifique, através da sinastria, a compatibilidade deles com o seu mapa.
-              </Text>
-              <Text style={styles.infoCardDescription}>
-                Inicialmente você possui 1 mapa extra disponível. Adquira mais mapas para continuar gerando comparações.
-              </Text>
-            </View>
-          )}
-        </View>
-
+        <InfoCardSinastria 
+          isInitialized={isInitialized}
+          extraMapsUsed={extraMapsUsed}
+          maxExtraMaps={maxExtraMaps}
+          isInfoExpanded={isInfoExpanded}
+          setIsInfoExpanded={setIsInfoExpanded}
+        />
         <View style={styles.chartsSection}>
           {isLoading ? (
-            <ActivityIndicator color="#6D44FF" size="large" />
+            <ActivityIndicator color={COLORS.PRIMARY} size="large" />
           ) : (
             <FlatList
               data={extraCharts}
@@ -372,151 +339,114 @@ const SynastryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
   },
-
   content: {
     flex: 1,
-    padding: 20,
+    padding: SPACING.LARGE,
   },
-
-  infoCard: {
-    backgroundColor: 'rgba(109, 68, 255, 0.1)',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(32, 178, 170, 0.15)',
-  },
-
   chartsSection: {
-    flex: 1, // Isso é importante para a FlatList se ajustar
+    flex: 1,
   },
-
   chartsList: {
-    flexGrow: 1, // Permite que a lista cresça, mas mantém a rolagem
-    paddingBottom: 20, // Espaço extra no final da lista
-  },
-
-  infoIconContainer: {
-    backgroundColor: 'rgba(109, 68, 255, 0.2)',
-    padding: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  infoCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexGrow: 1,
+    paddingBottom: SPACING.LARGE,
   },
   titleContainer: {
     flex: 1,
-    marginLeft: 12,
-  },
-  infoCardTitle: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    marginLeft: SPACING.MEDIUM,
   },
   extraMapsText: {
-    color: '#7A708E',
-    fontSize: 14,
-  },
-  infoCardDescription: {
-    color: '#bbb',
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 15,
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.SMALL,
   },
   customButton: {
-    backgroundColor: 'rgba(109, 68, 255, 0.3)',
+    backgroundColor: COLORS.PRIMARY_LIGHT,
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.6)',
   },
   customButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.LARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    marginBottom: SPACING.LARGE,
   },
   chartCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(109, 68, 255, 0.1)',
-    padding: 15,
+    padding: SPACING.LARGE,
     borderRadius: 12,
-    marginBottom: 10,
+    marginBottom: SPACING.MEDIUM,
     borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.3)',
+    borderColor: COLORS.BORDER,
   },
   chartIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
-    padding: 8,
+    padding: SPACING.SMALL,
     borderRadius: 20,
-    marginRight: 15,
+    marginRight: SPACING.LARGE,
   },
   chartInfo: {
     flex: 1,
   },
   chartName: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   chartDetails: {
-    color: '#bbb',
-    fontSize: 14,
-    marginTop: 2,
+    color: COLORS.TEXT_SECONDARY,
+    fontSize: FONTS.SIZES.SMALL,
+    marginTop: SPACING.TINY,
   },
   emptyText: {
-    color: '#7A708E',
+    color: COLORS.TEXT_TERTIARY,
     textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
+    marginTop: SPACING.LARGE,
+    fontSize: FONTS.SIZES.MEDIUM,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingHorizontal: 20,
-    marginBottom: 10,
+    paddingHorizontal: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: SPACING.LARGE,
   },
   modalContent: {
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
     borderRadius: 15,
-    padding: 20,
+    padding: SPACING.LARGE,
     width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.3)',
+    borderColor: COLORS.BORDER,
   },
   modalTitle: {
-    fontSize: 24,
-    color: '#FFD700',
+    fontSize: FONTS.SIZES.XXLARGE,
+    color: COLORS.HIGHLIGHT,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: SPACING.MEDIUM,
   },
   modalText: {
-    fontSize: 16,
-    color: '#FFFFFF',
+    fontSize: FONTS.SIZES.MEDIUM,
+    color: COLORS.TEXT_PRIMARY,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: SPACING.XLARGE,
   },
   creditsOptions: {
-    gap: 15,
-    marginBottom: 20,
+    gap: SPACING.LARGE,
+    marginBottom: SPACING.LARGE,
   },
   creditButton: {
     backgroundColor: 'rgba(109, 68, 255, 0.25)',
@@ -531,7 +461,7 @@ const styles = StyleSheet.create({
   },
   bestValueButton: {
     backgroundColor: 'rgba(109, 68, 255, 0.4)',
-    borderColor: '#FFD700',
+    borderColor: COLORS.HIGHLIGHT,
     borderWidth: 2,
   },
   discountBadge: {
@@ -540,36 +470,36 @@ const styles = StyleSheet.create({
     top: -10,
     backgroundColor: '#FF4081',
     borderRadius: 12,
-    padding: 8,
+    padding: SPACING.SMALL,
     flexDirection: 'column',
     alignItems: 'center',
   },
   bestValueBadge: {
-    backgroundColor: '#FFD700',
+    backgroundColor: COLORS.HIGHLIGHT,
   },
   discountText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: COLORS.TEXT_PRIMARY,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    fontSize: FONTS.SIZES.MEDIUM,
   },
   pricePerUnit: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.SMALL,
     opacity: 0.9,
   },
   bestValueFlag: {
     position: 'absolute',
     left: 10,
     top: -12,
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    backgroundColor: COLORS.HIGHLIGHT,
+    paddingHorizontal: SPACING.MEDIUM,
+    paddingVertical: SPACING.TINY,
     borderRadius: 12,
   },
   bestValueText: {
-    color: '#141527',
-    fontWeight: 'bold',
-    fontSize: 12,
+    color: COLORS.BACKGROUND,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    fontSize: FONTS.SIZES.TINY,
   },
   closeButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -578,23 +508,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonLabel: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.LARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    marginBottom: SPACING.TINY,
   },
   buttonAmount: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
     opacity: 0.9,
   },
   bestValueLabel: {
-    fontSize: 20,
-    color: '#FFD700',
+    fontSize: FONTS.SIZES.XLARGE,
+    color: COLORS.HIGHLIGHT,
   },
   bestValueAmount: {
-    fontSize: 18,
-    color: '#FFD700',
+    fontSize: FONTS.SIZES.LARGE,
+    color: COLORS.HIGHLIGHT,
   },
   disabledButton: {
     opacity: 0.5,
@@ -603,14 +533,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   expandButton: {
-    padding: 8,
+    padding: SPACING.SMALL,
   },
   expandedInfo: {
-    marginTop: 15,
-    paddingTop: 15,
+    marginTop: SPACING.LARGE,
+    paddingTop: SPACING.LARGE,
     borderTopWidth: 1,
     borderTopColor: 'rgba(109, 68, 255, 0.2)',
-  },  
+  },
 });
 
 export default SynastryScreen;

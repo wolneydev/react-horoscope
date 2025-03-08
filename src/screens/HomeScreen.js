@@ -7,6 +7,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
+import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
+import EmailVerificationCard from '../Components/EmailVerificationCard';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -22,6 +25,7 @@ const HomeScreen = () => {
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const startShake = () => {
+    console.log('Iniciando animação de shake no HomeScreen');
     Animated.sequence([
       Animated.timing(shakeAnimation, {
         toValue: 10,
@@ -261,49 +265,15 @@ const HomeScreen = () => {
 
       {/* Cards de Navegação */}
       <View style={styles.cardsContainer}>
+        <EmailVerificationCard 
+          userData={userData}
+          canResendEmail={canResendEmail}
+          resendCounter={resendCounter}
+          handleVerifyEmail={handleVerifyEmail}
+          shakeAnimation={shakeAnimation}
+        />
 
-        <Animated.View style={{ transform: [{ translateX: shakeAnimation }] }}>
-          {/* Card de Verificação de Email */}
-          {!userData?.email_verified_at && (
-            <TouchableOpacity 
-              style={[
-                styles.warningCard,
-                !canResendEmail && styles.warningCardDisabled
-              ]}
-              onPress={handleVerifyEmail}
-              disabled={!canResendEmail}
-            >
-              <View style={styles.warningIconContainer}>
-                <Icon name="warning" size={24} color="#FFD700" />
-              </View>
-              <Text style={styles.warningCardTitle}>Verifique seu Email</Text>
-              <Text style={styles.warningCardDescription}>
-                Enviamos um email para {userData?.email}.
-              </Text>
-              <Text style={styles.warningCardDescription}>
-                Por favor, verifique sua caixa de entrada e siga as instruções para ativar sua conta.
-              </Text>              
-              <Text style={[
-                styles.warningCardAction,
-                !canResendEmail && styles.warningCardActionDisabled
-              ]}>
-                {canResendEmail 
-                  ? 'Reenviar email de verificação'
-                  : `Aguarde ${resendCounter}s para reenviar`
-                }
-              </Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-
-        {/* Card de Verificação de Email */}
-        {userData?.email_verified_at && showSuccess && (
-          <Animated.View style={[styles.successMailVerificationCard, { opacity: fadeAnim }]}>
-            <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
-          </Animated.View>
-        )}
-
-        {/* Mapa Astral Card */}        
+        {/* Mapa Astral Card */}
         <TouchableOpacity 
           style={[
             styles.card,
@@ -313,8 +283,8 @@ const HomeScreen = () => {
         >
           <Text style={styles.cardTitle}>Mapa Astral</Text>
           <Text style={styles.cardDescription}>Veja seu mapa astral completo</Text>
-          <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
-        </TouchableOpacity>        
+          <Icon name="arrow-forward" size={24} color={COLORS.PRIMARY} style={styles.cardIcon} />
+        </TouchableOpacity>
 
         {/* Sinastria Card */}
         <TouchableOpacity 
@@ -326,7 +296,7 @@ const HomeScreen = () => {
         >
           <Text style={styles.cardTitle}>Sinastria</Text>
           <Text style={styles.cardDescription}>Compare mapas astrais e descubra compatibilidades</Text>
-          <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
+          <Icon name="arrow-forward" size={24} color={COLORS.PRIMARY} style={styles.cardIcon} />
         </TouchableOpacity>
       </View>
     </View>
@@ -336,11 +306,11 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
   },
   header: {
-    padding: 20,
-    paddingTop: 20,
+    padding: SPACING.LARGE,
+    paddingTop: SPACING.LARGE,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(109, 68, 255, 0.2)',
   },
@@ -356,7 +326,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: '#6D44FF',
+    borderColor: COLORS.PRIMARY,
   },
   statusDot: {
     position: 'absolute',
@@ -365,106 +335,95 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.SUCCESS,
     borderWidth: 2,
-    borderColor: '#141527',
+    borderColor: COLORS.BACKGROUND,
   },
   userTextInfo: {
-    marginLeft: 15,
+    marginLeft: SPACING.LARGE,
   },
   welcomeText: {
-    color: '#7A708E',
-    fontSize: 14,
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.SMALL,
   },
   userName: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.XLARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   cardsContainer: {
-    padding: 20,
+    padding: SPACING.LARGE,
   },
   card: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
     borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
+    padding: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.3)',
   },
   cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 10,
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.XLARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    marginBottom: SPACING.TINY,
   },
   cardDescription: {
-    color: '#bbb',
-    fontSize: 15,
-    marginTop: 5,
-    marginBottom: 10,
+    color: COLORS.TEXT_SECONDARY,
+    fontSize: FONTS.SIZES.SMALL,
   },
   cardIcon: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-  },
-  warningCard: {
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-  },
-  warningIconContainer: {
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
-    padding: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  warningCardTitle: {
-    color: '#FFD700',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 10,
-  },
-  warningCardDescription: {
-    color: '#FFD700',
-    fontSize: 15,
-    marginTop: 5,
-    marginBottom: 10,
-    opacity: 0.8,
-  },
-  warningCardAction: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
-    marginTop: 5,
-  },
-  successMailVerificationCard: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    borderRadius: 15,
-    padding: 14,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.3)',
-  },
-  successMailVerificationCardTitle: {
-    color: '#4CAF50',
-    fontSize: 14,
-    fontWeight: 'bold',
+    right: SPACING.LARGE,
+    bottom: SPACING.LARGE,
   },
   disabledCard: {
     opacity: 0.5,
   },
+  warningCard: {
+    ...CARD_STYLES.WARNING,
+  },
+  warningIconContainer: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    padding: SPACING.SMALL,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: SPACING.MEDIUM,
+  },
+  warningCardTitle: {
+    color: COLORS.WARNING,
+    fontSize: FONTS.SIZES.XLARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    marginTop: SPACING.MEDIUM,
+  },
+  warningCardDescription: {
+    color: COLORS.WARNING,
+    fontSize: FONTS.SIZES.MEDIUM,
+    marginTop: SPACING.TINY,
+    marginBottom: SPACING.MEDIUM,
+    opacity: 0.8,
+  },
+  warningCardAction: {
+    color: COLORS.WARNING,
+    fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    textDecorationLine: 'underline',
+    marginTop: SPACING.TINY,
+  },
+  successMailVerificationCard: {
+    ...CARD_STYLES.SUCCESS,
+    padding: SPACING.MEDIUM,
+  },
+  successMailVerificationCardTitle: {
+    color: COLORS.SUCCESS,
+    fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+  },
   debugButton: {
-    backgroundColor: 'rgba(255, 0, 0, 0.2)',
-    padding: 10,
+    backgroundColor: COLORS.ERROR_LIGHT,
+    padding: SPACING.MEDIUM,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: SPACING.LARGE,
     borderWidth: 1,
     borderColor: 'rgba(255, 0, 0, 0.3)',
   },
@@ -473,9 +432,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 0, 0, 0.2)',
   },
   debugButtonText: {
-    color: '#FF0000',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: COLORS.ERROR,
+    fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.BOLD,
     textAlign: 'center',
   },
   warningCardDisabled: {
@@ -487,8 +446,8 @@ const styles = StyleSheet.create({
   resendingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 5,
+    gap: SPACING.MEDIUM,
+    marginTop: SPACING.TINY,
   },
 });
 

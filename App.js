@@ -391,23 +391,7 @@ function CustomDrawerContent(props) {
               styles.drawerLabel,
               currentRoute === 'Sinastria' && styles.drawerLabelActive
             ]}
-          />
-          <DrawerItem
-            label="Mapa Extra"
-            icon={({ focused }) => (
-              <Icon name="add-circle-outline" color={currentRoute === 'CreateExtraChart' ? '#FFFFFF' : '#7A708E'} size={24} />
-            )}
-            onPress={handleCreateExtraChart}
-            style={[
-              styles.drawerItem,
-              styles.nestedItem,
-              currentRoute === 'CreateExtraChart' && styles.drawerItemActive
-            ]}
-            labelStyle={[
-              styles.drawerLabel,
-              currentRoute === 'CreateExtraChart' && styles.drawerLabelActive
-            ]}
-          />
+          />          
         </View>
 
         <DrawerItem
