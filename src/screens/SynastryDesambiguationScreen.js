@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
 import InfoCardSinastria from '../Components/InfoCardSinastria';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
+import EmailVerificationGuard from '../Components/EmailVerificationGuard';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
@@ -176,85 +177,68 @@ const SynastryScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      {memoStars}
-      
-      <View style={styles.content}>
-        <InfoCardSinastria 
-          isInitialized={isInitialized}
-          extraMapsUsed={extraMapsUsed}
-          maxExtraMaps={maxExtraMaps}
-          isInfoExpanded={isInfoExpanded}
-          setIsInfoExpanded={setIsInfoExpanded}
-        />
-        <View style={styles.chartsSection}>
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.PRIMARY} size="large" />
-          ) : (
-            <FlatList
-              data={extraCharts}
-              renderItem={renderChartItem}
-              keyExtractor={item => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.chartsList}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>
-                  Nenhum mapa astral adicional encontrado
-                </Text>
-              }
-            />
-          )}
-        </View>
-
-        <CustomButton
-          title="Criar Novo Mapa Astral"
-          onPress={handleCreateChart}
-          style={[
-            styles.customButton,
-            !isInitialized && styles.disabledButton
-          ]}
-          textStyle={styles.customButtonText}
-          icon="add-circle-outline"
-          disabled={!isInitialized}
-        />        
-      </View>
-
-      <Modal
-        visible={showCreditsModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCreditsModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Adicionar Mapas</Text>
-            <Text style={styles.modalText}>
-              Você já utilizou todos os seus mapas extras disponíveis. 
-              Escolha um pacote para continuar gerando mapas e verificando as compatibilidades com o seu.
-            </Text>
-
-            <View style={styles.creditsOptions}>
-              <BuyExtraMapsButton
-                amount={10.00}
-                product_slug={'extra_map'}
-                onSuccess={handlePurchaseSuccess}
-                onCancel={handlePurchaseCancel}
-                onStartProcessing={() => setIsAnyProcessing(true)}
-                onEndProcessing={() => setIsAnyProcessing(false)}
-                style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
-                disabled={isAnyProcessing}
-                label={
-                  <View style={styles.buttonLabelContainer}>
-                    <Text style={[styles.buttonLabel, isAnyProcessing && styles.disabledText]}>1 Mapa Extra</Text>
-                    <Text style={[styles.buttonAmount, isAnyProcessing && styles.disabledText]}>R$ 10,00</Text>
-                  </View>
+    <EmailVerificationGuard>
+      <View style={styles.container}>
+        {memoStars}
+        
+        <View style={styles.content}>
+          <InfoCardSinastria 
+            isInitialized={isInitialized}
+            extraMapsUsed={extraMapsUsed}
+            maxExtraMaps={maxExtraMaps}
+            isInfoExpanded={isInfoExpanded}
+            setIsInfoExpanded={setIsInfoExpanded}
+          />
+          <View style={styles.chartsSection}>
+            {isLoading ? (
+              <ActivityIndicator color={COLORS.PRIMARY} size="large" />
+            ) : (
+              <FlatList
+                data={extraCharts}
+                renderItem={renderChartItem}
+                keyExtractor={item => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.chartsList}
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>
+                    Adicione
+                  </Text>
                 }
               />
+            )}
+          </View>
 
-              <View style={styles.discountContainer}>
+          <CustomButton
+            title="Criar Novo Mapa Astral"
+            onPress={handleCreateChart}
+            style={[
+              styles.customButton,
+              !isInitialized && styles.disabledButton
+            ]}
+            textStyle={styles.customButtonText}
+            icon="add-circle-outline"
+            disabled={!isInitialized}
+          />        
+        </View>
+
+        <Modal
+          visible={showCreditsModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowCreditsModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Adicionar Mapas</Text>
+              <Text style={styles.modalText}>
+                Você já utilizou todos os seus mapas extras disponíveis. 
+                Escolha um pacote para continuar gerando mapas e verificando as compatibilidades com o seu.
+              </Text>
+
+              <View style={styles.creditsOptions}>
                 <BuyExtraMapsButton
-                  amount={18.00}
-                  product_slug={'two_extra_map_pack'}
+                  amount={10.00}
+                  product_slug={'extra_map'}
                   onSuccess={handlePurchaseSuccess}
                   onCancel={handlePurchaseCancel}
                   onStartProcessing={() => setIsAnyProcessing(true)}
@@ -263,76 +247,95 @@ const SynastryScreen = () => {
                   disabled={isAnyProcessing}
                   label={
                     <View style={styles.buttonLabelContainer}>
-                      <Text style={[styles.buttonLabel, isAnyProcessing && styles.disabledText]}>2 Mapas Extras</Text>
-                      <Text style={[styles.buttonAmount, isAnyProcessing && styles.disabledText]}>R$ 18,00</Text>
+                      <Text style={[styles.buttonLabel, isAnyProcessing && styles.disabledText]}>1 Mapa Extra</Text>
+                      <Text style={[styles.buttonAmount, isAnyProcessing && styles.disabledText]}>R$ 10,00</Text>
                     </View>
                   }
                 />
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>10% OFF</Text>
-                  <Text style={styles.pricePerUnit}>R$ 9,00/cada</Text>
+
+                <View style={styles.discountContainer}>
+                  <BuyExtraMapsButton
+                    amount={18.00}
+                    product_slug={'two_extra_map_pack'}
+                    onSuccess={handlePurchaseSuccess}
+                    onCancel={handlePurchaseCancel}
+                    onStartProcessing={() => setIsAnyProcessing(true)}
+                    onEndProcessing={() => setIsAnyProcessing(false)}
+                    style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
+                    disabled={isAnyProcessing}
+                    label={
+                      <View style={styles.buttonLabelContainer}>
+                        <Text style={[styles.buttonLabel, isAnyProcessing && styles.disabledText]}>2 Mapas Extras</Text>
+                        <Text style={[styles.buttonAmount, isAnyProcessing && styles.disabledText]}>R$ 18,00</Text>
+                      </View>
+                    }
+                  />
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountText}>10% OFF</Text>
+                    <Text style={styles.pricePerUnit}>R$ 9,00/cada</Text>
+                  </View>
+                </View>
+
+                <View style={styles.bestValueContainer}>
+                  <BuyExtraMapsButton
+                    amount={40.00}
+                    product_slug={'five_extra_map_pack'}
+                    onSuccess={handlePurchaseSuccess}
+                    onCancel={handlePurchaseCancel}
+                    onStartProcessing={() => setIsAnyProcessing(true)}
+                    onEndProcessing={() => setIsAnyProcessing(false)}
+                    style={[
+                      styles.creditButton, 
+                      styles.bestValueButton,
+                      isAnyProcessing && styles.disabledButton
+                    ]}
+                    disabled={isAnyProcessing}
+                    label={
+                      <View style={styles.buttonLabelContainer}>
+                        <Text style={[styles.buttonLabel, styles.bestValueLabel, isAnyProcessing && styles.disabledText]}>
+                          5 Mapas Extras
+                        </Text>
+                        <Text style={[styles.buttonAmount, styles.bestValueAmount, isAnyProcessing && styles.disabledText]}>
+                          R$ 40,00
+                        </Text>
+                      </View>
+                    }
+                  />
+                  <View style={[styles.discountBadge, styles.bestValueBadge]}>
+                    <Text style={styles.discountText}>20% OFF</Text>
+                    <Text style={styles.pricePerUnit}>R$ 8,00/cada</Text>
+                  </View>
                 </View>
               </View>
 
-              <View style={styles.bestValueContainer}>
-                <BuyExtraMapsButton
-                  amount={40.00}
-                  product_slug={'five_extra_map_pack'}
-                  onSuccess={handlePurchaseSuccess}
-                  onCancel={handlePurchaseCancel}
-                  onStartProcessing={() => setIsAnyProcessing(true)}
-                  onEndProcessing={() => setIsAnyProcessing(false)}
-                  style={[
-                    styles.creditButton, 
-                    styles.bestValueButton,
-                    isAnyProcessing && styles.disabledButton
-                  ]}
-                  disabled={isAnyProcessing}
-                  label={
-                    <View style={styles.buttonLabelContainer}>
-                      <Text style={[styles.buttonLabel, styles.bestValueLabel, isAnyProcessing && styles.disabledText]}>
-                        5 Mapas Extras
-                      </Text>
-                      <Text style={[styles.buttonAmount, styles.bestValueAmount, isAnyProcessing && styles.disabledText]}>
-                        R$ 40,00
-                      </Text>
-                    </View>
-                  }
-                />
-                <View style={[styles.discountBadge, styles.bestValueBadge]}>
-                  <Text style={styles.discountText}>20% OFF</Text>
-                  <Text style={styles.pricePerUnit}>R$ 8,00/cada</Text>
-                </View>
-              </View>
+              <CustomButton
+                title="Fechar"
+                onPress={() => setShowCreditsModal(false)}
+                style={styles.closeButton}
+              />
             </View>
-
-            <CustomButton
-              title="Fechar"
-              onPress={() => setShowCreditsModal(false)}
-              style={styles.closeButton}
-            />
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      <BuyMapsPopupMessage
-        visible={showSuccessPopup}
-        onClose={() => setShowSuccessPopup(false)}
-        type="success"
-        title="Compra Realizada!"
-        message="Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!"
-      />
+        <BuyMapsPopupMessage
+          visible={showSuccessPopup}
+          onClose={() => setShowSuccessPopup(false)}
+          type="success"
+          title="Compra Realizada!"
+          message="Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!"
+        />
 
-      <BuyMapsPopupMessage
-        visible={showErrorPopup}
-        onClose={() => handleCloseErrorPopup()}
-        type="error"
-        title="Erro na Compra!"
-        message="Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida. Caso queira mais informações sobre esta transação, acesse o menu 'Minhas Compras'."
-        errorTitle="Retorno da operadora:"
-        errorMessage={failMessage}
-      />
-    </View>
+        <BuyMapsPopupMessage
+          visible={showErrorPopup}
+          onClose={() => handleCloseErrorPopup()}
+          type="error"
+          title="Erro na Compra!"
+          message="Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida. Caso queira mais informações sobre esta transação, acesse o menu 'Minhas Compras'."
+          errorTitle="Retorno da operadora:"
+          errorMessage={failMessage}
+        />
+      </View>
+    </EmailVerificationGuard>
   );
 };
 

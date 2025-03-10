@@ -124,7 +124,7 @@ export const CARD_STYLES = {
     backgroundColor: COLORS.SUCCESS_LIGHT,
     borderRadius: 15,
     padding: SPACING.LARGE,
-    marginBottom: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
     borderWidth: 1,
     borderColor: COLORS.SUCCESS_BORDER,
   },

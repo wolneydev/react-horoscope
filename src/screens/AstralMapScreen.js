@@ -11,6 +11,9 @@ import {
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import CustomButton from '../Components/CustomButton';
+import LoadingOverlay from '../Components/LoadingOverlay';
+import EmailVerificationGuard from '../Components/EmailVerificationGuard';
+import { COLORS } from '../styles/theme';
 
 // Componentes refatorados
 import InfoCard from '../Components/astralmap/InfoCard';
@@ -81,67 +84,73 @@ const AstralMapScreen = ({ route }) => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        {memoizedStars}
-        <View style={[styles.content, styles.centerContent]}>
-          <ActivityIndicator size="large" color="#FFD700" />
+      <EmailVerificationGuard>
+        <View style={styles.container}>
+          {memoizedStars}
+          <View style={[styles.content, styles.centerContent]}>
+            <ActivityIndicator size="large" color="#FFD700" />
+          </View>
         </View>
-      </View>
+      </EmailVerificationGuard>
     );
   }
 
   if (!astralMap) {
     return (
-      <View style={styles.container}>
-        {memoizedStars}
-        <View style={[styles.content, styles.centerContent]}>
-          <Text style={styles.errorText}>Não foi possível carregar o mapa astral</Text>
+      <EmailVerificationGuard>
+        <View style={styles.container}>
+          {memoizedStars}
+          <View style={[styles.content, styles.centerContent]}>
+            <Text style={styles.errorText}>Não foi possível carregar o mapa astral</Text>
+          </View>
         </View>
-      </View>
+      </EmailVerificationGuard>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {memoizedStars}
+    <EmailVerificationGuard>
+      <View style={styles.container}>
+        {memoizedStars}
 
-      {/* Botão Fixo (só exibe se não for o meu próprio mapa astral) */}
-      {astralMap && !astralMap.is_my_astral_map && (
-        <View style={styles.stickyButtonContainer}>
-          <CustomButton
-            title="Verificar Compatibilidade Astral"
-            onPress={handleCompatibilityPress}
-            style={styles.stickyButton}
-            textStyle={styles.stickyButtonText}
-            icon="favorite"
-          />
-        </View>
-      )}
-
-      <View style={[
-        styles.mainContainer,
-        (!astralMap?.is_my_astral_map) && styles.mainContainerWithButton
-      ]}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
-          {/* Componente InfoCard */}
-          <InfoCard astralMap={astralMap} />
-
-          {/* Lista de entidades astrais (usando AstralEntityCard) */}
-          {astralMap?.astral_entities?.map((item) => (
-            <AstralEntityCard
-              key={item.id}
-              item={item}
-              imageMap={imageMap}
+        {/* Botão Fixo (só exibe se não for o meu próprio mapa astral) */}
+        {astralMap && !astralMap.is_my_astral_map && (
+          <View style={styles.stickyButtonContainer}>
+            <CustomButton
+              title="Verificar Compatibilidade Astral"
+              onPress={handleCompatibilityPress}
+              style={styles.stickyButton}
+              textStyle={styles.stickyButtonText}
+              icon="favorite"
             />
-          ))}
-        </ScrollView>
+          </View>
+        )}
+
+        <View style={[
+          styles.mainContainer,
+          (!astralMap?.is_my_astral_map) && styles.mainContainerWithButton
+        ]}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
+            {/* Componente InfoCard */}
+            <InfoCard astralMap={astralMap} />
+
+            {/* Lista de entidades astrais (usando AstralEntityCard) */}
+            {astralMap?.astral_entities?.map((item) => (
+              <AstralEntityCard
+                key={item.id}
+                item={item}
+                imageMap={imageMap}
+              />
+            ))}
+          </ScrollView>
+        </View>
       </View>
-    </View>
+    </EmailVerificationGuard>
   );
 };
 
@@ -150,7 +159,7 @@ export default AstralMapScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
   },
   mainContainer: {
     flex: 1,

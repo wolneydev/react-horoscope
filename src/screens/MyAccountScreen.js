@@ -1,16 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
-import SpinningMandala from '../Components/SpinningMandala';
 import LoadingOverlay from '../Components/LoadingOverlay';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
 import EmailVerificationCard from '../Components/EmailVerificationCard';
 import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
-import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
+import EmailVerificationGuard from '../Components/EmailVerificationGuard';
 
 const MyAccountScreen = () => {
   const navigation = useNavigation();
@@ -109,72 +107,6 @@ const MyAccountScreen = () => {
     }
   };
 
-  // Função para verificar email periodicamente
-  const startEmailVerification = async () => {
-    if (autoCheckIntervalRef.current) {
-      clearInterval(autoCheckIntervalRef.current);
-    }
-
-    try {
-      console.log('Iniciando verificação periódica...');
-      const token = await StorageService.getAccessToken();
-      
-      autoCheckIntervalRef.current = setInterval(async () => {
-        try {
-          console.log('Verificando status do email...');
-          
-          const response = await api.get('users/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          console.log('Resposta da API:', response.data.data.email_verified_at);
-
-          if (response.data.data.email_verified_at) {
-            console.log('Email verificado com sucesso!');
-            
-            // Atualiza dados do usuário
-            const updatedUserData = {
-              ...userData,
-              email_verified_at: response.data.data.email_verified_at
-            };
-            
-            await StorageService.saveUserData(updatedUserData);
-            setUserData(updatedUserData);
-            
-            // Para a verificação
-            clearInterval(autoCheckIntervalRef.current);
-            autoCheckIntervalRef.current = null;
-          }
-        } catch (error) {
-          console.error('Erro na verificação:', error);
-        }
-      }, 10000); // Verifica a cada 10 segundos
-
-    } catch (error) {
-      console.error('Erro ao iniciar verificação periódica:', error);
-    }
-  };
-
-  // Inicia verificação quando a tela recebe foco
-  useFocusEffect(
-    useCallback(() => {
-      if (!userData?.email_verified_at) {
-        startEmailVerification();
-      }
-
-      // Cleanup quando a tela perde foco
-      return () => {
-        if (autoCheckIntervalRef.current) {
-          console.log('Parando verificação periódica...');
-          clearInterval(autoCheckIntervalRef.current);
-          autoCheckIntervalRef.current = null;
-        }
-      };
-    }, [userData?.email_verified_at])
-  );
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -222,61 +154,50 @@ const MyAccountScreen = () => {
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
   return (
-    <View style={styles.container}>
-      
-      {memoStars}
-      {isLoading && <LoadingOverlay message={loadingMessage} />}
-      
-      {/* Header com Avatar e Nome */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
-              style={styles.avatar}
-            />
-            <View style={styles.statusDot} />
-          </View>
-          <View style={styles.userTextInfo}>
-            <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
-            <Text style={styles.userName}>{userData?.name || ''}</Text>
+    <EmailVerificationGuard>
+      <View style={styles.container}>
+        
+        {memoStars}
+        {isLoading && <LoadingOverlay message={loadingMessage} />}
+        
+        {/* Header com Avatar e Nome */}
+        <View style={styles.header}>
+          <View style={styles.userInfo}>
+            <View style={styles.avatarContainer}>
+              <Image 
+                source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
+                style={styles.avatar}
+              />
+              <View style={styles.statusDot} />
+            </View>
+            <View style={styles.userTextInfo}>
+              <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
+              <Text style={styles.userName}>{userData?.name || ''}</Text>
+            </View>
           </View>
         </View>
+
+        {/* Cards de Navegação */}
+        <View style={styles.cardsContainer}>
+          <EmailVerificationCard 
+            userData={userData}
+            canResendEmail={canResendEmail}
+            resendCounter={resendCounter}
+            handleVerifyEmail={handleVerifyEmail}
+            shakeAnimation={shakeAnimation}
+          />
+
+          {/* Sinastria Card */}
+          <ScreenMenuItemCard 
+            title="Minhas Compras"
+            description="Veja os detalhes das suas compras e assinaturas."
+            icon="arrow-forward"
+            disabled={!userData?.email_verified_at}
+            onPress={() => handleCardPress('Minhas Compras')}
+          />
+        </View>
       </View>
-
-      {/* Cards de Navegação */}
-      <View style={styles.cardsContainer}>
-        <EmailVerificationCard 
-          userData={userData}
-          canResendEmail={canResendEmail}
-          resendCounter={resendCounter}
-          handleVerifyEmail={handleVerifyEmail}
-          shakeAnimation={shakeAnimation}
-        />
-
-        {/* Mapa Astral Card */}        
-        <TouchableOpacity 
-          style={[
-            styles.card,
-            !userData?.email_verified_at && styles.disabledCard
-          ]}
-          onPress={() => handleCardPress('Mapa Astral')}
-        >
-          <Text style={styles.cardTitle}>Mapa Astral</Text>
-          <Text style={styles.cardDescription}>Veja seu mapa astral completo</Text>
-          <Icon name="arrow-forward" size={24} color="#6D44FF" style={styles.cardIcon} />
-        </TouchableOpacity>
-
-        {/* Sinastria Card */}
-        <ScreenMenuItemCard 
-          title="Sinastria"
-          description="Compare mapas astrais e descubra compatibilidades"
-          icon="arrow-forward"
-          disabled={!userData?.email_verified_at}
-          onPress={() => handleCardPress('Sinastria')}
-        />
-      </View>
-    </View>
+    </EmailVerificationGuard>
   );
 };
 

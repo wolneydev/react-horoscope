@@ -355,26 +355,6 @@ function CustomDrawerContent(props) {
           labelStyle={[styles.drawerLabel, currentRoute === 'Minha Conta' && styles.drawerLabelActive]}
         />
 
-        <DrawerItem
-          label="Minhas Compras"
-          icon={({ focused }) => (
-            <Icon 
-              name="shopping-cart" 
-              color={currentRoute === 'Minhas Compras' ? '#FFFFFF' : '#7A708E'} 
-              size={24} 
-            />
-          )}
-          onPress={() => props.navigation.navigate('Minhas Compras')}
-          style={[
-            styles.drawerItem,
-            currentRoute === 'Minhas Compras' && styles.drawerItemActive
-          ]}
-          labelStyle={[
-            styles.drawerLabel,
-            currentRoute === 'Minhas Compras' && styles.drawerLabelActive
-          ]}
-        />
-
         {/* Grupo Sinastria */}
         <View style={styles.drawerGroup}>
           <DrawerItem

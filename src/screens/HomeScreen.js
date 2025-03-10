@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import LoadingOverlay from '../Components/LoadingOverlay';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
-import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 import EmailVerificationCard from '../Components/EmailVerificationCard';
+import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
+import EmailVerificationGuard from '../Components/EmailVerificationGuard';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -21,8 +22,9 @@ const HomeScreen = () => {
   const [resendCounter, setResendCounter] = useState(60);
   const counterIntervalRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [showSuccess, setShowSuccess] = useState(true);
+  const [showSuccessCard, setShowSuccessCard] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const isFocused = useIsFocused();
 
   const startShake = () => {
     console.log('Iniciando animação de shake no HomeScreen');
@@ -204,22 +206,25 @@ const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
+    // Se o email foi verificado, mostra o card de sucesso por alguns segundos
     if (userData?.email_verified_at) {
+      setShowSuccessCard(true);
+      
       // Inicia com opacidade 1
       fadeAnim.setValue(1);
       
-      // Aguarda 2 segundos antes de iniciar o fade out
+      // Aguarda 3 segundos antes de iniciar o fade out
       const timer = setTimeout(() => {
         Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 1000, // duração da animação em ms
           useNativeDriver: true,
-        }).start(() => setShowSuccess(false));
-      }, 2000);
+        }).start(() => setShowSuccessCard(false));
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
-  }, [userData?.email_verified_at]);
+  }, [userData?.email_verified_at, fadeAnim]);
 
   const startResendCounter = () => {
     setCanResendEmail(false);
@@ -240,9 +245,19 @@ const HomeScreen = () => {
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
+  // Função para lidar com cliques em qualquer lugar da tela
+  const handleScreenPress = () => {
+    if (!userData?.email_verified_at) {
+      startShake();
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      
+    <TouchableOpacity 
+      activeOpacity={1} 
+      style={styles.container} 
+      onPress={handleScreenPress}
+    >
       {memoStars}
       {isLoading && <LoadingOverlay message={loadingMessage} />}
       
@@ -265,41 +280,53 @@ const HomeScreen = () => {
 
       {/* Cards de Navegação */}
       <View style={styles.cardsContainer}>
-        <EmailVerificationCard 
-          userData={userData}
-          canResendEmail={canResendEmail}
-          resendCounter={resendCounter}
-          handleVerifyEmail={handleVerifyEmail}
-          shakeAnimation={shakeAnimation}
-        />
+        {/* Card de Verificação de Email */}
+        {!userData?.email_verified_at ? (
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={(e) => {
+              // Impede que o clique se propague para o TouchableOpacity pai
+              e.stopPropagation();
+              if (canResendEmail) {
+                handleVerifyEmail();
+              }
+            }}
+          >
+            <EmailVerificationCard 
+              userData={userData}
+              canResendEmail={canResendEmail}
+              resendCounter={resendCounter}
+              shakeAnimation={shakeAnimation}
+            />
+          </TouchableOpacity>
+        ) : showSuccessCard && (
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <TouchableOpacity style={styles.successMailVerificationCard}>
+              <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
 
         {/* Mapa Astral Card */}
-        <TouchableOpacity 
-          style={[
-            styles.card,
-            !userData?.email_verified_at && styles.disabledCard
-          ]}
-          onPress={() => handleCardPress('Mapa Astral')}
-        >
-          <Text style={styles.cardTitle}>Mapa Astral</Text>
-          <Text style={styles.cardDescription}>Veja seu mapa astral completo</Text>
-          <Icon name="arrow-forward" size={24} color={COLORS.PRIMARY} style={styles.cardIcon} />
-        </TouchableOpacity>
+        {/* Mapa Astral Card */}
+        <ScreenMenuItemCard
+            title="Mapa Astral"
+            description="Veja seu mapa astral completo"
+            icon="arrow-forward"
+            disabled={!userData?.email_verified_at}
+            onPress={() => handleCardPress('Mapa Astral')}
+          />
 
         {/* Sinastria Card */}
-        <TouchableOpacity 
-          style={[
-            styles.card,
-            !userData?.email_verified_at && styles.disabledCard
-          ]}
-          onPress={() => handleCardPress('Sinastria')}
-        >
-          <Text style={styles.cardTitle}>Sinastria</Text>
-          <Text style={styles.cardDescription}>Compare mapas astrais e descubra compatibilidades</Text>
-          <Icon name="arrow-forward" size={24} color={COLORS.PRIMARY} style={styles.cardIcon} />
-        </TouchableOpacity>
+        <ScreenMenuItemCard
+            title="Sinastria"
+            description="Compare mapas astrais e descubra compatibilidades"
+            icon="arrow-forward"
+            disabled={!userData?.email_verified_at}
+            onPress={() => handleCardPress('Sinastria')}
+          />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
