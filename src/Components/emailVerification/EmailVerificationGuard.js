@@ -2,9 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import StorageService from '../store/store';
-import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
-import AnimatedStars from './animation/AnimatedStars';
+import StorageService from '../../store/store';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../../styles/theme';
 
 const EmailVerificationGuard = ({ children }) => {
   const navigation = useNavigation();

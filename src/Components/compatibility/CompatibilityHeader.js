@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { COLORS, SPACING, FONTS } from '../../styles/theme';
 
 const CompatibilityHeader = ({
   averageCompatibility,
@@ -16,7 +17,7 @@ const CompatibilityHeader = ({
           <View>
             <View style={styles.titleContainer}>
               <View style={styles.infoIconContainer}>
-                <Icon name="favorite" size={24} color="#6D44FF" />
+                <Icon name="favorite" size={24} color={COLORS.PRIMARY} />
               </View>
               <Text style={styles.averageTitle}>Compatibilidade Total</Text>
             </View>
@@ -49,13 +50,13 @@ const CompatibilityHeader = ({
         <View style={styles.infoHeader}>
           <View style={styles.titleContainer}>
             <View style={styles.infoIconContainer}>
-              <Icon name="help-outline" size={24} color="#6D44FF" />
+              <Icon name="help-outline" size={24} color={COLORS.PRIMARY} />
             </View>
             <Text style={styles.infoTitle}>Como funciona?</Text>
             <Icon
               name={isExpanded ? 'expand-less' : 'expand-more'}
               size={24}
-              color="#6D44FF"
+              color={COLORS.PRIMARY}
             />
           </View>
         </View>
@@ -112,10 +113,10 @@ const CompatibilityHeader = ({
 
 const styles = StyleSheet.create({
   infoCard: {
-    backgroundColor: 'rgba(109, 68, 255, 0.1)',
+    backgroundColor: COLORS.BACKGROUND_DARK,
     borderRadius: 15,
-    padding: 20,
-    marginBottom: 24,
+    padding: SPACING.LARGE,
+    marginBottom: SPACING.XLARGE,
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.3)',
   },
@@ -129,39 +130,39 @@ const styles = StyleSheet.create({
   },
   infoIconContainer: {
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
-    padding: 8,
+    padding: SPACING.SMALL,
     borderRadius: 20,
-    marginRight: 12,
+    marginRight: SPACING.MEDIUM,
   },
   averageTitle: {
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: FONTS.SIZES.LARGE,
+    color: COLORS.TEXT_PRIMARY,
   },
   averageValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: FONTS.SIZES.XXLARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   infoTitle: {
     flex: 1,
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: FONTS.SIZES.LARGE,
+    color: COLORS.TEXT_PRIMARY,
   },
   infoDescription: {
-    fontSize: 15,
-    color: '#FFFFFF',
+    fontSize: FONTS.SIZES.SMALL,
+    color: COLORS.TEXT_PRIMARY,
     opacity: 0.8,
     lineHeight: 22,
-    marginTop: 12,
+    marginTop: SPACING.MEDIUM,
   },
   infoDescriptionList: {
-    fontSize: 15,
-    color: '#FFFFFF',
+    fontSize: FONTS.SIZES.SMALL,
+    color: COLORS.TEXT_PRIMARY,
     opacity: 0.8,
     lineHeight: 22,
-    marginTop: 12,
-    marginLeft: 20,
+    marginTop: SPACING.MEDIUM,
+    marginLeft: SPACING.LARGE,
   },
 });
 

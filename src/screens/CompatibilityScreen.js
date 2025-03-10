@@ -13,14 +13,10 @@ import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import api from '../services/api';
 import StorageService from '../store/store';
-
-// Novos componentes refatorados
-import NavigationHeader from '../Components/NavigationHeader';
 import CompatibilityHeader from '../Components/compatibility/CompatibilityHeader';
 import CompatibilityItem from '../Components/compatibility/CompatibilityItem';
 
 export default function CompatibilityScreen({ route }) {
-  const navigation = useNavigation();
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
 
   // Recebe os dois UUIDs via parâmetros da rota
@@ -103,30 +99,30 @@ export default function CompatibilityScreen({ route }) {
 
   const getCompatibilityText = (value) => {
     if (value >= 90) {
-      return 'União Celestial! Uma conexão extraordinariamente rara...';
+      return 'União Celestial! Uma conexão extraordinariamente rara.';
     }
     if (value >= 80) {
-      return 'Conexão Excepcional! Existe uma harmonia natural...';
+      return 'Conexão Excepcional! Existe uma harmonia natural.';
     }
     if (value >= 70) {
-      return 'Sintonia Elevada! A compatibilidade entre vocês é muito favorável...';
+      return 'Sintonia Elevada! A compatibilidade entre vocês é muito favorável.';
     }
     if (value >= 60) {
-      return 'Ótima Compatibilidade! Vocês têm uma conexão positiva...';
+      return 'Ótima Compatibilidade! Vocês têm uma conexão positiva.';
     }
     if (value >= 50) {
-      return 'Compatibilidade Favorável. Existe um bom equilíbrio entre...';
+      return 'Compatibilidade Favorável. Existe um bom equilíbrio entre.';
     }
     if (value >= 40) {
-      return 'Compatibilidade Moderada. Existem áreas de harmonia e desafios...';
+      return 'Compatibilidade Moderada. Existem áreas de harmonia e desafios.';
     }
     if (value >= 30) {
-      return 'Compatibilidade Desafiadora. Há aspectos importantes...';
+      return 'Compatibilidade Desafiadora. Há aspectos importantes.';
     }
     if (value >= 20) {
-      return 'Compatibilidade Complexa. Existem desafios significativos...';
+      return 'Compatibilidade Complexa. Existem desafios significativos.';
     }
-    return 'Compatibilidade Muito Desafiadora. A relação apresenta aspectos...';
+    return 'Compatibilidade Muito Desafiadora. A relação apresenta aspectos.';
   };
 
   const getAstroImage = (astralEntity) => {
@@ -147,14 +143,12 @@ export default function CompatibilityScreen({ route }) {
   return (
     <SafeAreaView style={styles.container}>
       {memoizedStars}
-      {/* Cabeçalho de navegação */}
-      <NavigationHeader onBackPress={() => navigation.goBack()} />
 
       <View style={styles.content}>
         {loading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#FFD700" />
-            <Text style={styles.loadingText}>Calculando compatibilidade...</Text>
+            <Text style={styles.loadingText}>Calculando compatibilidade.</Text>
           </View>
         ) : (
           <FlatList

@@ -5,14 +5,12 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
   ScrollView
 } from 'react-native';
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import CustomButton from '../Components/CustomButton';
-import LoadingOverlay from '../Components/LoadingOverlay';
-import EmailVerificationGuard from '../Components/EmailVerificationGuard';
+import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 import { COLORS } from '../styles/theme';
 
 // Componentes refatorados
@@ -73,9 +71,12 @@ const AstralMapScreen = ({ route }) => {
   const handleCompatibilityPress = async () => {
     try {
       const astralMapData = await StorageService.getMyAstralMap();
-      navigation.navigate('CompatibilityScreen', {
-        uuid1: astralMapData.uuid,
-        uuid2: astralMap2.uuid,
+      navigation.navigate('HomeScreen', { 
+        screen: 'Compatibilidade', 
+        params: { 
+          uuid1: astralMapData.uuid, 
+          uuid2: astralMap2.uuid
+        }
       });
     } catch (error) {
       console.error('Erro ao obter usuário atual:', error);

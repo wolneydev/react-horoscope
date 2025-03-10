@@ -32,7 +32,6 @@ import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
 import { useState, useRef, useEffect } from 'react';
-import { TouchableOpacity } from 'react-native';
 import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
 import { PrivacyPolicyScreen, TermsOfUseScreen } from './src/screens/TermsScreen';
 enableScreens(false);
@@ -87,8 +86,7 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Drawer.Screen
-          name="CompatibilityScreen"
-        
+          name="CompatibilityScreen"        
           component={CompatibilityScreen}
           options={{
             headerShown: false,
@@ -345,17 +343,6 @@ function CustomDrawerContent(props) {
           ]}
         />
 
-        <DrawerItem
-          label="Minha Conta"
-          icon={({ focused }) => (
-            <Icon name="stars" color={currentRoute === 'Minha Conta' ? '#FFFFFF' : '#7A708E'} size={24} />
-          )}
-          onPress={() => props.navigation.navigate('Minha Conta')}
-          style={[styles.drawerItem, currentRoute === 'Minha Conta' && styles.drawerItemActive]}
-          labelStyle={[styles.drawerLabel, currentRoute === 'Minha Conta' && styles.drawerLabelActive]}
-        />
-
-        {/* Grupo Sinastria */}
         <View style={styles.drawerGroup}>
           <DrawerItem
             label="Sinastria"
@@ -388,6 +375,16 @@ function CustomDrawerContent(props) {
             styles.drawerLabel,
             currentRoute === 'Casas' && styles.drawerLabelActive
           ]}
+        />
+
+        <DrawerItem
+          label="Minha Conta"
+          icon={({ focused }) => (
+            <Icon name="account-circle" color={currentRoute === 'Minha Conta' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Minha Conta')}
+          style={[styles.drawerItem, currentRoute === 'Minha Conta' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Minha Conta' && styles.drawerLabelActive]}
         />
 
         <DrawerItem
@@ -522,14 +519,16 @@ function AppDrawer() {
             drawerIcon: ({ color, size }) => (
               <Icon name="favorite" color={color} size={size} />
             ),
-            title: "Mapa Extra"
           }}
-          listeners={{
-            drawerItemPress: (e) => {
-              // Previne navegação padrão
-              e.preventDefault();
-              handleCreateExtraChart();
-            }
+        />
+
+        <Drawer.Screen
+          name="Compatibilidade"
+          component={CompatibilityScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="favorite" color={color} size={size} />
+            ),
           }}
         />
 

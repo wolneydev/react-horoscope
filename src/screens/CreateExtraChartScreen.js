@@ -18,6 +18,8 @@ import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import LoadingOverlay from '../Components/LoadingOverlay';
 import { useNavigation } from '@react-navigation/native';
+import InfoCard from '../Components/InfoCard';
+import { COLORS, SPACING, FONTS } from '../styles/theme';
 
 // Exemplo de import do seu JSON de cidades
 // Ajuste o path conforme seu projeto, caso tenha:
@@ -61,6 +63,7 @@ const CreateExtraChartScreen = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   // Animação de fundo (memoizada)
   const memoStars = useMemo(() => <AnimatedStars />, []);
@@ -214,6 +217,10 @@ const CreateExtraChartScreen = () => {
           // Terceiro passo
           setLoadingMessage('Gerando o mapa astral ...');
 
+          // Limpa os campos
+          setNome('');
+          setCity('');
+
           if (data.astral_map) {
             navigation.navigate('HomeScreen', {
               screen: 'Mapa Astral',
@@ -236,10 +243,16 @@ const CreateExtraChartScreen = () => {
       {memoStars}
 
       <View style={styles.content}>
-        <Text style={styles.title}>Novo Mapa Astral</Text>
-        <Text style={styles.subtitle}>
-          Preencha os dados para gerar um novo mapa astral
-        </Text>
+        <View style={styles.header}>
+          <InfoCard
+            title="Novo Mapa Astral"
+            description="Preencha os dados abaixo para gerar um novo mapa astral. Você poderá visualizar as posições dos planetas, casas astrológicas e aspectos, além de poder comparar este mapa com o seu através da sinastria."
+            icon="auto-awesome"
+            isInfoExpanded={isInfoExpanded}
+            setIsInfoExpanded={setIsInfoExpanded}
+            expandable={true}
+          />
+        </View>
 
         <View style={styles.form}>
           {/* Campo Nome */}
@@ -351,73 +364,75 @@ export default CreateExtraChartScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
   },
   content: {
     flex: 1,
-    padding: 20,
-    paddingTop: 40,
+    padding: SPACING.LARGE,    
+  },
+  header: {
+    marginBottom: SPACING.LARGE,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
+    fontSize: FONTS.SIZES.TITLE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.MEDIUM,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#7A708E',
-    marginBottom: 20,
+    fontSize: FONTS.SIZES.MEDIUM,
+    color: COLORS.TEXT_TERTIARY,
+    marginBottom: SPACING.LARGE,
     textAlign: 'center',
   },
   form: {
-    gap: 10,
+    gap: SPACING.MEDIUM,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    backgroundColor: COLORS.SECONDARY_LIGHT,
     borderRadius: 12,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: COLORS.BORDER_LIGHT,
     marginBottom: 5,
     height: 55,
   },
   input: {
     flex: 1,
-    color: '#FFFFFF',
-    marginLeft: 10,
-    fontSize: 16,
+    color: COLORS.TEXT_PRIMARY,
+    marginLeft: SPACING.MEDIUM,
+    fontSize: FONTS.SIZES.MEDIUM,
   },
   dateText: {
     flex: 1,
-    color: '#FFFFFF',
-    marginLeft: 10,
-    fontSize: 16,
+    color: COLORS.TEXT_PRIMARY,
+    marginLeft: SPACING.MEDIUM,
+    fontSize: FONTS.SIZES.MEDIUM,
   },
   placeholder: {
-    color: '#7A708E',
+    color: COLORS.TEXT_TERTIARY,
   },
   button: {
-    backgroundColor: '#6D44FF',
+    backgroundColor: COLORS.PRIMARY,
     borderRadius: 12,
     height: 55,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: SPACING.LARGE,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   errorText: {
-    color: '#ff4444',
-    fontSize: 12,
+    color: COLORS.ERROR,
+    fontSize: FONTS.SIZES.TINY,
     marginTop: 4,
-    marginLeft: 10,
+    marginLeft: SPACING.MEDIUM,
   },
   /** Estilos do dropdown de cidades */
   suggestionsContainer: {
@@ -433,7 +448,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   suggestionItem: {
-    padding: 10,
+    padding: SPACING.MEDIUM,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },

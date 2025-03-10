@@ -7,9 +7,10 @@ import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
-import EmailVerificationCard from '../Components/EmailVerificationCard';
+import EmailVerificationCard from '../Components/emailVerification/EmailVerificationCard';
+import EmailVerifiedCard from '../Components/emailVerification/EmailVerifiedCard';
 import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
-import EmailVerificationGuard from '../Components/EmailVerificationGuard';
+import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const HomeScreen = () => {
@@ -253,63 +254,61 @@ const HomeScreen = () => {
   };
 
   return (
-    <TouchableOpacity 
-      activeOpacity={1} 
-      style={styles.container} 
-      onPress={handleScreenPress}
-    >
-      {memoStars}
-      {isLoading && <LoadingOverlay message={loadingMessage} />}
-      
-      {/* Header com Avatar e Nome */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
-              style={styles.avatar}
-            />
-            <View style={styles.statusDot} />
-          </View>
-          <View style={styles.userTextInfo}>
-            <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
-            <Text style={styles.userName}>{userData?.name || ''}</Text>
+    <EmailVerificationGuard>
+      <TouchableOpacity 
+        activeOpacity={1} 
+        style={styles.container} 
+        onPress={handleScreenPress}
+      >
+        {memoStars}
+        {isLoading && <LoadingOverlay message={loadingMessage} />}
+        
+        {/* Header com Avatar e Nome */}
+        <View style={styles.header}>
+          <View style={styles.userInfo}>
+            <View style={styles.avatarContainer}>
+              <Image 
+                source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
+                style={styles.avatar}
+              />
+              <View style={styles.statusDot} />
+            </View>
+            <View style={styles.userTextInfo}>
+              <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
+              <Text style={styles.userName}>{userData?.name || ''}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Cards de Navegação */}
-      <View style={styles.cardsContainer}>
-        {/* Card de Verificação de Email */}
-        {!userData?.email_verified_at ? (
-          <TouchableOpacity 
-            activeOpacity={1}
-            onPress={(e) => {
-              // Impede que o clique se propague para o TouchableOpacity pai
-              e.stopPropagation();
-              if (canResendEmail) {
-                handleVerifyEmail();
-              }
-            }}
-          >
-            <EmailVerificationCard 
-              userData={userData}
-              canResendEmail={canResendEmail}
-              resendCounter={resendCounter}
-              shakeAnimation={shakeAnimation}
-            />
-          </TouchableOpacity>
-        ) : showSuccessCard && (
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <TouchableOpacity style={styles.successMailVerificationCard}>
-              <Text style={styles.successMailVerificationCardTitle}>Email Verificado!</Text>
+        {/* Cards de Navegação */}
+        <View style={styles.cardsContainer}>
+          {/* Card de Verificação de Email */}
+          {!userData?.email_verified_at ? (
+            <TouchableOpacity 
+              activeOpacity={1}
+              onPress={(e) => {
+                // Impede que o clique se propague para o TouchableOpacity pai
+                e.stopPropagation();
+                if (canResendEmail) {
+                  handleVerifyEmail();
+                }
+              }}
+            >
+              <EmailVerificationCard 
+                userData={userData}
+                canResendEmail={canResendEmail}
+                resendCounter={resendCounter}
+                shakeAnimation={shakeAnimation}
+              />
             </TouchableOpacity>
-          </Animated.View>
-        )}
+          ) : showSuccessCard && (
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <EmailVerifiedCard />
+            </Animated.View>
+          )}
 
-        {/* Mapa Astral Card */}
-        {/* Mapa Astral Card */}
-        <ScreenMenuItemCard
+          {/* Mapa Astral Card */}
+          <ScreenMenuItemCard
             title="Mapa Astral"
             description="Veja seu mapa astral completo"
             icon="arrow-forward"
@@ -317,16 +316,28 @@ const HomeScreen = () => {
             onPress={() => handleCardPress('Mapa Astral')}
           />
 
-        {/* Sinastria Card */}
-        <ScreenMenuItemCard
+
+          {/* Sinastria Card */}
+          <ScreenMenuItemCard
             title="Sinastria"
             description="Compare mapas astrais e descubra compatibilidades"
             icon="arrow-forward"
             disabled={!userData?.email_verified_at}
             onPress={() => handleCardPress('Sinastria')}
           />
-      </View>
-    </TouchableOpacity>
+
+          {/* Minha Conta Card */}
+          <ScreenMenuItemCard
+            title="Minha Conta"
+            description="Acesse as informações de sua conta e suas configurações"
+            icon="arrow-forward"
+            disabled={!userData?.email_verified_at}
+            onPress={() => handleCardPress('Minha Conta')}
+          />
+
+        </View>
+      </TouchableOpacity>
+    </EmailVerificationGuard>
   );
 };
 

@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { COLORS, SPACING, FONTS } from '../styles/theme';
+import { COLORS, SPACING, FONTS } from '../../styles/theme';
 
 const EmailVerificationCard = ({ 
   userData, 
   canResendEmail, 
   resendCounter, 
-  shakeAnimation 
+  shakeAnimation,
+  onlyShowIfVerified
 }) => {
   if (!userData) return null;
   

@@ -9,6 +9,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import StripeService from '../services/StripeService';
 import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
+import InfoCard from '../Components/InfoCard';
+import { COLORS, SPACING, FONTS } from '../styles/theme';
 
 const MyPurchasesScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -18,6 +20,7 @@ const MyPurchasesScreen = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [failMessage, setFailMessage] = useState(null);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useFocusEffect(
@@ -121,19 +124,18 @@ const MyPurchasesScreen = () => {
       {memoStars}
       
       <View style={styles.header}>
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconContainer}>
-            <Icon name="shopping-cart" size={24} color="#6D44FF" />
-          </View>
-          <Text style={styles.infoCardTitle}>Histórico de Compras</Text>
-          <Text style={styles.infoCardDescription}>
-            Aqui você encontra todo o seu histórico de compras realizadas.
-          </Text>
-        </View>
+        <InfoCard
+          title="Minhas Compras"
+          description="Aqui você encontra todas as informações sobre suas compras realizadas, incluindo o status de cada uma delas e as mensagens das operadoras, caso tenha acontecido algum problema."
+          icon="attach-money"
+          isInfoExpanded={isInfoExpanded}
+          setIsInfoExpanded={setIsInfoExpanded}
+          expandable={true}
+        />
       </View>
 
       {isLoading ? (
-        <ActivityIndicator size="large" color="#6D44FF" />
+        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
       ) : orders.length > 0 ? (
         <ScrollView 
           style={styles.scrollView}
@@ -227,14 +229,14 @@ const MyPurchasesScreen = () => {
         </ScrollView>
       ) : (
         <View style={styles.emptyContainer}>
-          <Icon name="shopping-cart" size={64} color="#7A708E" />
+          <Icon name="shopping-cart" size={64} color={COLORS.TEXT_TERTIARY} />
           <Text style={styles.emptyText}>Nenhuma compra realizada</Text>
         </View>
       )}
 
       {loading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#6D44FF" />
+          <ActivityIndicator size="large" color={COLORS.PRIMARY} />
         </View>
       )}
 
@@ -262,53 +264,24 @@ const MyPurchasesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
   },
   header: {
-    padding: 20,
+    padding: SPACING.LARGE,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(109, 68, 255, 0.2)',
-  },
-  infoCard: {
-    backgroundColor: 'rgba(109, 68, 255, 0.1)',
-    borderRadius: 15,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.3)',
-    alignItems: 'center',
-  },
-  infoIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(109, 68, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  infoCardTitle: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  infoCardDescription: {
-    fontSize: 14,
-    color: '#7A708E',
-    textAlign: 'center',
-    lineHeight: 20,
   },
   scrollView: {
     flex: 1,
   },
   scrollViewContent: {
-    padding: 20,
+    padding: SPACING.LARGE,
   },
   card: {
     backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderRadius: 15,
-    padding: 15,
-    marginBottom: 15,
+    padding: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.3)',
   },
@@ -323,102 +296,102 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(109, 68, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: SPACING.MEDIUM,
   },
   headerContent: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginLeft: 12,
-    marginRight: 8,
+    marginLeft: SPACING.MEDIUM,
+    marginRight: SPACING.SMALL,
   },
   mainInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: SPACING.MEDIUM,
   },
   expandedContent: {
-    marginTop: 15,
-    paddingTop: 15,
+    marginTop: SPACING.LARGE,
+    paddingTop: SPACING.LARGE,
     borderTopWidth: 1,
     borderTopColor: 'rgba(109, 68, 255, 0.2)',
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: SPACING.MEDIUM,
   },
   detailLabel: {
-    color: '#7A708E',
-    fontSize: 14,
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.SMALL,
   },
   detailValue: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.MEDIUM,
   },
   retryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6D44FF',
-    padding: 12,
+    backgroundColor: COLORS.PRIMARY,
+    padding: SPACING.MEDIUM,
     borderRadius: 8,
-    marginTop: 10,
+    marginTop: SPACING.MEDIUM,
   },
   retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    marginLeft: SPACING.SMALL,
   },
   orderTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   orderAmount: {
-    color: '#7A708E',
-    fontSize: 14,
-    marginTop: 4,
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.SMALL,
+    marginTop: SPACING.TINY,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: SPACING.MEDIUM,
+    paddingVertical: SPACING.TINY,
     borderRadius: 20,
   },
   statusText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.TINY,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: SPACING.LARGE,
   },
   emptyText: {
-    color: '#7A708E',
-    fontSize: 16,
-    marginTop: 10,
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    marginTop: SPACING.MEDIUM,
     textAlign: 'center',
   },
   errorMessageContainer: {
     backgroundColor: 'rgba(255, 68, 68, 0.1)',
     borderRadius: 8,
-    padding: 12,
-    marginTop: 10,
-    marginBottom: 10,
+    padding: SPACING.MEDIUM,
+    marginTop: SPACING.MEDIUM,
+    marginBottom: SPACING.MEDIUM,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 68, 68, 0.3)',
   },
   errorMessage: {
-    color: '#FF4444',
-    fontSize: 14,
-    marginLeft: 8,
+    color: COLORS.ERROR,
+    fontSize: FONTS.SIZES.SMALL,
+    marginLeft: SPACING.SMALL,
     flex: 1,
   },
   loadingOverlay: {

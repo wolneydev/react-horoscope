@@ -13,7 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
 import InfoCardSinastria from '../Components/InfoCardSinastria';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
-import EmailVerificationGuard from '../Components/EmailVerificationGuard';
+import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
@@ -88,7 +88,9 @@ const SynastryScreen = () => {
     if (used >= max) {
       setShowCreditsModal(true);
     } else {
-      navigation.navigate('CreateExtraChartScreen');
+      navigation.navigate('HomeScreen', { 
+        screen: 'Mapa Extra', 
+      });
     }
   };
 
@@ -201,7 +203,7 @@ const SynastryScreen = () => {
                 contentContainerStyle={styles.chartsList}
                 ListEmptyComponent={
                   <Text style={styles.emptyText}>
-                    Adicione
+                    Adicione novos mapas para realizar a sinastria com o seu!
                   </Text>
                 }
               />

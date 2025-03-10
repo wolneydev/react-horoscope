@@ -2,56 +2,30 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
 import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import SpinningMandala from '../Components/SpinningMandala';
 import LoadingOverlay from '../Components/LoadingOverlay';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
 import api from '../services/api';
-import EmailVerificationCard from '../Components/EmailVerificationCard';
+import EmailVerificationCard from '../Components/emailVerification/EmailVerificationCard';
+import EmailVerifiedCard from '../Components/emailVerification/EmailVerifiedCard';
 import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
-import EmailVerificationGuard from '../Components/EmailVerificationGuard';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
+import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 
 const MyAccountScreen = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const shakeAnimation = useRef(new Animated.Value(0)).current;
-  const autoCheckIntervalRef = useRef(null);
   const [canResendEmail, setCanResendEmail] = useState(false);
   const [resendCounter, setResendCounter] = useState(60);
   const counterIntervalRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState('');
-
-  const startShake = () => {
-    console.log('Iniciando animação de shake no MyAccountScreen');
-    Animated.sequence([
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: -10,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
+  const [showSuccessCard, setShowSuccessCard] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const handleCardPress = async (screenName) => {
-    if (!userData?.email_verified_at) {
-      startShake();
-      return;
-    }
 
     try {
       //setIsLoading(true);
@@ -72,41 +46,6 @@ const MyAccountScreen = () => {
     }
   };
 
-  const handleVerifyEmail = async () => {
-    if (!canResendEmail) return;
-
-    try {
-      setIsLoading(true);
-      setLoadingMessage('Reenviando email de verificação...');
-      
-      const token = await StorageService.getAccessToken();
-      
-      await api.post('auth/resend-email-verification', { uuid: userData.uuid }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      // Simula um pequeno delay para feedback visual
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLoadingMessage('Email reenviado com sucesso!');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Reinicia o contador
-      startResendCounter();
-      
-    } catch (error) {
-      console.error('Erro ao reenviar email:', error);
-      Alert.alert(
-        'Erro',
-        'Não foi possível reenviar o email de verificação.'
-      );
-    } finally {
-      setIsLoading(false);
-      setLoadingMessage('');
-    }
-  };
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -122,11 +61,7 @@ const MyAccountScreen = () => {
     fetchUserData();
   }, []);
 
-  useEffect(() => {
-    // Inicia com botão desabilitado e contador
-    if (!userData?.email_verified_at) {
-      startResendCounter();
-    }
+  useEffect(() => {    
     return () => {
       if (counterIntervalRef.current) {
         clearInterval(counterIntervalRef.current);
@@ -152,6 +87,17 @@ const MyAccountScreen = () => {
 
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
+
+  const handleVerifyEmail = () => {
+    setShowSuccessCard(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start(() => {
+      fadeAnim.setValue(0);
+    });
+  };
 
   return (
     <EmailVerificationGuard>
@@ -179,15 +125,11 @@ const MyAccountScreen = () => {
 
         {/* Cards de Navegação */}
         <View style={styles.cardsContainer}>
-          <EmailVerificationCard 
-            userData={userData}
-            canResendEmail={canResendEmail}
-            resendCounter={resendCounter}
-            handleVerifyEmail={handleVerifyEmail}
-            shakeAnimation={shakeAnimation}
-          />
 
-          {/* Sinastria Card */}
+          {/* Email Verificado */}
+          <EmailVerifiedCard/>
+                    
+          {/* Minhas Compras */}
           <ScreenMenuItemCard 
             title="Minhas Compras"
             description="Veja os detalhes das suas compras e assinaturas."
@@ -195,6 +137,7 @@ const MyAccountScreen = () => {
             disabled={!userData?.email_verified_at}
             onPress={() => handleCardPress('Minhas Compras')}
           />
+
         </View>
       </View>
     </EmailVerificationGuard>
