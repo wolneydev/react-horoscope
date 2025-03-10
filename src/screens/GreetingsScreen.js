@@ -58,7 +58,6 @@ const GreetingsScreen = () => {
         <CustomButton 
           title="Começar"
           onPress={() => navigation.navigate('RegisterScreen')}
-          style={styles.customButton}
         />
       </View>
     </View>
@@ -111,14 +110,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
     marginBottom: 20,
-  },
-  customButton: {
-    width: '100%',
-    marginVertical: 5,
-  },
-  buttonContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
   },
 });
 

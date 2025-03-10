@@ -139,14 +139,12 @@ const IndexScreen = () => {
               title="Começar uma nova jornada astral"
               onPress={handleNewJourneyPress}
               disabled={loading}
-              style={styles.customButton}
             />
 
             <CustomButton
               title="Já tenho uma conta"
               onPress={() => navigation.navigate('LoginScreen')}
               disabled={loading}
-              style={styles.customButton}
             />
           </View>
 
@@ -250,9 +248,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 10,
   },
-  customButton: {
-    marginVertical: 5,
-  },
+  
   /* Links de Termos e Política */
   termsContainer: {
     flexDirection: 'row',

@@ -156,7 +156,6 @@ const RegisterForm = ({
         onPress={onSubmit}
         disabled={isLoading}
         loading={isLoading}
-        style={styles.customButton}
       />
 
       {/* Link para Login */}
@@ -208,9 +207,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 10,
-  },
-  customButton: {
-    marginVertical: 5,
   },
   linkButton: {
     alignItems: 'center',

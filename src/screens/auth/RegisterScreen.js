@@ -498,7 +498,6 @@ export default function RegisterScreen({ navigation }) {
                 onPress={handleSubmit}
                 disabled={isLoading}
                 loading={isLoading}
-                style={styles.customButton}
               />
 
               <TouchableOpacity
@@ -621,9 +620,6 @@ const styles = StyleSheet.create({
   linkTextHighlight: {
     color: '#6D44FF',
     fontWeight: 'bold',
-  },
-  customButton: {
-    marginVertical: 5,
   },
 });
 

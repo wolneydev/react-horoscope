@@ -213,11 +213,6 @@ const SynastryScreen = () => {
           <CustomButton
             title="Criar Novo Mapa Astral"
             onPress={handleCreateChart}
-            style={[
-              styles.customButton,
-              !isInitialized && styles.disabledButton
-            ]}
-            textStyle={styles.customButtonText}
             icon="add-circle-outline"
             disabled={!isInitialized}
           />        
@@ -313,7 +308,6 @@ const SynastryScreen = () => {
               <CustomButton
                 title="Fechar"
                 onPress={() => setShowCreditsModal(false)}
-                style={styles.closeButton}
               />
             </View>
           </View>
@@ -364,16 +358,6 @@ const styles = StyleSheet.create({
   extraMapsText: {
     color: COLORS.TEXT_TERTIARY,
     fontSize: FONTS.SIZES.SMALL,
-  },
-  customButton: {
-    backgroundColor: COLORS.PRIMARY_LIGHT,
-    borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.6)',
-  },
-  customButtonText: {
-    color: COLORS.TEXT_PRIMARY,
-    fontSize: FONTS.SIZES.MEDIUM,
-    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   sectionTitle: {
     color: COLORS.TEXT_PRIMARY,
@@ -530,12 +514,6 @@ const styles = StyleSheet.create({
   bestValueAmount: {
     fontSize: FONTS.SIZES.LARGE,
     color: COLORS.HIGHLIGHT,
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  disabledText: {
-    opacity: 0.7,
   },
   expandButton: {
     padding: SPACING.SMALL,

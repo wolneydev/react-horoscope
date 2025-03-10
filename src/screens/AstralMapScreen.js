@@ -120,8 +120,6 @@ const AstralMapScreen = ({ route }) => {
             <CustomButton
               title="Verificar Compatibilidade Astral"
               onPress={handleCompatibilityPress}
-              style={styles.stickyButton}
-              textStyle={styles.stickyButtonText}
               icon="favorite"
             />
           </View>
@@ -181,21 +179,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(109, 68, 255, 0.2)',
-  },
-  stickyButton: {
-    backgroundColor: 'rgba(109, 68, 255, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(109, 68, 255, 0.6)',
-  },
-  stickyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   content: {
     padding: 20,

@@ -146,7 +146,6 @@ export default function ResetPasswordScreen({ route, navigation }) {
                 onPress={handleResetPassword}
                 disabled={loading}
                 loading={loading}
-                style={styles.customButton}
               />
             </View>
           </View>
@@ -213,9 +212,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 10,
     fontSize: 16,
-  },
-  customButton: {
-    marginVertical: 5,
   },
   errorText: {
     color: '#ff4444',

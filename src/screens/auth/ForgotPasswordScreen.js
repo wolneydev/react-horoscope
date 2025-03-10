@@ -175,7 +175,6 @@ export default function ForgotPasswordScreen({ navigation }) {
                   onPress={handleSendCode}
                   disabled={loading}
                   loading={loading}
-                  style={styles.customButton}
                 />
               </View>
             ) : (
@@ -196,7 +195,6 @@ export default function ForgotPasswordScreen({ navigation }) {
                   onPress={handleVerifyCode}
                   disabled={loading}
                   loading={loading}
-                  style={styles.customButton}
                 />
               </View>
             )}
@@ -280,9 +278,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 24,
     textAlign: 'center',
-  },
-  customButton: {
-    marginVertical: 5,
   },
   errorText: {
     color: '#ff4444',

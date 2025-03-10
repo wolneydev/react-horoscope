@@ -3,18 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
   FlatList,
   SafeAreaView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-
 import AnimatedStars from '../Components/animation/AnimatedStars';
+import LoadingOverlay from '../Components/LoadingOverlay';
 import api from '../services/api';
 import StorageService from '../store/store';
 import CompatibilityHeader from '../Components/compatibility/CompatibilityHeader';
 import CompatibilityItem from '../Components/compatibility/CompatibilityItem';
+import { COLORS, SPACING, FONTS } from '../styles/theme';
 
 export default function CompatibilityScreen({ route }) {
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
@@ -26,6 +25,7 @@ export default function CompatibilityScreen({ route }) {
   const [compatibilities, setCompatibilities] = useState([]);
   const [averageCompatibility, setAverageCompatibility] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Calculando compatibilidade...');
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Lista de astros e imagens
@@ -57,9 +57,14 @@ export default function CompatibilityScreen({ route }) {
       return;
     }
     setLoading(true);
+    setLoadingMessage('Calculando compatibilidade...');
+    
     try {
       const accessToken = await StorageService.getAccessToken();
 
+      setLoadingMessage('Analisando posições planetárias...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       const response = await api.post(
         'synastry',
         { map1_uuid: uuid1, map2_uuid: uuid2 },
@@ -71,6 +76,9 @@ export default function CompatibilityScreen({ route }) {
         }
       );
 
+      setLoadingMessage('Processando resultados...');
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       const { compatibilidades, compatibilidade_media } = response.data.data;
       setCompatibilities(compatibilidades || []);
       setAverageCompatibility(compatibilidade_media || null);
@@ -143,34 +151,28 @@ export default function CompatibilityScreen({ route }) {
   return (
     <SafeAreaView style={styles.container}>
       {memoizedStars}
+      {loading && <LoadingOverlay message={loadingMessage} />}
 
       <View style={styles.content}>
-        {loading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#FFD700" />
-            <Text style={styles.loadingText}>Calculando compatibilidade.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={compatibilities}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={styles.flatListContent}
-            showsVerticalScrollIndicator={false}
-            bounces={true}
-            overScrollMode="always"
-            // ListHeaderComponent para exibir o componente de compat. total
-            ListHeaderComponent={
-              <CompatibilityHeader
-                averageCompatibility={averageCompatibility}
-                getCompatibilityColor={getCompatibilityColor}
-                getCompatibilityText={getCompatibilityText}
-                isExpanded={isExpanded}
-                setIsExpanded={setIsExpanded}
-              />
-            }
-          />
-        )}
+        <FlatList
+          data={compatibilities}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.flatListContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          overScrollMode="always"
+          // ListHeaderComponent para exibir o componente de compat. total
+          ListHeaderComponent={
+            <CompatibilityHeader
+              averageCompatibility={averageCompatibility}
+              getCompatibilityColor={getCompatibilityColor}
+              getCompatibilityText={getCompatibilityText}
+              isExpanded={isExpanded}
+              setIsExpanded={setIsExpanded}
+            />
+          }
+        />
       </View>
     </SafeAreaView>
   );
@@ -179,25 +181,15 @@ export default function CompatibilityScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141527',
+    backgroundColor: COLORS.BACKGROUND,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 20 : 0,
+    paddingHorizontal: SPACING.LARGE,
+    paddingTop: Platform.OS === 'android' ? SPACING.LARGE : 0,
   },
   flatListContent: {
-    paddingBottom: 40,
+    paddingBottom: SPACING.XLARGE,
     flexGrow: 1,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#FFD700',
-    marginTop: 16,
-    fontSize: 16,
   },
 });

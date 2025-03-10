@@ -48,7 +48,7 @@ const CompatibilityItem = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderRadius: 15,
     marginBottom: 16,
     borderWidth: 1,

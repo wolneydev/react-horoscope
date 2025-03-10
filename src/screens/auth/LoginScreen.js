@@ -211,7 +211,6 @@ export default function LoginScreen({ navigation }) {
                 onPress={handleSubmit}
                 disabled={loading}
                 loading={loading}
-                style={styles.customButton}
               />
 
               <TouchableOpacity 
@@ -296,9 +295,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 10,
     fontSize: 16,
-  },
-  customButton: {
-    marginVertical: 5,
   },
   forgotPasswordButton: {
     marginTop: 20,

@@ -17,6 +17,7 @@ import api from '../services/api';
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import LoadingOverlay from '../Components/LoadingOverlay';
+import CustomButton from '../Components/CustomButton';
 import { useNavigation } from '@react-navigation/native';
 import InfoCard from '../Components/InfoCard';
 import { COLORS, SPACING, FONTS } from '../styles/theme';
@@ -331,9 +332,12 @@ const CreateExtraChartScreen = () => {
           </View>
 
           {/* Botão de Envio */}
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Gerar Mapa Astral</Text>
-          </TouchableOpacity>
+          <CustomButton
+            title="Gerar Mapa Astral"
+            onPress={handleSubmit}
+            icon="auto-awesome"
+            style={styles.customButton}
+          />
         </View>
 
         {/* DateTimePickers */}
@@ -415,18 +419,8 @@ const styles = StyleSheet.create({
   placeholder: {
     color: COLORS.TEXT_TERTIARY,
   },
-  button: {
-    backgroundColor: COLORS.PRIMARY,
-    borderRadius: 12,
-    height: 55,
-    alignItems: 'center',
-    justifyContent: 'center',
+  customButton: {
     marginTop: SPACING.LARGE,
-  },
-  buttonText: {
-    color: COLORS.TEXT_PRIMARY,
-    fontSize: FONTS.SIZES.MEDIUM,
-    fontWeight: FONTS.WEIGHTS.BOLD,
   },
   errorText: {
     color: COLORS.ERROR,

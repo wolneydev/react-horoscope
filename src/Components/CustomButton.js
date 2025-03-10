@@ -7,7 +7,6 @@ const CustomButton = ({
   title, 
   disabled = false,
   loading = false,
-  style = {},
   textStyle = {},
   icon = null,
   iconSize = 20,
@@ -18,7 +17,6 @@ const CustomButton = ({
       style={[
         styles.buttonWrapper,
         disabled && styles.buttonDisabled,
-        style
       ]} 
       onPress={onPress}
       disabled={disabled || loading}
@@ -43,13 +41,12 @@ const CustomButton = ({
 
 const styles = StyleSheet.create({
   buttonWrapper: {
-    marginVertical: 5,
     borderRadius: 12,
     backgroundColor: 'rgba(109, 68, 255, 0.25)', 
     borderWidth: 1,
     borderColor: 'rgba(109, 68, 255, 0.75)',
     overflow: 'hidden',
-    marginBottom: 0,
+    marginBottom: -2,
   },
   
   buttonContent: {
@@ -72,7 +69,6 @@ const styles = StyleSheet.create({
 
   buttonDisabled: {
     opacity: 0.7,
-    backgroundColor: '#4A4A4A',
   },
 
   icon: {
