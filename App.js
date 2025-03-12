@@ -3,7 +3,7 @@ import React from 'react';
 import "react-native-url-polyfill/auto";
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -13,6 +13,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
+
 // Importando as telas
 import SplashScreen from './src/screens/SplashScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
@@ -28,13 +29,16 @@ import CreateExtraChartScreen from './src/screens/CreateExtraChartScreen';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/auth/ResetPasswordScreen';
 import MyAccountScreen from './src/screens/MyAccountScreen';
-import { enableScreens } from 'react-native-screens';
-import LoadingOverlay from './src/Components/LoadingOverlay';
-import StorageService from './src/store/store';
-import { useState, useRef, useEffect } from 'react';
-import { TouchableOpacity } from 'react-native';
 import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
 import { PrivacyPolicyScreen, TermsOfUseScreen } from './src/screens/TermsScreen';
+import LoadingOverlay from './src/Components/LoadingOverlay';
+import StorageService from './src/store/store';
+
+// *** IMPORTAÇÃO DA NOVA TELA QUE LISTA OS USUÁRIOS ***
+import UserListScreen from './src/screens/UserListScreen'; // Ajuste o caminho caso necessário
+
+import { enableScreens } from 'react-native-screens';
+import PhotoPicker from './src/Components/PhotoPicker';
 enableScreens(false);
 
 const Stack = createStackNavigator();
@@ -50,54 +54,53 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        component={IndexScreen}
         name="IndexScreen"
+        component={IndexScreen}
         options={{ headerShown: false }}
       />
-        {/* Tela de Termos de Uso */}
-        <Stack.Screen
-          name="TermsOfUseScreen"
-          component={TermsOfUseScreen}
-          options={{
-            title: 'Termos de Uso',
-            headerStyle: { backgroundColor: '#141527' },
-            headerTintColor: '#fff',
-          }}
-        />
-
-        {/* Tela de Política de Privacidade */}
-        <Stack.Screen
-          name="PrivacyPolicyScreen"
-          component={PrivacyPolicyScreen}
-          options={{
-            title: 'Política de Privacidade',
-            headerStyle: { backgroundColor: '#141527' },
-            headerTintColor: '#fff',
-          }}
-        />      
+      {/* Tela de Termos de Uso */}
       <Stack.Screen
-        component={HousesScreen}
+        name="TermsOfUseScreen"
+        component={TermsOfUseScreen}
+        options={{
+          title: 'Termos de Uso',
+          headerStyle: { backgroundColor: '#141527' },
+          headerTintColor: '#fff',
+        }}
+      />
+
+      {/* Tela de Política de Privacidade */}
+      <Stack.Screen
+        name="PrivacyPolicyScreen"
+        component={PrivacyPolicyScreen}
+        options={{
+          title: 'Política de Privacidade',
+          headerStyle: { backgroundColor: '#141527' },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Stack.Screen
         name="HousesScreen"
+        component={HousesScreen}
         options={{ headerShown: false }}
-      />      
-    
+      />
       <Stack.Screen
         name="AstralMapScreen"
         component={AstralMapScreen}
         options={{ headerShown: false }}
       />
+      {/* A tela de compatibilidade estava registrada como Drawer.Screen, mas deixaremos conforme seu código original */}
       <Drawer.Screen
-          name="CompatibilityScreen"
-        
-          component={CompatibilityScreen}
-          options={{
-            headerShown: false,
-            drawerLabel: 'Compatibilidade Astral',
-            drawerIcon: ({ color, size }) => (
-              <Icon name="arrow" color={color} size={size} />
-            ),
-          }}
-        />
+        name="CompatibilityScreen"
+        component={CompatibilityScreen}
+        options={{
+          headerShown: false,
+          drawerLabel: 'Compatibilidade Astral',
+          drawerIcon: ({ color, size }) => (
+            <Icon name="arrow" color={color} size={size} />
+          ),
+        }}
+      />
       <Stack.Screen
         name="LoginScreen"
         component={LoginScreen}
@@ -143,6 +146,17 @@ function MainStack() {
         component={MyAccountScreen}
         options={{ headerShown: false }}
       />
+
+      {/* IMPORTANTE: Adicione esta rota para poder navegar para o UserListScreen */}
+      <Stack.Screen
+        name="UserListScreen"
+        component={UserListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+          name="PhotoPicker" 
+          component={PhotoPicker} 
+        />      
     </Stack.Navigator>
   );
 }
@@ -151,25 +165,26 @@ function MainStack() {
 function SinastriaStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen 
-        name="SynastryDesambiguation" 
-        component={SynastryDesambiguationScreen} 
+      <Stack.Screen
+        name="SynastryDesambiguation"
+        component={SynastryDesambiguationScreen}
       />
-      <Stack.Screen 
-        name="CreateExtraChart" 
-        component={CreateExtraChartScreen} 
+      <Stack.Screen
+        name="CreateExtraChart"
+        component={CreateExtraChartScreen}
       />
     </Stack.Navigator>
   );
 }
 
+/** CustomDrawerContent é responsável por renderizar o conteúdo personalizado do Drawer */
 function CustomDrawerContent(props) {
-  const [userData, setUserData] = useState(null);
-  const [zodiacSign, setZodiacSign] = useState("default");
-  const [isLoading, setIsLoading] = useState(false);
+  const [userData, setUserData] = React.useState(null);
+  const [zodiacSign, setZodiacSign] = React.useState("default");
+  const [isLoading, setIsLoading] = React.useState(false);
   const currentRoute = props.state.routeNames[props.state.index];
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchUserData = async () => {
       try {
         const savedUserData = await StorageService.getUserData();
@@ -205,15 +220,14 @@ function CustomDrawerContent(props) {
       { sign: "sagittarius", start: "11-22", end: "12-21" },
     ];
 
+    // Formata "MM-DD" para comparar
     const birthDate = `${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-    console.log("Data de nascimento:", birthDate);
 
     for (const zodiac of zodiacSigns) {
       if (
         (birthDate >= zodiac.start && month === parseInt(zodiac.start.split("-")[0])) ||
         (birthDate <= zodiac.end && month === parseInt(zodiac.end.split("-")[0]))
       ) {
-        console.log("Signo encontrado:", zodiac.sign);
         return zodiac.sign;
       }
     }
@@ -221,7 +235,7 @@ function CustomDrawerContent(props) {
     return "default";
   };
 
-  // Objeto de mapeamento de imagens
+  // Imagens correspondentes a cada signo
   const zodiacImages = {
     aries: require("./src/assets/images/sign/aries.jpg"),
     taurus: require("./src/assets/images/sign/taurus.jpg"),
@@ -235,23 +249,14 @@ function CustomDrawerContent(props) {
     capricorn: require("./src/assets/images/sign/capricorn.jpg"),
     aquarius: require("./src/assets/images/sign/aquarius.jpg"),
     pisces: require("./src/assets/images/sign/pisces.jpg"),
-    default: require("./src/assets/images/sign/virgo.jpg"), // Imagem fallback
+    default: require("./src/assets/images/sign/virgo.jpg"), // fallback
   };
-
-  console.log("Imagem carregada:", zodiacImages[zodiacSign]); // Debug
 
   const handleLogout = async () => {
     try {
-      // Mostra o loading imediatamente
       setIsLoading(true);
-
-      // Simula um pequeno delay para mostrar o loading (opcional)
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Limpa os dados do usuário
       await StorageService.clearAll();
-
-      // Navega para a tela de login
       props.navigation.reset({
         index: 0,
         routes: [{ name: 'IndexScreen' }],
@@ -265,14 +270,11 @@ function CustomDrawerContent(props) {
   };
 
   const handleCreateExtraChart = () => {
-    // Verifica se já existe um mapa astral principal
     StorageService.getMainAstralMap()
       .then(mainMap => {
         if (mainMap) {
-          // Se existe mapa principal, navega direto para criar mapa extra
           props.navigation.navigate('CreateExtraChart');
         } else {
-          // Se não existe mapa principal, mostra alerta
           Alert.alert(
             'Mapa Principal Necessário',
             'Você precisa ter um mapa astral principal antes de criar um mapa extra.',
@@ -358,10 +360,10 @@ function CustomDrawerContent(props) {
         <DrawerItem
           label="Minhas Compras"
           icon={({ focused }) => (
-            <Icon 
-              name="shopping-cart" 
-              color={currentRoute === 'Minhas Compras' ? '#FFFFFF' : '#7A708E'} 
-              size={24} 
+            <Icon
+              name="shopping-cart"
+              color={currentRoute === 'Minhas Compras' ? '#FFFFFF' : '#7A708E'}
+              size={24}
             />
           )}
           onPress={() => props.navigation.navigate('Minhas Compras')}
@@ -426,6 +428,40 @@ function CustomDrawerContent(props) {
           ]}
         />
 
+        {/* ITEM DE MENU PARA A LISTA DE USUÁRIOS */}
+        <DrawerItem
+          label="Lista de Usuários"
+          icon={({ focused }) => (
+            <Icon name="group" color={currentRoute === 'UserListScreen' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={async (e) => {
+            // Previne a navegação padrão para poder inserir o uuid:
+            e?.preventDefault();
+            try {
+              const savedUserData = await StorageService.getUserData();
+              if (savedUserData?.uuid) {
+                props.navigation.navigate('UserListScreen', { uuid: savedUserData.uuid });
+              } else {
+                Alert.alert(
+                  'Usuário não encontrado', 
+                  'Não foi possível encontrar o UUID do usuário logado.'
+                );
+              }
+            } catch (error) {
+              console.error('Erro ao abrir lista de usuários:', error);
+              Alert.alert('Erro', 'Não foi possível abrir a lista de usuários.');
+            }
+          }}
+          style={[
+            styles.drawerItem,
+            currentRoute === 'UserListScreen' && styles.drawerItemActive
+          ]}
+          labelStyle={[
+            styles.drawerLabel,
+            currentRoute === 'UserListScreen' && styles.drawerLabelActive
+          ]}
+        />
+
         <DrawerItem
           label="Sair"
           icon={({ focused }) => (
@@ -443,20 +479,13 @@ function CustomDrawerContent(props) {
 // Menu Drawer Navigator
 function AppDrawer() {
   const navigation = useNavigation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLogout = async () => {
     try {
-      // Mostra o loading imediatamente
       setIsLoading(true);
-
-      // Simula um pequeno delay para mostrar o loading (opcional)
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Limpa os dados do usuário
       await StorageService.clearAll();
-
-      // Navega para a tela de login
       navigation.reset({
         index: 0,
         routes: [{ name: 'IndexScreen' }],
@@ -470,14 +499,11 @@ function AppDrawer() {
   };
 
   const handleCreateExtraChart = () => {
-    // Verifica se já existe um mapa astral principal
     StorageService.getMainAstralMap()
       .then(mainMap => {
         if (mainMap) {
-          // Se existe mapa principal, navega direto para criar mapa extra
           navigation.navigate('CreateExtraChart');
         } else {
-          // Se não existe mapa principal, mostra alerta
           Alert.alert(
             'Mapa Principal Necessário',
             'Você precisa ter um mapa astral principal antes de criar um mapa extra.',
@@ -504,13 +530,13 @@ function AppDrawer() {
           <CustomDrawerContent {...props} handleLogout={handleLogout} />
         )}
         screenOptions={{
-          headerStyle: { 
+          headerStyle: {
             backgroundColor: '#141527',
             borderWidth: 1,
             borderColor: 'rgba(109, 68, 255, 0.2)'
-          },          
+          },
           headerTintColor: 'white',
-          drawerStyle: { 
+          drawerStyle: {
             backgroundColor: '#141527',
             borderRightWidth: 1,
             borderRightColor: 'rgba(109, 68, 255, 0.2)',
@@ -529,7 +555,7 @@ function AppDrawer() {
             ),
           }}
         />
-        
+
         <Drawer.Screen
           name="Mapa Astral"
           component={AstralMapScreen}
@@ -562,7 +588,6 @@ function AppDrawer() {
           }}
           listeners={{
             drawerItemPress: (e) => {
-              // Previne navegação padrão
               e.preventDefault();
               handleCreateExtraChart();
             }
@@ -598,6 +623,11 @@ function AppDrawer() {
             ),
           }}
         />
+
+        {/* 
+          Observação: Não repetimos o item "UserListScreen" aqui, 
+          pois ele foi adicionado no menu através do CustomDrawerContent.
+        */}
 
         <Drawer.Screen
           name="Sair"
