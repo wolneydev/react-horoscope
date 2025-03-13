@@ -11,6 +11,7 @@ import EmailVerificationCard from '../Components/emailVerification/EmailVerifica
 import EmailVerifiedCard from '../Components/emailVerification/EmailVerifiedCard';
 import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import UserInfoHeader from '../Components/UserInfoHeader';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -259,21 +260,11 @@ const HomeScreen = () => {
       {memoStars}
       
       {/* Header com Avatar e Nome */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
-              style={styles.avatar}
-            />
-            <View style={styles.statusDot} />
-          </View>
-          <View style={styles.userTextInfo}>
-            <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
-            <Text style={styles.userName}>{userData?.name || ''}</Text>
-          </View>
-        </View>
-      </View>
+      <UserInfoHeader 
+        userData={userData}
+        showWelcome={true}
+        style={styles.header}
+      />
 
       {/* Cards de Navegação */}
       <View style={styles.cardsContainer}>

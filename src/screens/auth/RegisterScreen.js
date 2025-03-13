@@ -26,6 +26,7 @@ import AnimatedStars from '../../Components/animation/AnimatedStars';
 import LoadingOverlay from '../../Components/LoadingOverlay';
 import CustomButton from '../../Components/CustomButton';
 import CityAutoComplete from '../../Components/CityAutoComplete';
+import ErrorNotification from '../../Components/ErrorNotification';
 
 export default function RegisterScreen({ navigation }) {
   // Inputs de texto
@@ -61,6 +62,14 @@ export default function RegisterScreen({ navigation }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Estado para a notificação de erro
+  const [errorNotification, setErrorNotification] = useState({
+    visible: false,
+    message: ''
+  });
 
   // Animação
   const memoStars = useMemo(() => <AnimatedStars />, []);
@@ -287,6 +296,7 @@ export default function RegisterScreen({ navigation }) {
           {
             headers: {
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
             },
           }
         );
@@ -328,9 +338,58 @@ export default function RegisterScreen({ navigation }) {
 
           navigation.navigate('HomeScreen');
         }
+
       } catch (error) {
-        console.error('Erro:', error);
-        Alert.alert('Erro', 'Não foi possível completar o registro');
+        // Verificar se é um erro de resposta da API (422 - Unprocessable Entity)
+        if (error.response && error.response.status === 422) {
+          // Obter as mensagens de erro da resposta
+          const errorData = error.response.data;
+          console.log('Erro de validação:', errorData);
+          
+          // Se houver mensagens de erro específicas, exibi-las
+          if (errorData.errors) {
+            // Atualizar o estado de erros com as mensagens do servidor
+            const serverErrors = {};
+            
+            // Mapear os erros do servidor para o formato do estado de erros
+            Object.keys(errorData.errors).forEach(field => {
+              // Converter os nomes dos campos da API para os nomes dos campos do formulário
+              console.log('Campo:', field);
+              console.log('Erro:', errorData.errors[field][0]);
+              
+              // Usar a primeira mensagem de erro para cada campo
+              serverErrors[field] = errorData.errors[field][0];
+            });
+            
+            setErrors(prev => ({...prev, ...serverErrors}));
+            
+            // Se houver uma mensagem geral, exibi-la na notificação
+            if (errorData.message) {
+              setErrorNotification({
+                visible: true,
+                message: errorData.message
+              });
+            }
+          } else if (errorData.message) {
+            // Se houver apenas uma mensagem geral
+            setErrorNotification({
+              visible: true,
+              message: errorData.message
+            });
+          } else {
+            // Fallback para mensagem genérica
+            setErrorNotification({
+              visible: true,
+              message: 'Não foi possível completar o registro. Verifique os dados informados.'
+            });
+          }
+        } else {
+          // Para outros tipos de erro
+          setErrorNotification({
+            visible: true,
+            message: 'Não foi possível completar o registro. Tente novamente mais tarde.'
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -345,6 +404,14 @@ export default function RegisterScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {memoStars}
+      
+      {/* Notificação de erro */}
+      <ErrorNotification 
+        visible={errorNotification.visible}
+        message={errorNotification.message}
+        onDismiss={() => setErrorNotification({ visible: false, message: '' })}
+      />
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -356,6 +423,8 @@ export default function RegisterScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
           bounces
           keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled={true}
+          scrollEventThrottle={16}
         >
           <View style={styles.content}>
             <Text style={styles.title}>Criar Conta</Text>
@@ -465,8 +534,18 @@ export default function RegisterScreen({ navigation }) {
                       setPassword(text);
                       setErrors((prev) => ({ ...prev, password: '' }));
                     }}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                   />
+                  <TouchableOpacity 
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Icon 
+                      name={showPassword ? "visibility" : "visibility-off"} 
+                      size={20} 
+                      color="#7A708E" 
+                    />
+                  </TouchableOpacity>
                 </View>
                 <ErrorMessage error={errors.password} />
               </View>
@@ -487,8 +566,18 @@ export default function RegisterScreen({ navigation }) {
                         password_confirmation: '',
                       }));
                     }}
-                    secureTextEntry
+                    secureTextEntry={!showConfirmPassword}
                   />
+                  <TouchableOpacity 
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Icon 
+                      name={showConfirmPassword ? "visibility" : "visibility-off"} 
+                      size={20} 
+                      color="#7A708E" 
+                    />
+                  </TouchableOpacity>
                 </View>
                 <ErrorMessage error={errors.password_confirmation} />
               </View>
@@ -620,6 +709,9 @@ const styles = StyleSheet.create({
   linkTextHighlight: {
     color: '#6D44FF',
     fontWeight: 'bold',
+  },
+  eyeIcon: {
+    padding: 10,
   },
 });
 

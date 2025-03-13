@@ -28,6 +28,7 @@ export default function LoginScreen({ navigation }) {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
@@ -200,8 +201,18 @@ export default function LoginScreen({ navigation }) {
                       setPassword(text);
                       setErrors(prev => ({ ...prev, password: '' }));
                     }}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                   />
+                  <TouchableOpacity 
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Icon 
+                      name={showPassword ? "visibility" : "visibility-off"} 
+                      size={20} 
+                      color="#7A708E" 
+                    />
+                  </TouchableOpacity>
                 </View>
                 <ErrorMessage error={errors.password} />
               </View>
@@ -295,6 +306,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 10,
     fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 10,
   },
   forgotPasswordButton: {
     marginTop: 20,

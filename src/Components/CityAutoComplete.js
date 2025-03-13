@@ -1,6 +1,16 @@
 // src/Components/CityAutoComplete.js
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, FlatList, Text, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  FlatList, 
+  Text, 
+  StyleSheet, 
+  Keyboard,
+  Dimensions
+} from 'react-native';
+import { Portal } from '@gorhom/portal';
 import citiesBr from '../data/geo/citiesBr';
 
 /**
@@ -17,6 +27,22 @@ const CityAutoComplete = ({
 }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredCities, setFilteredCities] = useState([]);
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const inputRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Medir a posição do input para posicionar corretamente a lista de sugestões
+    if (filteredCities.length > 0 && containerRef.current) {
+      containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setPosition({
+          top: pageY + height,
+          left: pageX,
+          width: width
+        });
+      });
+    }
+  }, [filteredCities]);
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -30,7 +56,7 @@ const CityAutoComplete = ({
     }
   };
 
-  const handleSelectCity = (item) => {
+  const handleSelectCity = useCallback((item) => {
     // Chama a callback do pai
     if (onCitySelected) {
       onCitySelected(item);
@@ -39,36 +65,62 @@ const CityAutoComplete = ({
     setSearchText(`${item.city}, ${item.state}, ${item.country}`);
     // Limpa as sugestões
     setFilteredCities([]);
-  };
+    // Fecha o teclado
+    Keyboard.dismiss();
+  }, [onCitySelected]);
+
+  // Renderiza o item da lista separadamente para melhorar o desempenho
+  const renderItem = useCallback(({ item }) => (
+    <TouchableOpacity
+      style={styles.suggestionItem}
+      onPress={() => handleSelectCity(item)}
+    >
+      <Text style={styles.suggestionText}>
+        {`${item.city} - ${item.state} - ${item.country}`}
+      </Text>
+    </TouchableOpacity>
+  ), [handleSelectCity]);
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={[styles.input, style]}
-        value={searchText}
-        onChangeText={handleSearch}
-        placeholder="Cidade de nascimento"
-        placeholderTextColor={placeholderTextColor}
-      />
+    <>
+      <View 
+        ref={containerRef}
+        style={styles.container}
+        collapsable={false}
+      >
+        <TextInput
+          ref={inputRef}
+          style={[styles.input, style]}
+          value={searchText}
+          onChangeText={handleSearch}
+          placeholder="Cidade de nascimento"
+          placeholderTextColor={placeholderTextColor}
+        />
+      </View>
+      
       {filteredCities.length > 0 && (
-        <View style={styles.suggestionsContainer}>
-          <FlatList
-            data={filteredCities}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.suggestionItem}
-                onPress={() => handleSelectCity(item)}
-              >
-                <Text style={styles.suggestionText}>
-                  {`${item.city} - ${item.state} - ${item.country}`}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+        <Portal>
+          <View 
+            style={[
+              styles.suggestionsContainer,
+              {
+                top: position.top,
+                left: position.left,
+                width: position.width
+              }
+            ]}
+          >
+            <FlatList
+              data={filteredCities}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderItem}
+              keyboardShouldPersistTaps="handled"
+              style={styles.list}
+            />
+          </View>
+        </Portal>
       )}
-    </View>
+    </>
   );
 };
 
@@ -88,12 +140,18 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     position: 'absolute',
-    top: 50, // Ajuste conforme necessário para não sobrepor o TextInput
-    left: 0,
-    right: 0,
     backgroundColor: '#1e1e1e',
-    zIndex: 999,
     borderRadius: 8,
+    maxHeight: 200,
+    zIndex: 9999,
+    elevation: 5, // Para Android
+    shadowColor: '#000', // Para iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  list: {
+    maxHeight: 200,
   },
   suggestionItem: {
     padding: 10,
