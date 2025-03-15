@@ -3,7 +3,7 @@ import React from 'react';
 import "react-native-url-polyfill/auto";
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -13,6 +13,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
+
 // Importando as telas
 import SplashScreen from './src/screens/SplashScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
@@ -36,6 +37,9 @@ import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
 import { PrivacyPolicyScreen, TermsOfUseScreen } from './src/screens/TermsScreen';
 import { PortalProvider } from '@gorhom/portal';
 import UserInfoHeader from './src/Components/UserInfoHeader';
+import UserListScreen from './src/screens/UserListScreen'; 
+import PhotoPicker from './src/Components/PhotoPicker';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 enableScreens(false);
 
 const Stack = createStackNavigator();
@@ -51,42 +55,42 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        component={IndexScreen}
         name="IndexScreen"
+        component={IndexScreen}
         options={{ headerShown: false }}
       />
-        {/* Tela de Termos de Uso */}
-        <Stack.Screen
-          name="TermsOfUseScreen"
-          component={TermsOfUseScreen}
-          options={{
-            title: 'Termos de Uso',
-            headerStyle: { backgroundColor: '#141527' },
-            headerTintColor: '#fff',
-          }}
-        />
-
-        {/* Tela de Política de Privacidade */}
-        <Stack.Screen
-          name="PrivacyPolicyScreen"
-          component={PrivacyPolicyScreen}
-          options={{
-            title: 'Política de Privacidade',
-            headerStyle: { backgroundColor: '#141527' },
-            headerTintColor: '#fff',
-          }}
-        />      
+      {/* Tela de Termos de Uso */}
       <Stack.Screen
-        component={HousesScreen}
+        name="TermsOfUseScreen"
+        component={TermsOfUseScreen}
+        options={{
+          title: 'Termos de Uso',
+          headerStyle: { backgroundColor: '#141527' },
+          headerTintColor: '#fff',
+        }}
+      />
+
+      {/* Tela de Política de Privacidade */}
+      <Stack.Screen
+        name="PrivacyPolicyScreen"
+        component={PrivacyPolicyScreen}
+        options={{
+          title: 'Política de Privacidade',
+          headerStyle: { backgroundColor: '#141527' },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Stack.Screen
         name="HousesScreen"
+        component={HousesScreen}
         options={{ headerShown: false }}
-      />      
-    
+      />
       <Stack.Screen
         name="AstralMapScreen"
         component={AstralMapScreen}
         options={{ headerShown: false }}
       />
+      {/* A tela de compatibilidade estava registrada como Drawer.Screen, mas deixaremos conforme seu código original */}
       <Drawer.Screen
           name="CompatibilityScreen"        
           component={CompatibilityScreen}
@@ -98,6 +102,7 @@ function MainStack() {
             ),
           }}
         />
+
       <Stack.Screen
         name="LoginScreen"
         component={LoginScreen}
@@ -143,6 +148,20 @@ function MainStack() {
         component={MyAccountScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="UserListScreen"
+        component={UserListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+          name="PhotoPicker" 
+          component={PhotoPicker} 
+        />      
+       <Stack.Screen 
+          name="EditProfileScreen" 
+          component={EditProfileScreen} 
+          options={{ headerShown: false }}
+        />              
     </Stack.Navigator>
   );
 }
@@ -151,24 +170,26 @@ function MainStack() {
 function SinastriaStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen 
-        name="SynastryDesambiguation" 
-        component={SynastryDesambiguationScreen} 
+      <Stack.Screen
+        name="SynastryDesambiguation"
+        component={SynastryDesambiguationScreen}
       />
-      <Stack.Screen 
-        name="CreateExtraChart" 
-        component={CreateExtraChartScreen} 
+      <Stack.Screen
+        name="CreateExtraChart"
+        component={CreateExtraChartScreen}
       />
     </Stack.Navigator>
   );
 }
 
+/** CustomDrawerContent é responsável por renderizar o conteúdo personalizado do Drawer */
 function CustomDrawerContent(props) {
   const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [zodiacSign, setZodiacSign] = React.useState("default");
+  const [isLoading, setIsLoading] = React.useState(false);
   const currentRoute = props.state.routeNames[props.state.index];
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchUserData = async () => {
       try {
         const savedUserData = await StorageService.getUserData();
@@ -183,16 +204,9 @@ function CustomDrawerContent(props) {
 
   const handleLogout = async () => {
     try {
-      // Mostra o loading imediatamente
       setIsLoading(true);
-
-      // Simula um pequeno delay para mostrar o loading (opcional)
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Limpa os dados do usuário
       await StorageService.clearAll();
-
-      // Navega para a tela de login
       props.navigation.reset({
         index: 0,
         routes: [{ name: 'IndexScreen' }],
@@ -281,6 +295,40 @@ function CustomDrawerContent(props) {
           ]}
         />
 
+        {/* ITEM DE MENU PARA A LISTA DE USUÁRIOS */}
+        <DrawerItem
+          label="Lista de Usuários"
+          icon={({ focused }) => (
+            <Icon name="group" color={currentRoute === 'UserListScreen' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={async (e) => {
+            // Previne a navegação padrão para poder inserir o uuid:
+            e?.preventDefault();
+            try {
+              const savedUserData = await StorageService.getUserData();
+              if (savedUserData?.uuid) {
+                props.navigation.navigate('UserListScreen', { uuid: savedUserData.uuid });
+              } else {
+                Alert.alert(
+                  'Usuário não encontrado', 
+                  'Não foi possível encontrar o UUID do usuário logado.'
+                );
+              }
+            } catch (error) {
+              console.error('Erro ao abrir lista de usuários:', error);
+              Alert.alert('Erro', 'Não foi possível abrir a lista de usuários.');
+            }
+          }}
+          style={[
+            styles.drawerItem,
+            currentRoute === 'UserListScreen' && styles.drawerItemActive
+          ]}
+          labelStyle={[
+            styles.drawerLabel,
+            currentRoute === 'UserListScreen' && styles.drawerLabelActive
+          ]}
+        />
+
         <DrawerItem
           label="Minha Conta"
           icon={({ focused }) => (
@@ -308,20 +356,13 @@ function CustomDrawerContent(props) {
 // Menu Drawer Navigator
 function AppDrawer() {
   const navigation = useNavigation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLogout = async () => {
     try {
-      // Mostra o loading imediatamente
       setIsLoading(true);
-
-      // Simula um pequeno delay para mostrar o loading (opcional)
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Limpa os dados do usuário
       await StorageService.clearAll();
-
-      // Navega para a tela de login
       navigation.reset({
         index: 0,
         routes: [{ name: 'IndexScreen' }],
@@ -341,13 +382,13 @@ function AppDrawer() {
           <CustomDrawerContent {...props} handleLogout={handleLogout} />
         )}
         screenOptions={{
-          headerStyle: { 
+          headerStyle: {
             backgroundColor: '#141527',
             borderWidth: 1,
             borderColor: 'rgba(109, 68, 255, 0.2)'
-          },          
+          },
           headerTintColor: 'white',
-          drawerStyle: { 
+          drawerStyle: {
             backgroundColor: '#141527',
             borderRightWidth: 1,
             borderRightColor: 'rgba(109, 68, 255, 0.2)',
@@ -366,7 +407,7 @@ function AppDrawer() {
             ),
           }}
         />
-        
+
         <Drawer.Screen
           name="Mapa Astral"
           component={AstralMapScreen}
@@ -437,6 +478,11 @@ function AppDrawer() {
             ),
           }}
         />
+
+        {/* 
+          Observação: Não repetimos o item "UserListScreen" aqui, 
+          pois ele foi adicionado no menu através do CustomDrawerContent.
+        */}
 
         <Drawer.Screen
           name="Sair"
