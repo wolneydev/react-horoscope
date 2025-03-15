@@ -14,7 +14,6 @@ import { useNavigation } from '@react-navigation/native';
 
 import api from '../services/api';
 import StorageService from '../store/store';
-
 const BASE_IMAGE_URL = 'https://api.astralmatch.life/storage/';
 
 const UserListScreen = () => {
@@ -169,7 +168,7 @@ const UserListScreen = () => {
             <View style={styles.titleContainer}>
               <Text style={styles.infoCardTitle}>{mainUserName || 'Social'}</Text>
             </View>
-            <TouchableOpacity style={styles.changePhotoButton} onPress={() => navigation.navigate('PhotoPicker')}>
+            <TouchableOpacity style={styles.changePhotoButton} onPress={() => navigation.navigate('EditProfileScreen')}>
               <Icon name="edit" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
