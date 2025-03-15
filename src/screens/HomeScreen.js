@@ -16,7 +16,8 @@ import UserInfoHeader from '../Components/UserInfoHeader';
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const autoCheckIntervalRef = useRef(null);
   const [canResendEmail, setCanResendEmail] = useState(false);
@@ -181,12 +182,14 @@ const HomeScreen = () => {
     const fetchUserData = async () => {
       try {
         setIsLoading(true);
+        setLoadingMessage('Carregando dados...');
         const savedUserData = await StorageService.getUserData();
         setUserData(savedUserData);
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
       } finally {
         setIsLoading(false);
+        setLoadingMessage('');
       }
     };
     fetchUserData();
@@ -323,6 +326,9 @@ const HomeScreen = () => {
         />
 
       </View>
+
+      {/* Loading Overlay */}
+      {isLoading && <LoadingOverlay message={loadingMessage} />}
     </TouchableOpacity>
   );
 };
