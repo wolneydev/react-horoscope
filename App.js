@@ -37,6 +37,7 @@ import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
 import { PrivacyPolicyScreen, TermsOfUseScreen } from './src/screens/TermsScreen';
 import UserListScreen from './src/screens/UserListScreen'; 
 import PhotoPicker from './src/Components/PhotoPicker';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 enableScreens(false);
 
 const Stack = createStackNavigator();
@@ -154,6 +155,11 @@ function MainStack() {
           name="PhotoPicker" 
           component={PhotoPicker} 
         />      
+       <Stack.Screen 
+          name="EditProfileScreen" 
+          component={EditProfileScreen} 
+          options={{ headerShown: false }}
+        />              
     </Stack.Navigator>
   );
 }
