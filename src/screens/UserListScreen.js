@@ -28,20 +28,6 @@ const UserListScreen = () => {
   const [instagramModalVisible, setInstagramModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      title: 'Social',
-      headerStyle: { backgroundColor: '#141527' },
-      headerTintColor: '#fff',
-      headerLeft: () => (
-        <TouchableOpacity style={{ marginLeft: 15 }} onPress={() => navigation.openDrawer()}>
-          <Icon name="menu" size={28} color="#fff" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
   useEffect(() => {
     fetchData();
   }, []);

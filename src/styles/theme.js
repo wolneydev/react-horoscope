@@ -155,6 +155,43 @@ export const BUTTON_STYLES = {
   },
 };
 
+// Adicionando os estilos de input ao tema global
+export const INPUT_STYLES = {
+  CONTAINER: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(32, 178, 170, 0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    height: 55,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 0,
+  },
+  TEXT: {
+    flex: 1,
+    color: COLORS.TEXT_PRIMARY,
+    marginLeft: 10,
+    fontSize: FONTS.SIZES.MEDIUM,
+  },
+  ICON: {
+    color: COLORS.TEXT_TERTIARY,
+    marginRight: 10,
+  },
+  ERROR: {
+    color: COLORS.ERROR,
+    fontSize: FONTS.SIZES.TINY,
+    marginTop: 4,
+    marginLeft: 10,
+  },
+  FOCUS: {
+    borderColor: COLORS.PRIMARY_LIGHT,
+  },
+  DISABLED: {
+    opacity: 0.5,
+  }
+};
+
 export default {
   COLORS,
   SPACING,
@@ -162,4 +199,5 @@ export default {
   SHADOWS,
   CARD_STYLES,
   BUTTON_STYLES,
+  INPUT_STYLES,
 }; 

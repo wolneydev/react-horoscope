@@ -27,6 +27,8 @@ import LoadingOverlay from '../../Components/LoadingOverlay';
 import CustomButton from '../../Components/CustomButton';
 import CityAutoComplete from '../../Components/CityAutoComplete';
 import ErrorNotification from '../../Components/ErrorNotification';
+import CustomInput from '../../Components/CustomInput';
+import CustomDateTimePicker from '../../Components/CustomDateTimePicker';
 
 export default function RegisterScreen({ navigation }) {
   // Inputs de texto
@@ -49,8 +51,6 @@ export default function RegisterScreen({ navigation }) {
   const [birthTime, setBirthTime] = useState(new Date());
 
   // Estados de UI
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   const [errors, setErrors] = useState({
     nome: '',
     city: '',
@@ -168,23 +168,13 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // ----------------------------------------------------------------------
-  // DatePicker e TimePicker
-  // ----------------------------------------------------------------------
-  const showDatePicker = () => setDatePickerVisibility(true);
-  const hideDatePicker = () => setDatePickerVisibility(false);
-
-  const showTimePicker = () => setTimePickerVisibility(true);
-  const hideTimePicker = () => setTimePickerVisibility(false);
-
+  // Funções simplificadas para data e hora
   const handleConfirmDate = (selectedDate) => {
     setBirthDate(selectedDate);
-    hideDatePicker();
   };
 
   const handleConfirmTime = (selectedTime) => {
     setBirthTime(selectedTime);
-    hideTimePicker();
   };
 
   // Formatação
@@ -435,20 +425,17 @@ export default function RegisterScreen({ navigation }) {
             <View style={styles.form}>
               {/* Nome */}
               <View>
-                <View style={styles.inputContainer}>
-                  <Icon name="person" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nome completo"
-                    placeholderTextColor="#7A708E"
-                    value={nome}
-                    onChangeText={(text) => {
-                      setNome(text);
-                      setErrors((prev) => ({ ...prev, nome: '' }));
-                    }}
-                  />
-                </View>
-                <ErrorMessage error={errors.nome} />
+                <CustomInput
+                  icon="person"
+                  placeholder="Nome completo"
+                  value={nome}
+                  onChangeText={(text) => {
+                    setNome(text);
+                    setErrors((prev) => ({ ...prev, nome: '' }));
+                  }}
+                  error={errors.nome}
+                  autoCapitalize="words"
+                />
               </View>
 
               {/* Cidade de nascimento e coordenadas de nascimento via CityAutoComplete */}
@@ -471,115 +458,76 @@ export default function RegisterScreen({ navigation }) {
 
               {/* Data de nascimento */}
               <View>
-                <TouchableOpacity
-                  style={styles.inputContainer}
-                  onPress={showDatePicker}
-                >
-                  <Icon name="calendar-today" size={20} color="#7A708E" />
-                  <Text style={[styles.dateText, !birthDate && styles.placeholder]}>
-                    {birthDate
-                      ? formatSelectedDate(birthDate)
-                      : 'Data de nascimento'}
-                  </Text>
-                </TouchableOpacity>
-                <ErrorMessage error={errors.birthDate} />
+                <CustomDateTimePicker
+                  icon="calendar-today"
+                  placeholder="Data de nascimento"
+                  value={birthDate}
+                  onChange={handleConfirmDate}
+                  mode="date"
+                  error={errors.birthDate}
+                  format={formatSelectedDate}
+                />
               </View>
 
               {/* Hora de nascimento */}
               <View>
-                <TouchableOpacity
-                  style={styles.inputContainer}
-                  onPress={showTimePicker}
-                >
-                  <Icon name="access-time" size={20} color="#7A708E" />
-                  <Text style={[styles.dateText, !birthTime && styles.placeholder]}>
-                    {birthTime
-                      ? formatSelectedTime(birthTime)
-                      : 'Horário de nascimento'}
-                  </Text>
-                </TouchableOpacity>
-                <ErrorMessage error={errors.birthTime} />
+                <CustomDateTimePicker
+                  icon="access-time"
+                  placeholder="Horário de nascimento"
+                  value={birthTime}
+                  onChange={handleConfirmTime}
+                  mode="time"
+                  error={errors.birthTime}
+                  format={formatSelectedTime}
+                />
               </View>
 
               {/* Email */}
               <View>
-                <View style={styles.inputContainer}>
-                  <Icon name="email" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="E-mail"
-                    placeholderTextColor="#7A708E"
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      setErrors((prev) => ({ ...prev, email: '' }));
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-                <ErrorMessage error={errors.email} />
+                <CustomInput
+                  icon="email"
+                  placeholder="E-mail"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    setErrors((prev) => ({ ...prev, email: '' }));
+                  }}
+                  keyboardType="email-address"
+                  error={errors.email}
+                />
               </View>
 
               {/* Senha */}
               <View>
-                <View style={styles.inputContainer}>
-                  <Icon name="lock" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Senha"
-                    placeholderTextColor="#7A708E"
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      setErrors((prev) => ({ ...prev, password: '' }));
-                    }}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    <Icon 
-                      name={showPassword ? "visibility" : "visibility-off"} 
-                      size={20} 
-                      color="#7A708E" 
-                    />
-                  </TouchableOpacity>
-                </View>
-                <ErrorMessage error={errors.password} />
+                <CustomInput
+                  icon="lock"
+                  placeholder="Senha"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setErrors((prev) => ({ ...prev, password: '' }));
+                  }}
+                  secureTextEntry
+                  error={errors.password}
+                />
               </View>
 
               {/* Confirmar senha */}
               <View>
-                <View style={styles.inputContainer}>
-                  <Icon name="lock-outline" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirmar senha"
-                    placeholderTextColor="#7A708E"
-                    value={password_confirmation}
-                    onChangeText={(text) => {
-                      setPasswordConfirmation(text);
-                      setErrors((prev) => ({
-                        ...prev,
-                        password_confirmation: '',
-                      }));
-                    }}
-                    secureTextEntry={!showConfirmPassword}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    <Icon 
-                      name={showConfirmPassword ? "visibility" : "visibility-off"} 
-                      size={20} 
-                      color="#7A708E" 
-                    />
-                  </TouchableOpacity>
-                </View>
-                <ErrorMessage error={errors.password_confirmation} />
+                <CustomInput
+                  icon="lock-outline"
+                  placeholder="Confirmar senha"
+                  value={password_confirmation}
+                  onChangeText={(text) => {
+                    setPasswordConfirmation(text);
+                    setErrors((prev) => ({
+                      ...prev,
+                      password_confirmation: '',
+                    }));
+                  }}
+                  secureTextEntry
+                  error={errors.password_confirmation}
+                />
               </View>
 
               <CustomButton
@@ -599,24 +547,6 @@ export default function RegisterScreen({ navigation }) {
                 </Text>
               </TouchableOpacity>
             </View>
-
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="date"
-              onConfirm={handleConfirmDate}
-              onCancel={hideDatePicker}
-              date={birthDate}
-              themeVariant="dark"
-            />
-
-            <DateTimePickerModal
-              isVisible={isTimePickerVisible}
-              mode="time"
-              onConfirm={handleConfirmTime}
-              onCancel={hideTimePicker}
-              date={birthTime}
-              themeVariant="dark"
-            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

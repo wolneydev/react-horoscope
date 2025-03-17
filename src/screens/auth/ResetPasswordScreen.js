@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +14,8 @@ import AnimatedStars from '../../Components/animation/AnimatedStars';
 import LoadingOverlay from '../../Components/LoadingOverlay';
 import CustomButton from '../../Components/CustomButton';
 import api from '../../services/api';
+import CustomInput from '../../Components/CustomInput';
+import MessageModal from '../../Components/MessageModal';
 
 export default function ResetPasswordScreen({ route, navigation }) {
   const { email, code } = route.params;
@@ -24,6 +25,13 @@ export default function ResetPasswordScreen({ route, navigation }) {
   const [error, setError] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'success',
+    actions: []
+  });
 
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
 
@@ -38,15 +46,15 @@ export default function ResetPasswordScreen({ route, navigation }) {
       return;
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#-])[A-Za-z\d@$!%*?&#-]{8,}$/;
+    // Regex simplificado sem exigência de caracteres especiais
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
     
     if (!passwordRegex.test(newPassword)) {
       setError(
         'A senha deve conter pelo menos:\n' +
         '- Uma letra maiúscula\n' +
         '- Uma letra minúscula\n' +
-        '- Um número\n' +
-        '- Um caractere especial (@$!%*?&#-)'
+        '- Um número'
       );
       return;
     }
@@ -61,16 +69,30 @@ export default function ResetPasswordScreen({ route, navigation }) {
       });
 
       if (response.data.status === 'success') {
-        Alert.alert('Sucesso', 'Senha alterada com sucesso', [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('LoginScreen'),
-          },
-        ]);
+        setMessageModal({
+          visible: true,
+          title: 'Sucesso',
+          message: 'Senha alterada com sucesso',
+          type: 'success',
+          actions: [
+            {
+              text: 'Fazer Login',
+              primary: true,
+              onPress: () => navigation.navigate('LoginScreen')
+            }
+          ]
+        });
       }
     } catch (error) {
       setError('Erro ao redefinir a senha. Tente novamente.');
       console.error(error);
+      
+      setMessageModal({
+        visible: true,
+        title: 'Erro',
+        message: 'Não foi possível redefinir sua senha. Por favor, tente novamente mais tarde.',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -95,51 +117,32 @@ export default function ResetPasswordScreen({ route, navigation }) {
             </Text>
 
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Icon name="lock" size={20} color="#7A708E" />
-                <TextInput
-                  style={styles.input}
+              <View>
+                <CustomInput
+                  icon="lock"
                   placeholder="Nova senha"
-                  placeholderTextColor="#7A708E"
                   value={newPassword}
-                  onChangeText={setNewPassword}
+                  onChangeText={(text) => {
+                    setNewPassword(text);
+                    setError('');
+                  }}
                   secureTextEntry={!showNewPassword}
+                  error={error}
                 />
-                <TouchableOpacity 
-                  onPress={() => setShowNewPassword(!showNewPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Icon 
-                    name={showNewPassword ? "visibility" : "visibility-off"} 
-                    size={20} 
-                    color="#7A708E" 
-                  />
-                </TouchableOpacity>
               </View>
 
-              <View style={styles.inputContainer}>
-                <Icon name="lock" size={20} color="#7A708E" />
-                <TextInput
-                  style={styles.input}
+              <View>
+                <CustomInput
+                  icon="lock-outline"
                   placeholder="Confirme a nova senha"
-                  placeholderTextColor="#7A708E"
                   value={confirmPassword}
-                  onChangeText={setConfirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    setError('');
+                  }}
                   secureTextEntry={!showConfirmPassword}
                 />
-                <TouchableOpacity 
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Icon 
-                    name={showConfirmPassword ? "visibility" : "visibility-off"} 
-                    size={20} 
-                    color="#7A708E" 
-                  />
-                </TouchableOpacity>
               </View>
-
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <CustomButton
                 title="Redefinir Senha"
@@ -151,6 +154,16 @@ export default function ResetPasswordScreen({ route, navigation }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        actions={messageModal.actions}
+        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+      />
+      
       {loading && <LoadingOverlay />}
     </View>
   );
@@ -194,7 +207,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   form: {
-    gap: 15,
+    gap: 10,
     marginTop: 30,
   },
   inputContainer: {

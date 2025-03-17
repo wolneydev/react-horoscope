@@ -297,36 +297,13 @@ function CustomDrawerContent(props) {
 
         {/* ITEM DE MENU PARA A LISTA DE USUÁRIOS */}
         <DrawerItem
-          label="Lista de Usuários"
+          label="Social"
           icon={({ focused }) => (
-            <Icon name="group" color={currentRoute === 'UserListScreen' ? '#FFFFFF' : '#7A708E'} size={24} />
+            <Icon name="account-circle" color={currentRoute === 'Social' ? '#FFFFFF' : '#7A708E'} size={24} />
           )}
-          onPress={async (e) => {
-            // Previne a navegação padrão para poder inserir o uuid:
-            e?.preventDefault();
-            try {
-              const savedUserData = await StorageService.getUserData();
-              if (savedUserData?.uuid) {
-                props.navigation.navigate('UserListScreen', { uuid: savedUserData.uuid });
-              } else {
-                Alert.alert(
-                  'Usuário não encontrado', 
-                  'Não foi possível encontrar o UUID do usuário logado.'
-                );
-              }
-            } catch (error) {
-              console.error('Erro ao abrir lista de usuários:', error);
-              Alert.alert('Erro', 'Não foi possível abrir a lista de usuários.');
-            }
-          }}
-          style={[
-            styles.drawerItem,
-            currentRoute === 'UserListScreen' && styles.drawerItemActive
-          ]}
-          labelStyle={[
-            styles.drawerLabel,
-            currentRoute === 'UserListScreen' && styles.drawerLabelActive
-          ]}
+          onPress={() => props.navigation.navigate('Social')}
+          style={[styles.drawerItem, currentRoute === 'Social' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Social' && styles.drawerLabelActive]}
         />
 
         <DrawerItem
@@ -432,6 +409,16 @@ function AppDrawer() {
         <Drawer.Screen
           name="Mapa Extra"
           component={CreateExtraChartScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="favorite" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Drawer.Screen
+          name="Social"
+          component={UserListScreen}
           options={{
             drawerIcon: ({ color, size }) => (
               <Icon name="favorite" color={color} size={size} />

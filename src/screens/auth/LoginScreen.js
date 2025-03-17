@@ -4,7 +4,6 @@ import {
   TextInput,
   StyleSheet,
   View,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +13,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
 import LoadingOverlay from '../../Components/LoadingOverlay';
 import CustomButton from '../../Components/CustomButton';
+import CustomInput from '../../Components/CustomInput';
+import MessageModal from '../../Components/MessageModal';
 
 import api from '../../services/api';
 import StorageService from '../../store/store';
@@ -29,6 +30,13 @@ export default function LoginScreen({ navigation }) {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'error',
+    actions: []
+  });
 
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
@@ -136,7 +144,14 @@ export default function LoginScreen({ navigation }) {
       }
     } catch (error) {
       console.error('Erro:', error);
-      Alert.alert('Erro', 'Email ou senha incorretos');
+      
+      // Substituindo o Alert.alert pelo MessageModal
+      setMessageModal({
+        visible: true,
+        title: 'Erro de Login',
+        message: 'Email ou senha incorretos. Por favor, verifique suas credenciais e tente novamente.',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
       setLoadingMessage('');
@@ -171,50 +186,31 @@ export default function LoginScreen({ navigation }) {
 
             <View style={styles.form}>
               <View>
-                <View style={styles.inputContainer}>
-                  <Icon name="email" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#7A708E"
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      setErrors(prev => ({ ...prev, email: '' }));
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-                <ErrorMessage error={errors.email} />
+                <CustomInput
+                  icon="email"
+                  placeholder="E-mail"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    setErrors((prev) => ({ ...prev, email: '' }));
+                  }}
+                  keyboardType="email-address"
+                  error={errors.email}
+                />
               </View>
 
               <View>
-                <View style={styles.inputContainer}>
-                  <Icon name="lock" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Senha"
-                    placeholderTextColor="#7A708E"
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      setErrors(prev => ({ ...prev, password: '' }));
-                    }}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    <Icon 
-                      name={showPassword ? "visibility" : "visibility-off"} 
-                      size={20} 
-                      color="#7A708E" 
-                    />
-                  </TouchableOpacity>
-                </View>
-                <ErrorMessage error={errors.password} />
+                <CustomInput
+                  icon="lock"
+                  placeholder="Senha"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setErrors((prev) => ({ ...prev, password: '' }));
+                  }}
+                  secureTextEntry
+                  error={errors.password}
+                />
               </View>
 
               <CustomButton
@@ -245,6 +241,17 @@ export default function LoginScreen({ navigation }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      {/* MessageModal */}
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        actions={messageModal.actions}
+        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+      />
+      
       {loading && <LoadingOverlay message={loadingMessage} />}
     </View>
   );
@@ -288,7 +295,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   form: {
-    gap: 15,
+    gap: 10,
     marginTop: 30,
   },
   inputContainer: {

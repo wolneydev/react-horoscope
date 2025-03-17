@@ -1,19 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
 import LoadingOverlay from '../../Components/LoadingOverlay';
 import CustomButton from '../../Components/CustomButton';
 import api from '../../services/api';
+import CustomInput from '../../Components/CustomInput';
+import MessageModal from '../../Components/MessageModal';
 
 const CodeInput = ({ value, onChange, index }) => (
   <TextInput
@@ -34,6 +36,7 @@ const CodeInput = ({ value, onChange, index }) => (
     keyboardType="number-pad"
     maxLength={6} // Aumentado para permitir colar
     selectTextOnFocus
+    autoCorrect={false}
   />
 );
 
@@ -43,8 +46,38 @@ export default function ForgotPasswordScreen({ navigation }) {
   const [codeSent, setCodeSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'success',
+    actions: []
+  });
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
+
+  // Monitorar o estado do teclado
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const handlePaste = async () => {
     try {
@@ -75,7 +108,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   const handleSendCode = async () => {
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      setError('Por favor, insira um email válido');
+      setErrors((prev) => ({ ...prev, email: 'Por favor, insira um email válido' }));
       return;
     }
 
@@ -89,11 +122,27 @@ export default function ForgotPasswordScreen({ navigation }) {
       if (response.data.status === 'success') {
         setCodeSent(true);
         setError('');
-        Alert.alert('Sucesso', 'Código de verificação enviado para seu email');
+        
+        // Usando o MessageModal
+        setMessageModal({
+          visible: true,
+          title: 'Sucesso',
+          message: 'Código de verificação enviado para seu email!',
+          type: 'success'
+        });
       }
     } catch (error) {
       setError('Erro ao enviar o código. Tente novamente.');
       console.error(error);
+      console.log(error.response?.data);
+      
+      // Usando o MessageModal para erro
+      setMessageModal({
+        visible: true,
+        title: 'Erro',
+        message: 'Não foi possível enviar o código de verificação. Verifique seu email e tente novamente.',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -125,6 +174,14 @@ export default function ForgotPasswordScreen({ navigation }) {
     } catch (error) {
       setError('Código inválido. Tente novamente.');
       console.error(error);
+      
+      // Exibindo mensagem de erro com o MessageModal
+      setMessageModal({
+        visible: true,
+        title: 'Código Inválido',
+        message: 'O código informado não é válido ou expirou. Por favor, tente novamente.',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -133,14 +190,88 @@ export default function ForgotPasswordScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {memoizedStars}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-      >
+      
+      {Platform.OS === 'ios' ? (
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={100}
+        >
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={[
+              styles.scrollViewContent,
+              keyboardVisible && styles.scrollViewContentWithKeyboard
+            ]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.content}>
+              <Text style={styles.title}>
+                {codeSent ? 'Verificar Código' : 'Recuperar Senha'}
+              </Text>
+              <Text style={styles.subtitle}>
+                {codeSent
+                  ? 'Digite o código de 6 dígitos enviado para seu email'
+                  : 'Insira seu email para receber o código de recuperação'}
+              </Text>
+
+              {!codeSent ? (
+                <View style={styles.form}>
+                  <View>
+                    <CustomInput
+                      icon="email"
+                      placeholder="E-mail"
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        setErrors((prev) => ({ ...prev, email: '' }));
+                      }}
+                      keyboardType="email-address"
+                      error={errors.email}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus={true}
+                    />
+                  </View>
+                  {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                  <CustomButton
+                    title="Enviar Código"
+                    onPress={handleSendCode}
+                    disabled={loading}
+                    loading={loading}
+                  />
+                </View>
+              ) : (
+                <View style={styles.form}>
+                  <View style={styles.codeContainer}>
+                    {verificationCode.map((digit, index) => (
+                      <CodeInput
+                        key={index}
+                        value={digit}
+                        onChange={handleCodeChange}
+                        index={index}
+                      />
+                    ))}
+                  </View>
+                  {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                  <CustomButton
+                    title="Verificar Código"
+                    onPress={handleVerifyCode}
+                    disabled={loading}
+                    loading={loading}
+                  />
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      ) : (
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
             <Text style={styles.title}>
@@ -154,19 +285,20 @@ export default function ForgotPasswordScreen({ navigation }) {
 
             {!codeSent ? (
               <View style={styles.form}>
-                <View style={styles.inputContainer}>
-                  <Icon name="email" size={20} color="#7A708E" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#7A708E"
+                <View>
+                  <CustomInput
+                    icon="email"
+                    placeholder="E-mail"
                     value={email}
                     onChangeText={(text) => {
                       setEmail(text);
-                      setError('');
+                      setErrors((prev) => ({ ...prev, email: '' }));
                     }}
                     keyboardType="email-address"
+                    error={errors.email}
                     autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus={true}
                   />
                 </View>
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -200,7 +332,18 @@ export default function ForgotPasswordScreen({ navigation }) {
             )}
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      )}
+      
+      {/* MessageModal */}
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        actions={messageModal.actions}
+        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+      />
+      
       {loading && <LoadingOverlay />}
     </View>
   );
@@ -219,11 +362,15 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
+    justifyContent: 'center',
+  },
+  scrollViewContentWithKeyboard: {
+    justifyContent: 'flex-start',
+    paddingTop: 50,
   },
   content: {
     flex: 1,
     padding: 20,
-    paddingTop: 60,
     justifyContent: 'center',
   },
   title: {
@@ -246,22 +393,6 @@ const styles = StyleSheet.create({
   form: {
     gap: 15,
     marginTop: 30,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(32, 178, 170, 0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    height: 55,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  input: {
-    flex: 1,
-    color: '#FFFFFF',
-    marginLeft: 10,
-    fontSize: 16,
   },
   codeContainer: {
     flexDirection: 'row',
