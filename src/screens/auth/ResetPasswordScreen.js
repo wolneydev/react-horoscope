@@ -46,8 +46,8 @@ export default function ResetPasswordScreen({ route, navigation }) {
       return;
     }
 
-    // Regex simplificado sem exigência de caracteres especiais
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    // Regex simplificado sem exigência de caracteres especiais, mas permitindo-os
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     
     if (!passwordRegex.test(newPassword)) {
       setError(
@@ -69,23 +69,30 @@ export default function ResetPasswordScreen({ route, navigation }) {
       });
 
       if (response.data.status === 'success') {
-        setMessageModal({
-          visible: true,
-          title: 'Sucesso',
-          message: 'Senha alterada com sucesso',
-          type: 'success',
-          actions: [
-            {
-              text: 'Fazer Login',
-              primary: true,
-              onPress: () => navigation.navigate('LoginScreen')
-            }
-          ]
-        });
+        // Log para depuração
+        console.log('Senha alterada com sucesso, exibindo modal');
+        
+        // Garantir que o modal seja realmente exibido
+        setTimeout(() => {
+          setMessageModal({
+            visible: true,
+            title: 'Sucesso',
+            message: 'Senha alterada com sucesso',
+            type: 'success',
+            actions: [
+              {
+                text: 'Fazer Login',
+                primary: true,
+                onPress: () => navigation.navigate('LoginScreen')
+              }
+            ]
+          });
+        }, 100);
       }
     } catch (error) {
       setError('Erro ao redefinir a senha. Tente novamente.');
       console.error(error);
+      console.log(error.response.data);
       
       setMessageModal({
         visible: true,
@@ -161,7 +168,16 @@ export default function ResetPasswordScreen({ route, navigation }) {
         message={messageModal.message}
         type={messageModal.type}
         actions={messageModal.actions}
-        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+        onClose={() => {
+          setMessageModal(prev => ({ ...prev, visible: false }));
+          
+          // Se for o modal de sucesso, redirecionar para a tela de login
+          if (messageModal.type === 'success') {
+            setTimeout(() => {
+              navigation.navigate('LoginScreen');
+            }, 100);
+          }
+        }}
       />
       
       {loading && <LoadingOverlay />}

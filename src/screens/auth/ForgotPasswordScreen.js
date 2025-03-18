@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   Keyboard,
+  TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AnimatedStars from '../../Components/animation/AnimatedStars';
@@ -55,6 +56,11 @@ export default function ForgotPasswordScreen({ navigation }) {
     actions: []
   });
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  
+  // Estado e referência para o contador de reenvio
+  const [canResend, setCanResend] = useState(false);
+  const [resendCounter, setResendCounter] = useState(60);
+  const timerRef = useRef(null);
 
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
 
@@ -78,6 +84,35 @@ export default function ForgotPasswordScreen({ navigation }) {
       keyboardDidHideListener.remove();
     };
   }, []);
+  
+  // Iniciar o contador quando o código for enviado
+  useEffect(() => {
+    if (codeSent) {
+      startResendCounter();
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [codeSent]);
+  
+  // Função para iniciar o contador de reenvio
+  const startResendCounter = () => {
+    setCanResend(false);
+    setResendCounter(60);
+    
+    if (timerRef.current) clearInterval(timerRef.current);
+    
+    timerRef.current = setInterval(() => {
+      setResendCounter(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handlePaste = async () => {
     try {
@@ -130,6 +165,9 @@ export default function ForgotPasswordScreen({ navigation }) {
           message: 'Código de verificação enviado para seu email!',
           type: 'success'
         });
+        
+        // Iniciar o contador de reenvio
+        startResendCounter();
       }
     } catch (error) {
       setError('Erro ao enviar o código. Tente novamente.');
@@ -141,6 +179,42 @@ export default function ForgotPasswordScreen({ navigation }) {
         visible: true,
         title: 'Erro',
         message: 'Não foi possível enviar o código de verificação. Verifique seu email e tente novamente.',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Função para reenviar o código
+  const handleResendCode = async () => {
+    if (!canResend) return;
+    
+    try {
+      setLoading(true);
+      const response = await api.post('auth/forgot-password', {
+        email: email.trim(),
+      });
+
+      if (response.data.status === 'success') {
+        setMessageModal({
+          visible: true,
+          title: 'Código Reenviado',
+          message: 'Um novo código de verificação foi enviado para seu email.',
+          type: 'success'
+        });
+        
+        // Reiniciar o contador
+        startResendCounter();
+      }
+    } catch (error) {
+      setError('Erro ao reenviar o código. Tente novamente.');
+      console.error(error);
+      
+      setMessageModal({
+        visible: true,
+        title: 'Erro',
+        message: 'Não foi possível reenviar o código de verificação.',
         type: 'error'
       });
     } finally {
@@ -254,6 +328,32 @@ export default function ForgotPasswordScreen({ navigation }) {
                       />
                     ))}
                   </View>
+                  
+                  {/* Contador de reenvio e botão de reenviar */}
+                  <View style={styles.resendContainer}>
+                    {resendCounter > 0 ? (
+                      <Text style={styles.resendCounterText}>
+                        Reenviar código em: {resendCounter}s
+                      </Text>
+                    ) : (
+                      <TouchableOpacity 
+                        onPress={handleResendCode}
+                        disabled={!canResend || loading}
+                        style={[
+                          styles.resendButton,
+                          (!canResend || loading) && styles.resendButtonDisabled
+                        ]}
+                      >
+                        <Text style={[
+                          styles.resendButtonText,
+                          (!canResend || loading) && styles.resendButtonTextDisabled
+                        ]}>
+                          Reenviar código
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  
                   {error ? <Text style={styles.errorText}>{error}</Text> : null}
                   <CustomButton
                     title="Verificar Código"
@@ -321,6 +421,32 @@ export default function ForgotPasswordScreen({ navigation }) {
                     />
                   ))}
                 </View>
+                
+                {/* Contador de reenvio e botão de reenviar */}
+                <View style={styles.resendContainer}>
+                  {resendCounter > 0 ? (
+                    <Text style={styles.resendCounterText}>
+                      Reenviar código em: {resendCounter}s
+                    </Text>
+                  ) : (
+                    <TouchableOpacity 
+                      onPress={handleResendCode}
+                      disabled={!canResend || loading}
+                      style={[
+                        styles.resendButton,
+                        (!canResend || loading) && styles.resendButtonDisabled
+                      ]}
+                    >
+                      <Text style={[
+                        styles.resendButtonText,
+                        (!canResend || loading) && styles.resendButtonTextDisabled
+                      ]}>
+                        Reenviar código
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 <CustomButton
                   title="Verificar Código"
@@ -415,5 +541,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 10,
+  },
+  // Estilos para o contador e botão de reenvio
+  resendContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  resendCounterText: {
+    color: '#7A708E',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  resendButton: {
+    padding: 10,
+  },
+  resendButtonDisabled: {
+    opacity: 0.5,
+  },
+  resendButtonText: {
+    color: '#6D44FF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  resendButtonTextDisabled: {
+    color: '#7A708E',
   },
 }); 
