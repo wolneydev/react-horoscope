@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
 import api from '../services/api';
 import StorageService from '../store/store';
 import AnimatedStars from '../Components/animation/AnimatedStars';
@@ -21,6 +20,7 @@ import CustomButton from '../Components/CustomButton';
 import { useNavigation } from '@react-navigation/native';
 import InfoCard from '../Components/InfoCard';
 import { COLORS, SPACING, FONTS } from '../styles/theme';
+import CityAutoComplete from '../Components/CityAutoComplete';
 
 // Exemplo de import do seu JSON de cidades
 // Ajuste o path conforme seu projeto, caso tenha:
@@ -39,17 +39,11 @@ const CreateExtraChartScreen = () => {
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
 
   // Estado da cidade (o que o usuário digita)
-  const [city, setCity] = useState('');
-
-  // Lista filtrada para o dropdown de sugestões
-  const [filteredCities, setFilteredCities] = useState([]);
-
-  // Estado para armazenar objeto selecionado da lista (opcional se quiser usar)
-  const [citySelected, setCitySelected] = useState(null);
+  const [birthCity, setBirthCity] = useState('');
+  const [birthLatitude, setBirthLatitude] = useState('');
+  const [birthLongitude, setBirthLongitude] = useState('');
 
   // Estados adicionais para latitude, longitude e timezone
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
   const [timezone, setTimezone] = useState('');
 
   // Estados de erro e loading
@@ -104,41 +98,8 @@ const CreateExtraChartScreen = () => {
     const hours = time.getHours().toString().padStart(2, '0');
     const minutes = time.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
-  };
-
-  // --- Funções de Busca e Seleção da Cidade ---
-  const handleSearchCity = (text) => {
-    setCity(text);
-
-    // Se o campo estiver vazio, limpa o dropdown
-    if (!text) {
-      setFilteredCities([]);
-      return;
-    }
-
-    // Filtra as cidades do JSON
-    const query = text.toLowerCase();
-    const results = citiesBr.cities
-      .filter((item) => item.city.toLowerCase().includes(query))
-      .slice(0, 10);
-
-    setFilteredCities(results);
-  };
-
-  const handleSelectCity = (item) => {
-    // Quando o usuário clica na sugestão
-    setCity(item.city); // apenas o nome da cidade no campo
-    setCitySelected(item);
-
-    // Se seu JSON tiver latitude/longitude/timezone:
-    setLatitude(String(item.latitude) || '');
-    setLongitude(String(item.longitude) || '');
-    setTimezone(item.timezone || '');
-
-    // Limpa a lista de sugestões
-    setFilteredCities([]);
-  };
-
+  };  
+  
   // --- Validação ---
   const validateFields = () => {
     let tempErrors = {};
@@ -149,8 +110,8 @@ const CreateExtraChartScreen = () => {
       isValid = false;
     }
 
-    if (!city || city.trim().length < 2) {
-      tempErrors.city = 'Cidade é obrigatória';
+    if (!birthCity || birthCity.trim().length < 2) {
+      tempErrors.city = 'Cidade de nascimento é obrigatória';
       isValid = false;
     }
 
@@ -177,7 +138,6 @@ const CreateExtraChartScreen = () => {
         const accessToken = await StorageService.getAccessToken();
 
         console.log('Token:', accessToken);
-        
 
         const year = birthDate.getFullYear();
         const month = birthDate.getMonth() + 1;
@@ -192,7 +152,7 @@ const CreateExtraChartScreen = () => {
           'astralmap/create',
           {
             name: nome.trim(),
-            birth_city: city.trim(),
+            birth_city: birthCity.trim(),
             birth_year: parseInt(year, 10),
             birth_month: parseInt(month, 10),
             birth_day: parseInt(day, 10),
@@ -200,8 +160,8 @@ const CreateExtraChartScreen = () => {
             birth_minute: parseInt(minute, 10),
 
             // Novos campos
-            birth_latitude: latitude ? parseFloat(latitude) : null,
-            birth_longitude: longitude ? parseFloat(longitude) : null,
+            birth_latitude: birthLatitude ? parseFloat(birthLatitude) : null,
+            birth_longitude: birthLongitude ? parseFloat(birthLongitude) : null,
             birth_timezone: timezone || '',
           },
           {
@@ -220,7 +180,6 @@ const CreateExtraChartScreen = () => {
 
           // Limpa os campos
           setNome('');
-          setCity('');
 
           if (data.astral_map) {
             navigation.navigate('HomeScreen', {
@@ -271,39 +230,24 @@ const CreateExtraChartScreen = () => {
             <ErrorMessage error={errors.nome} />
           </View>
 
-          {/* Campo Cidade + Dropdown de sugestões */}
+          {/* Cidade de nascimento e coordenadas de nascimento via CityAutoComplete */}
           <View>
             <View style={styles.inputContainer}>
               <Icon name="location-city" size={20} color="#7A708E" />
-              <TextInput
-                style={[styles.input, { marginLeft: 10 }]}
-                placeholder="Cidade de nascimento"
+              <CityAutoComplete
                 placeholderTextColor="#7A708E"
-                value={city}
-                onChangeText={handleSearchCity}
+                onCitySelected={(cityObj) => {
+                  setBirthCity(cityObj.city);
+                  setBirthLatitude(cityObj.latitude);
+                  setBirthLongitude(cityObj.longitude);
+                  setErrors((prev) => ({ ...prev, city: '' }));
+                }}
+                style={styles.input}
               />
             </View>
-
-            {filteredCities.length > 0 && (
-              <View style={styles.suggestionsContainer}>
-                <FlatList
-                  data={filteredCities}
-                  keyExtractor={(item, index) => index.toString()}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.suggestionItem}
-                      onPress={() => handleSelectCity(item)}
-                    >
-                      <Text style={styles.suggestionText}>
-                        {item.city}, {item.state}, {item.country}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-            )}
             <ErrorMessage error={errors.city} />
           </View>
+          
           <View>
             <TouchableOpacity
               style={styles.inputContainer}

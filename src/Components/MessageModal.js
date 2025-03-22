@@ -7,7 +7,9 @@ import {
   TouchableOpacity, 
   TouchableWithoutFeedback,
   Animated,
-  Dimensions
+  Dimensions,
+  ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../styles/theme';
@@ -21,10 +23,26 @@ const MessageModal = ({
   onClose, 
   type = 'success', // 'success', 'error', 'warning', 'info'
   actions = [],
-  animationDuration = 300
+  animationDuration = 300,
+  extraContent = null,
+  loading = false
 }) => {
   const [modalAnimation] = React.useState(new Animated.Value(0));
   const [backgroundOpacity] = React.useState(new Animated.Value(0));
+  const [isContentReady, setIsContentReady] = React.useState(!loading);
+
+  React.useEffect(() => {
+    if (!loading && visible) {
+      // Quando o loading terminar, mostrar o conteúdo após um breve delay
+      const timer = setTimeout(() => {
+        setIsContentReady(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else if (!visible) {
+      // Resetar o estado quando o modal for fechado
+      setIsContentReady(!loading);
+    }
+  }, [loading, visible]);
 
   React.useEffect(() => {
     if (visible) {
@@ -67,22 +85,22 @@ const MessageModal = ({
       case 'info':
         return 'info';
       default:
-        return 'check-circle';
+        return 'info';
     }
   };
 
   const getIconColor = () => {
     switch (type) {
       case 'success':
-        return COLORS.SUCCESS;
+        return '#4CAF50';
       case 'error':
-        return COLORS.ERROR;
+        return '#FF4444';
       case 'warning':
-        return COLORS.WARNING;
+        return '#FFC107';
       case 'info':
-        return COLORS.PRIMARY;
+        return '#2196F3';
       default:
-        return COLORS.SUCCESS;
+        return '#2196F3';
     }
   };
 
@@ -112,49 +130,68 @@ const MessageModal = ({
                 { transform: [{ translateY: modalTranslateY }] }
               ]}
             >
-              <View style={styles.iconContainer}>
-                <Icon name={getIconName()} size={50} color={getIconColor()} />
-              </View>
-              
-              <Text style={styles.title}>{title}</Text>
-              
-              <Text style={styles.message}>{message}</Text>
-              
-              <View style={styles.actionsContainer}>
-                {actions.length > 0 ? (
-                  actions.map((action, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.actionButton,
-                        action.primary && styles.primaryActionButton,
-                        action.style
-                      ]}
-                      onPress={() => {
-                        if (action.onPress) action.onPress();
-                        if (!action.keepOpen) onClose();
-                      }}
-                    >
-                      <Text 
-                        style={[
-                          styles.actionText,
-                          action.primary && styles.primaryActionText,
-                          action.textStyle
-                        ]}
+              {loading || !isContentReady ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+                  <Text style={styles.loadingText}>Carregando...</Text>
+                </View>
+              ) : (
+                <ScrollView 
+                  contentContainerStyle={styles.modalContent}
+                  showsVerticalScrollIndicator={false}
+                  bounces={false}
+                >
+                  <View style={styles.iconContainer}>
+                    <Icon name={getIconName()} size={40} color={getIconColor()} />
+                  </View>
+                  
+                  <Text style={styles.title}>{title}</Text>
+                  
+                  {message && <Text style={styles.message}>{message}</Text>}
+                  
+                  {extraContent && (
+                    <View style={styles.extraContentContainer}>
+                      {extraContent}
+                    </View>
+                  )}
+                  
+                  <View style={styles.actionsContainer}>
+                    {actions.length > 0 ? (
+                      actions.map((action, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.actionButton,
+                            action.primary && styles.primaryActionButton,
+                            action.style
+                          ]}
+                          onPress={() => {
+                            if (action.onPress) action.onPress();
+                            if (!action.keepOpen) onClose();
+                          }}
+                        >
+                          <Text 
+                            style={[
+                              styles.actionText,
+                              action.primary && styles.primaryActionText,
+                              action.textStyle
+                            ]}
+                          >
+                            {action.text}
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.primaryActionButton]}
+                        onPress={onClose}
                       >
-                        {action.text}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.primaryActionButton]}
-                    onPress={onClose}
-                  >
-                    <Text style={[styles.actionText, styles.primaryActionText]}>OK</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+                        <Text style={[styles.actionText, styles.primaryActionText]}>OK</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </ScrollView>
+              )}
             </Animated.View>
           </TouchableWithoutFeedback>
         </Animated.View>
@@ -172,25 +209,29 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: width * 0.85,
+    maxHeight: height * 0.8,
     backgroundColor: COLORS.BACKGROUND_DARK,
     borderRadius: 20,
-    padding: SPACING.LARGE,
-    alignItems: 'center',
     ...SHADOWS.LARGE,
     borderWidth: 1,
     borderColor: COLORS.BORDER,
   },
+  modalContent: {
+    padding: SPACING.LARGE,
+    alignItems: 'center',
+    paddingBottom: SPACING.MEDIUM,
+  },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: 'rgba(32, 178, 170, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.MEDIUM,
+    marginBottom: SPACING.SMALL,
   },
   title: {
-    fontSize: FONTS.SIZES.XLARGE,
+    fontSize: FONTS.SIZES.LARGE,
     fontWeight: FONTS.WEIGHTS.BOLD,
     color: COLORS.TEXT_PRIMARY,
     marginBottom: SPACING.SMALL,
@@ -200,12 +241,20 @@ const styles = StyleSheet.create({
     fontSize: FONTS.SIZES.MEDIUM,
     color: COLORS.TEXT_SECONDARY,
     textAlign: 'center',
+    marginBottom: SPACING.MEDIUM,
+    width: '100%',
+  },
+  extraContentContainer: {
+    width: '100%',
     marginBottom: SPACING.LARGE,
+    maxHeight: height * 0.3,
+    overflow: 'hidden',
   },
   actionsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
+    marginTop: SPACING.SMALL,
   },
   actionButton: {
     paddingVertical: SPACING.MEDIUM,
@@ -230,6 +279,17 @@ const styles = StyleSheet.create({
   primaryActionText: {
     color: COLORS.TEXT_PRIMARY,
     fontWeight: FONTS.WEIGHTS.BOLD,
+  },
+  loadingContainer: {
+    paddingVertical: SPACING.XLARGE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.LARGE,
+  },
+  loadingText: {
+    fontSize: FONTS.SIZES.MEDIUM,
+    color: COLORS.TEXT_PRIMARY,
+    marginTop: SPACING.MEDIUM,
   },
 });
 

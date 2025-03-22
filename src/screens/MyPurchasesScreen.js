@@ -10,6 +10,8 @@ import { ptBR } from 'date-fns/locale';
 import StripeService from '../services/StripeService';
 import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
 import InfoCard from '../Components/InfoCard';
+import MessageModal from '../Components/MessageModal';
+import CustomButton from '../Components/CustomButton';
 import { COLORS, SPACING, FONTS } from '../styles/theme';
 
 const MyPurchasesScreen = () => {
@@ -21,6 +23,15 @@ const MyPurchasesScreen = () => {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [failMessage, setFailMessage] = useState(null);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'success',
+    actions: [],
+    extraContent: null,
+    loading: false
+  });
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
   useFocusEffect(
@@ -75,18 +86,65 @@ const MyPurchasesScreen = () => {
   const handleRetryPayment = async (order) => {
     try {
       setLoading(true);
+      
+      // Exibir modal com loading
+      setMessageModal({
+        visible: true,
+        title: 'Processando pagamento',
+        message: 'Por favor, aguarde enquanto processamos seu pagamento...',
+        type: 'info',
+        loading: true
+      });
+      
       const result = await StripeService.reProcessPayment(order.total_amount, order.id);
 
       if (result.success) {
-        setShowSuccessPopup(true);
+        // Atualizar modal para mostrar sucesso
+        setMessageModal({
+          visible: true,
+          title: 'Compra Realizada!',
+          message: 'Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!',
+          type: 'success',
+          loading: false,
+          actions: [
+            {
+              text: 'OK',
+              primary: true,
+              onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+            }
+          ]
+        });
+        
+        // Fechar automaticamente após 4 segundos
         setTimeout(() => {
-          setShowSuccessPopup(false);
+          setMessageModal(prev => ({ ...prev, visible: false }));
         }, 4000);
       } else {
-        setFailMessage(result.message);        
-        setShowErrorPopup(true);
+        // Atualizar modal para mostrar erro
+        setMessageModal({
+          visible: true,
+          title: 'Erro na Compra!',
+          message: 'Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida.',
+          type: 'error',
+          loading: false,
+          actions: [
+            {
+              text: 'OK',
+              primary: true,
+              onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+            }
+          ],
+          extraContent: result.message ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorTitle}>Último retorno da operadora:</Text>
+              <Text style={styles.errorMessage}>{result.message}</Text>
+            </View>
+          ) : null
+        });
+        
+        // Fechar automaticamente após 7 segundos
         setTimeout(() => {
-          handleCloseErrorPopup();
+          setMessageModal(prev => ({ ...prev, visible: false }));
         }, 7000);
       }
 
@@ -94,19 +152,29 @@ const MyPurchasesScreen = () => {
 
     } catch (error) {
       console.error('Erro na compra de créditos:', error);
-      setFailMessage('Não foi possível processar seu pagamento. Tente novamente.');
-      setShowErrorPopup(true);
+      // Atualizar modal para mostrar erro genérico
+      setMessageModal({
+        visible: true,
+        title: 'Erro na Compra!',
+        message: 'Não foi possível processar seu pagamento. Tente novamente.',
+        type: 'error',
+        loading: false,
+        actions: [
+          {
+            text: 'OK',
+            primary: true,
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ]
+      });
+      
+      // Fechar automaticamente após 7 segundos
       setTimeout(() => {
-        handleCloseErrorPopup();
+        setMessageModal(prev => ({ ...prev, visible: false }));
       }, 7000);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCloseErrorPopup = () => {
-    setFailMessage(null);
-    setShowErrorPopup(false);
   };
 
   const getLastFailedMessage = (paymentIntents) => {
@@ -214,13 +282,12 @@ const MyPurchasesScreen = () => {
                   )}
 
                   {item.status.name === 'Finalizada com Erro' && (
-                    <TouchableOpacity 
-                      style={styles.retryButton}
+                    <CustomButton 
+                      title="Tentar Pagamento Novamente"
                       onPress={() => handleRetryPayment(item)}
-                    >
-                      <Icon name="refresh" size={20} color="#FFFFFF" />
-                      <Text style={styles.retryButtonText}>Tentar Pagamento Novamente</Text>
-                    </TouchableOpacity>
+                      icon="refresh"
+                      style={{ marginTop: SPACING.MEDIUM }}
+                    />
                   )}
                 </View>
               )}
@@ -240,22 +307,15 @@ const MyPurchasesScreen = () => {
         </View>
       )}
 
-      <BuyMapsPopupMessage
-        visible={showSuccessPopup}
-        onClose={() => setShowSuccessPopup(false)}
-        type="success"
-        title="Compra Realizada!"
-        message="Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!"
-      />
-
-      <BuyMapsPopupMessage
-        visible={showErrorPopup}
-        onClose={() => handleCloseErrorPopup()}
-        type="error"
-        title="Erro na Compra!"
-        message="Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida."
-        errorTitle="Último retorno da operadora:"
-        errorMessage={failMessage}
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        actions={messageModal.actions}
+        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+        extraContent={messageModal.extraContent}
+        loading={messageModal.loading}
       />
     </View>
   );
@@ -389,10 +449,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 68, 68, 0.3)',
   },
   errorMessage: {
-    color: COLORS.ERROR,
+    color: COLORS.ERROR || '#FF4444',
     fontSize: FONTS.SIZES.SMALL,
-    marginLeft: SPACING.SMALL,
-    flex: 1,
+    flexWrap: 'wrap',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -404,6 +463,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
+  },
+  errorContainer: {
+    marginTop: SPACING.SMALL,
+    padding: SPACING.MEDIUM,
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF4444',
+    width: '100%',
+  },
+  errorTitle: {
+    color: '#FF4444',
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    fontSize: FONTS.SIZES.MEDIUM,
+    marginBottom: SPACING.SMALL,
   },
 });
 

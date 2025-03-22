@@ -10,8 +10,9 @@ import StripeService from '../services/StripeService';
 import { formatNumber } from '../utils/helpers';
 import api from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
-import BuyMapsPopupMessage from '../Components/BuyMapsPopupMessage';
+import MessageModal from '../Components/MessageModal';
 import InfoCardSinastria from '../Components/InfoCardSinastria';
+import LoadingOverlay from '../Components/LoadingOverlay';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 
@@ -25,9 +26,16 @@ const SynastryScreen = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAnyProcessing, setIsAnyProcessing] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const [failMessage, setFailMessage] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'success',
+    actions: [],
+    extraContent: null,
+    loading: false
+  });
 
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
@@ -95,7 +103,18 @@ const SynastryScreen = () => {
   };
 
   const handlePurchaseSuccess = async () => {
-    setShowSuccessPopup(true);
+    // Oculta o loading quando a compra tem sucesso
+    setIsAnyProcessing(false);
+    setLoadingMessage('');
+    
+    setMessageModal({
+      visible: true,
+      title: 'Processando...',
+      message: 'Verificando sua compra',
+      type: 'info',
+      loading: true
+    });
+    
     setIsLoading(true);
     console.log('Iniciando verificação de atualização de número de mapas extras');
 
@@ -130,9 +149,25 @@ const SynastryScreen = () => {
         setMaxExtraMaps(currentMapsNumber);
         setIsLoading(false);
         
+        // Atualizar o modal para mostrar sucesso
+        setMessageModal({
+          visible: true,
+          title: 'Compra Realizada!',
+          message: 'Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!',
+          type: 'success',
+          loading: false,
+          actions: [
+            {
+              text: 'OK',
+              primary: true,
+              onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+            }
+          ]
+        });
+        
         // Esconder o popup após 3 segundos
         setTimeout(() => {
-          setShowSuccessPopup(false);
+          setMessageModal(prev => ({ ...prev, visible: false }));
         }, 3000);
       }
     }, 2000);
@@ -141,18 +176,56 @@ const SynastryScreen = () => {
   };
 
   const handlePurchaseCancel = (failMessage) => {
+    // Oculta o loading quando a compra falha
+    setIsAnyProcessing(false);
+    setLoadingMessage('');
+    
     if (failMessage) {
-      setFailMessage(failMessage);
-      setShowErrorPopup(true);
-      setTimeout(() => {
-        handleCloseErrorPopup();
-      }, 7000);
+      setMessageModal({
+        visible: true,
+        title: 'Erro na Compra!',
+        message: 'Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida. Caso queira mais informações sobre esta transação, acesse o menu \'Minhas Compras\'.',
+        type: 'error',
+        loading: false,
+        actions: [
+          {
+            text: 'OK',
+            primary: true,
+            onPress: () => {
+              setMessageModal(prev => ({ ...prev, visible: false }));
+              // Reabrir o modal de créditos após fechar a mensagem de erro
+              setShowCreditsModal(true);
+            }
+          }
+        ],
+        extraContent: failMessage ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorTitle}>Retorno da operadora:</Text>
+            <Text style={styles.errorMessage}>{failMessage}</Text>
+          </View>
+        ) : null
+      });
+      
+      // Removendo o timeout automático para permitir que o usuário leia a mensagem
+      // e decida quando fechar (e reabrir o modal de créditos)
+      /* setTimeout(() => {
+        setMessageModal(prev => ({ ...prev, visible: false }));
+      }, 7000); */
+    } else {
+      // Se não houver mensagem de erro, apenas reabrir o modal de créditos
+      setShowCreditsModal(true);
     }
   };
 
   const handleCloseErrorPopup = () => {
-    setFailMessage(null);
-    setShowErrorPopup(false);
+    setMessageModal({
+      visible: false,
+      title: '',
+      message: '',
+      type: 'success',
+      actions: [],
+      extraContent: null
+    });
   };
 
   const renderChartItem = ({ item }) => (
@@ -238,7 +311,11 @@ const SynastryScreen = () => {
                   product_slug={'extra_map'}
                   onSuccess={handlePurchaseSuccess}
                   onCancel={handlePurchaseCancel}
-                  onStartProcessing={() => setIsAnyProcessing(true)}
+                  onStartProcessing={() => {
+                    setIsAnyProcessing(true);
+                    setLoadingMessage('Processando pagamento');
+                    setShowCreditsModal(false);
+                  }}
                   onEndProcessing={() => setIsAnyProcessing(false)}
                   style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
                   disabled={isAnyProcessing}
@@ -256,7 +333,11 @@ const SynastryScreen = () => {
                     product_slug={'two_extra_map_pack'}
                     onSuccess={handlePurchaseSuccess}
                     onCancel={handlePurchaseCancel}
-                    onStartProcessing={() => setIsAnyProcessing(true)}
+                    onStartProcessing={() => {
+                      setIsAnyProcessing(true);
+                      setLoadingMessage('Processando pagamento');
+                      setShowCreditsModal(false);
+                    }}
                     onEndProcessing={() => setIsAnyProcessing(false)}
                     style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
                     disabled={isAnyProcessing}
@@ -279,7 +360,11 @@ const SynastryScreen = () => {
                     product_slug={'five_extra_map_pack'}
                     onSuccess={handlePurchaseSuccess}
                     onCancel={handlePurchaseCancel}
-                    onStartProcessing={() => setIsAnyProcessing(true)}
+                    onStartProcessing={() => {
+                      setIsAnyProcessing(true);
+                      setLoadingMessage('Processando pagamento');
+                      setShowCreditsModal(false);
+                    }}
                     onEndProcessing={() => setIsAnyProcessing(false)}
                     style={[
                       styles.creditButton, 
@@ -313,24 +398,20 @@ const SynastryScreen = () => {
           </View>
         </Modal>
 
-        <BuyMapsPopupMessage
-          visible={showSuccessPopup}
-          onClose={() => setShowSuccessPopup(false)}
-          type="success"
-          title="Compra Realizada!"
-          message="Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!"
-        />
-
-        <BuyMapsPopupMessage
-          visible={showErrorPopup}
-          onClose={() => handleCloseErrorPopup()}
-          type="error"
-          title="Erro na Compra!"
-          message="Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida. Caso queira mais informações sobre esta transação, acesse o menu 'Minhas Compras'."
-          errorTitle="Retorno da operadora:"
-          errorMessage={failMessage}
+        <MessageModal
+          visible={messageModal.visible}
+          title={messageModal.title}
+          message={messageModal.message}
+          type={messageModal.type}
+          actions={messageModal.actions}
+          onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+          extraContent={messageModal.extraContent}
+          loading={messageModal.loading}
         />
       </View>
+
+      {/* Loading Overlay */}
+      {isAnyProcessing && <LoadingOverlay message={loadingMessage} />}
     </EmailVerificationGuard>
   );
 };
@@ -523,6 +604,28 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.LARGE,
     borderTopWidth: 1,
     borderTopColor: 'rgba(109, 68, 255, 0.2)',
+  },
+  errorContainer: {
+    marginTop: SPACING.MEDIUM,
+    padding: SPACING.MEDIUM,
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF4444',
+    marginBottom: SPACING.LARGE,
+    alignItems: 'center',
+  },
+  errorTitle: {
+    color: '#FF4444',
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    fontSize: FONTS.SIZES.MEDIUM,
+    marginBottom: SPACING.SMALL,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    color: COLORS.ERROR || '#FF4444',
+    fontSize: FONTS.SIZES.SMALL,
+    textAlign: 'center',
   },
 });
 

@@ -14,11 +14,8 @@ import {
   PermissionsAndroid
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-// ---- REMOVIDO: import * as Location from 'expo-location'; // <--- BIBLIOTECA EXPO-LOCATION
 import Geolocation from 'react-native-geolocation-service'; // <--- IMPORTAÇÃO DA BIBLIOTECA NATIVA
-
 import api from '../../services/api';
 import StorageService from '../../store/store';
 import CryptoService from '../../services/crypto';
@@ -62,8 +59,6 @@ export default function RegisterScreen({ navigation }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Estado para a notificação de erro
   const [errorNotification, setErrorNotification] = useState({
