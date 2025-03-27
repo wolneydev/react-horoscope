@@ -58,6 +58,9 @@ const SynastryScreen = () => {
 
   const refreshUserData = async () => {
     try {
+      setIsLoading(true);
+      console.log('Iniciando verificação de atualização de número de mapas extras');
+      
       const token = await StorageService.getAccessToken();
 
       const response = await api.get(`users/me`, {
@@ -80,13 +83,15 @@ const SynastryScreen = () => {
         setExtraMapsUsed(await StorageService.getExtraMapsUsed());
         setMaxExtraMaps(await StorageService.getExtraMapsMaxNumber());
         setExtraCharts(await StorageService.getExtraCharts());
-        setIsLoading(false);
       }
       
     } catch (error) {
       console.error('Erro ao verificar dados do usuário (users/me)', error);
       return null;
+    } finally {
+      setIsLoading(false);
     }
+
   };
 
   const handleCreateChart = async () => {
@@ -287,7 +292,7 @@ const SynastryScreen = () => {
             title="Criar Novo Mapa Astral"
             onPress={handleCreateChart}
             icon="add-circle-outline"
-            disabled={!isInitialized}
+            disabled={!isInitialized || isLoading}
           />        
         </View>
 

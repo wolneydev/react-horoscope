@@ -22,10 +22,6 @@ import InfoCard from '../Components/InfoCard';
 import { COLORS, SPACING, FONTS } from '../styles/theme';
 import CityAutoComplete from '../Components/CityAutoComplete';
 
-// Exemplo de import do seu JSON de cidades
-// Ajuste o path conforme seu projeto, caso tenha:
-import citiesBr from '../data/geo/citiesBr';
-
 const CreateExtraChartScreen = () => {
   const navigation = useNavigation();
 

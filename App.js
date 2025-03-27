@@ -9,8 +9,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   StyleSheet,
   View,
-  Text,
-  Image,
   Alert,
 } from 'react-native';
 
@@ -19,7 +17,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import AstralMapScreen from './src/screens/AstralMapScreen';
 import IndexScreen from './src/screens/IndexScreen';
 import HomeScreen from './src/screens/HomeScreen';
-import HousesScreen from './src/screens/HousesScreen';
+import EntitiesScreen from './src/screens/EntitiesScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import SynastryDesambiguationScreen from './src/screens/SynastryDesambiguationScreen';
@@ -40,6 +38,7 @@ import UserInfoHeader from './src/Components/UserInfoHeader';
 import UserListScreen from './src/screens/UserListScreen'; 
 import PhotoPicker from './src/Components/PhotoPicker';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import LearningScreen from './src/screens/LearningScreen';
 enableScreens(false);
 
 const Stack = createStackNavigator();
@@ -81,8 +80,8 @@ function MainStack() {
         }}
       />
       <Stack.Screen
-        name="HousesScreen"
-        component={HousesScreen}
+        name="EntitiesScreen"
+        component={EntitiesScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -149,6 +148,11 @@ function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="LearningScreen"
+        component={LearningScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="UserListScreen"
         component={UserListScreen}
         options={{ headerShown: false }}
@@ -185,8 +189,6 @@ function SinastriaStack() {
 /** CustomDrawerContent é responsável por renderizar o conteúdo personalizado do Drawer */
 function CustomDrawerContent(props) {
   const [userData, setUserData] = useState(null);
-  const [zodiacSign, setZodiacSign] = React.useState("default");
-  const [isLoading, setIsLoading] = React.useState(false);
   const currentRoute = props.state.routeNames[props.state.index];
 
   React.useEffect(() => {
@@ -234,7 +236,7 @@ function CustomDrawerContent(props) {
           icon={({ focused }) => (
             <Icon name="home" color={currentRoute === 'Home' ? '#FFFFFF' : '#7A708E'} size={24} />
           )}
-          onPress={() => props.navigation.navigate('Home')}
+          onPress={() => props.navigation.navigate('Home', { userData: userData })}
           style={[
             styles.drawerItem,
             currentRoute === 'Home' && styles.drawerItemActive
@@ -279,21 +281,23 @@ function CustomDrawerContent(props) {
           />          
         </View>
 
+        {/* ITEM DE MENU PARA A SEÇÃO DE APRENDIZADO */}
         <DrawerItem
-          label="Casas"
+          label="Aprendizado"
           icon={({ focused }) => (
-            <Icon name="stars" color={currentRoute === 'Casas' ? '#FFFFFF' : '#7A708E'} size={24} />
+            <Icon name="book" color={currentRoute === 'Aprendizado' ? '#FFFFFF' : '#7A708E'} size={24} />
           )}
-          onPress={() => props.navigation.navigate('Casas')}
-          style={[
+          onPress={() => props.navigation.navigate('Aprendizado', { userData: userData })}
+          style={[  
             styles.drawerItem,
-            currentRoute === 'Casas' && styles.drawerItemActive
+            currentRoute === 'Aprendizado' && styles.drawerItemActive
           ]}
           labelStyle={[
             styles.drawerLabel,
-            currentRoute === 'Casas' && styles.drawerLabelActive
+            currentRoute === 'Aprendizado' && styles.drawerLabelActive
           ]}
         />
+
 
         {/* ITEM DE MENU PARA A LISTA DE USUÁRIOS */}
         <DrawerItem
@@ -437,11 +441,21 @@ function AppDrawer() {
         />
 
         <Drawer.Screen
-          name="Casas"
-          component={HousesScreen}
+          name="Entidades do Mapa Astral"
+          component={EntitiesScreen}
           options={{
             drawerIcon: ({ color, size }) => (
               <Icon name="stars" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Drawer.Screen  
+          name="Aprendizado"
+          component={LearningScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="book" color={color} size={size} />
             ),
           }}
         />

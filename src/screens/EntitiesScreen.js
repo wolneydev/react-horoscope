@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet, FlatList } from 'react-native';
+import AnimatedStars from '../Components/animation/AnimatedStars';
+import { COLORS, SPACING, FONTS } from '../styles/theme';
 
 const astros = [
   {
@@ -102,31 +104,36 @@ const AstrosList = () => (
   />
 );
 
-const HousesScreen = () => (
-  <View style={styles.container}>
-    <AstrosList />
-  </View>
-);
+const EntitiesScreen = () => {
+  const memoStars = useMemo(() => <AnimatedStars />, []);
+
+  return (
+    <View style={styles.container}>
+      {memoStars}
+      <AstrosList />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e', // Fundo mais escuro
-    paddingTop: 10,
-    paddingHorizontal: 10,
+    backgroundColor: COLORS.BACKGROUND,
+    paddingTop: SPACING.MEDIUM,
+    paddingHorizontal: SPACING.MEDIUM,
   },
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,  
-    backgroundColor: 'rgba(109, 68, 255, 0.1)', // Mantendo fundo do item
+    marginBottom: SPACING.MEDIUM,  
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderRadius: 12,
-    padding: 10,
+    padding: SPACING.MEDIUM,
   },
   textContainer: {
-    flex: 1, // Ocupa o espaço restante ao lado da imagem
-    padding: 15,
-    backgroundColor: 'rgba(109, 68, 255, 0.1)', // Fundo do texto no item
+    flex: 1,
+    padding: SPACING.LARGE,
+    backgroundColor: 'rgba(109, 68, 255, 0.1)',
     borderWidth: 1,
     borderRadius: 12,
     borderColor: 'rgba(109, 68, 255, 0.3)',
@@ -135,18 +142,17 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 20,
-    marginRight: 10, // Espaçamento entre imagem e texto
+    marginRight: SPACING.MEDIUM,
   },
   name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFD700',
+    fontSize: FONTS.SIZES.LARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    color: COLORS.HIGHLIGHT,
   },
   description: {
-    fontSize: 14,
-    color: 'white',
+    fontSize: FONTS.SIZES.SMALL,
+    color: COLORS.TEXT_PRIMARY,
   },
 });
 
-
-export default HousesScreen;
+export default EntitiesScreen;

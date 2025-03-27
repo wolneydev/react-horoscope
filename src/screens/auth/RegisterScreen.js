@@ -59,6 +59,8 @@ export default function RegisterScreen({ navigation }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Estado para a notificação de erro
   const [errorNotification, setErrorNotification] = useState({

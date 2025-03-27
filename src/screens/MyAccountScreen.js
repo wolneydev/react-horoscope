@@ -1,28 +1,21 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
-import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
-import SpinningMandala from '../Components/SpinningMandala';
 import LoadingOverlay from '../Components/LoadingOverlay';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import StorageService from '../store/store';
 import { useMemo } from 'react';
-import api from '../services/api';
-import EmailVerificationCard from '../Components/emailVerification/EmailVerificationCard';
 import EmailVerifiedCard from '../Components/emailVerification/EmailVerifiedCard';
 import ScreenMenuItemCard from '../Components/ScreenMenuItemCard';
-import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
+import UserInfoHeader from '../Components/UserInfoHeader';
 
 const MyAccountScreen = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [canResendEmail, setCanResendEmail] = useState(false);
-  const [resendCounter, setResendCounter] = useState(60);
   const counterIntervalRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [showSuccessCard, setShowSuccessCard] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
 
   const handleCardPress = async (screenName) => {
@@ -69,35 +62,8 @@ const MyAccountScreen = () => {
     };
   }, []);
 
-  const startResendCounter = () => {
-    setCanResendEmail(false);
-    setResendCounter(60);
-    
-    counterIntervalRef.current = setInterval(() => {
-      setResendCounter((prev) => {
-        if (prev <= 1) {
-          clearInterval(counterIntervalRef.current);
-          setCanResendEmail(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
   // Memoize AnimatedStars para evitar re-renderização
   const memoStars = useMemo(() => <AnimatedStars />, []);
-
-  const handleVerifyEmail = () => {
-    setShowSuccessCard(true);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start(() => {
-      fadeAnim.setValue(0);
-    });
-  };
 
   return (
     <EmailVerificationGuard>
@@ -107,21 +73,11 @@ const MyAccountScreen = () => {
         {isLoading && <LoadingOverlay message={loadingMessage} />}
         
         {/* Header com Avatar e Nome */}
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <View style={styles.avatarContainer}>
-              <Image 
-                source={require('../assets/images/sign/aries.jpg')} // Adicione uma imagem padrão
-                style={styles.avatar}
-              />
-              <View style={styles.statusDot} />
-            </View>
-            <View style={styles.userTextInfo}>
-              <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
-              <Text style={styles.userName}>{userData?.name || ''}</Text>
-            </View>
-          </View>
-        </View>
+        <UserInfoHeader 
+          userData={userData}
+          showWelcome={true}
+          style={styles.header}
+        />
 
         {/* Cards de Navegação */}
         <View style={styles.cardsContainer}>
@@ -148,49 +104,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#141527',
-  },
-  header: {
-    padding: 20,
-    paddingTop: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(109, 68, 255, 0.2)',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: '#6D44FF',
-  },
-  statusDot: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#4CAF50',
-    borderWidth: 2,
-    borderColor: '#141527',
-  },
-  userTextInfo: {
-    marginLeft: 15,
-  },
-  welcomeText: {
-    color: '#7A708E',
-    fontSize: 14,
-  },
-  userName: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   cardsContainer: {
     padding: 20,
@@ -220,41 +133,6 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: 20,
   },
-  warningCard: {
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-  },
-  warningIconContainer: {
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
-    padding: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  warningCardTitle: {
-    color: '#FFD700',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 10,
-  },
-  warningCardDescription: {
-    color: '#FFD700',
-    fontSize: 15,
-    marginTop: 5,
-    marginBottom: 10,
-    opacity: 0.8,
-  },
-  warningCardAction: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
-    marginTop: 5,
-  },
   successMailVerificationCard: {
     backgroundColor: 'rgba(76, 175, 80, 0.1)',
     borderRadius: 15,
@@ -270,36 +148,6 @@ const styles = StyleSheet.create({
   },
   disabledCard: {
     opacity: 0.5,
-  },
-  debugButton: {
-    backgroundColor: 'rgba(255, 0, 0, 0.2)',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 0, 0, 0.3)',
-  },
-  debugButtonActive: {
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    borderColor: 'rgba(255, 0, 0, 0.2)',
-  },
-  debugButtonText: {
-    color: '#FF0000',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  warningCardDisabled: {
-    opacity: 0.7,
-  },
-  warningCardActionDisabled: {
-    opacity: 0.5,
-  },
-  resendingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 5,
   },
 });
 

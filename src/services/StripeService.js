@@ -10,8 +10,9 @@ import StorageService from '../store/store';
 class StripeService {
   static async initializeStripe() {
     try {
+      console.log('initializeStripe asasasasa');
       await initStripe({
-        publishableKey: 'pk_test_51IjTO6FgY3qL9Yy9YxgyVyOGKiUC08dYI51M0Ss76qUpeyowI4phNGtbYaY1lpduXNHdg3NeoviKoHjcWjvd0YrM00ojju594Q', // Sua chave publicável do Stripe
+        publishableKey: 'pk_test_51R6Bh2GOWG1KPjIkZrGgjklojx0tDrKsQHmgPwF74bWjW9hW8UnHMaqmcNci9cg2TMRtVJXi9NPsA1b0k4HvAXVd004KyHGmoL', // Sua chave publicável do Stripe
         merchantIdentifier: 'your_merchant_identifier', // Para Apple Pay
       });
     } catch (error) {
