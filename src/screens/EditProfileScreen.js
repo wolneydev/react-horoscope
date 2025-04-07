@@ -11,27 +11,30 @@ import StorageService from '../store/store';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
+
+  // ----------------------------
+  // Estados para foto do perfil
+  // ----------------------------
   const [photo, setPhoto] = useState(null);
-
-  // Lista de tipos de contato vindos da API
-  const [contactTypes, setContactTypes] = useState([]);
-
-  // Array com todos os contatos existentes do usuário no banco
-  // ex.: [ { contact_id, user_id, contact_type_id, description }, ... ]
-  const [existingContacts, setExistingContacts] = useState([]);
-
-  // Objeto: contact_type_id -> description digitada
-  const [userContacts, setUserContacts] = useState({});
-
-  // Controle de modal para escolha de foto
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Controles para o MessageModal de feedback
+  // ----------------------------
+  // Estados de contatos
+  // ----------------------------
+  const [contactTypes, setContactTypes] = useState([]);
+  const [existingContacts, setExistingContacts] = useState([]);
+  const [userContacts, setUserContacts] = useState({});
+
+  // ----------------------------
+  // Estados para modal de mensagem
+  // ----------------------------
   const [msgModalVisible, setMsgModalVisible] = useState(false);
   const [msgModalType, setMsgModalType] = useState('info');
   const [msgModalText, setMsgModalText] = useState('');
 
-  // Exemplo de dados fixos do perfil (read-only)
+  // ----------------------------
+  // Exemplo de dados fixos do perfil
+  // ----------------------------
   const userProfile = {
     name: 'Maria Clara Silva',
     birthDate: '25/08/1995',
@@ -39,19 +42,52 @@ export default function EditProfileScreen() {
     contactMessage: 'Esses são contatos que você pode escolher compartilhar com os usuários que te solicitarem, caso aprove suas solicitações em seu menu de notificações 😊',
   };
 
+  // Na montagem do componente, buscamos:
+  // 1) A foto de perfil do usuário
+  // 2) Os contatos do usuário
   useEffect(() => {
+    fetchProfilePhoto();
     fetchContactsData();
   }, []);
 
+  // -------------------------------------
+  // Função para exibir mensagens (modal)
+  // -------------------------------------
   const showMessage = (text, type) => {
     setMsgModalText(text);
     setMsgModalType(type);
     setMsgModalVisible(true);
   };
 
-  /**
-   * Busca todos os contatos e tipos de contato do usuário
-   */
+  // -------------------------------------
+  // Busca a foto de perfil do usuário
+  // -------------------------------------
+  const fetchProfilePhoto = async () => {
+    try {
+      const token = await StorageService.getAccessToken();
+      const response = await api.get('getusersphoto/profiles', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // Supondo que a API está retornando algo como "\"https://url...\""
+      let photoUrl = response.data;
+      if (typeof photoUrl === 'string') {
+        // Remove aspas duplas no início e fim da string
+        photoUrl = photoUrl.replace(/^"|"$/g, '');
+      }
+  
+      if (photoUrl) {
+        setPhoto({ uri: photoUrl });
+      }
+    } catch (error) {
+      console.log('Erro ao buscar foto de perfil:', error);
+      showMessage('Não foi possível carregar a foto de perfil.', 'danger');
+    }
+  };
+
+  // -------------------------------------
+  // Busca os contatos do usuário
+  // -------------------------------------
   const fetchContactsData = async () => {
     try {
       const token = await StorageService.getAccessToken();
@@ -78,11 +114,9 @@ export default function EditProfileScreen() {
     }
   };
 
-  /**
-   * Atualiza o estado local quando o usuário digita em um TextInput.
-   * @param {number} contactTypeId
-   * @param {string} value
-   */
+  // -------------------------------------
+  // Atualiza valor do contato digitado
+  // -------------------------------------
   const handleChangeContact = (contactTypeId, value) => {
     setUserContacts((prev) => ({
       ...prev,
@@ -90,9 +124,9 @@ export default function EditProfileScreen() {
     }));
   };
 
-  /**
-   * Insert ou update para cada type
-   */
+  // -------------------------------------
+  // Salvar (insert/update) contatos
+  // -------------------------------------
   const handleSave = async () => {
     try {
       const token = await StorageService.getAccessToken();
@@ -139,9 +173,9 @@ export default function EditProfileScreen() {
     }
   };
 
-  /**
-   * Exclui (lógica) um contato existente, setando state = false no back-end
-   */
+  // -------------------------------------
+  // Excluir um contato existente
+  // -------------------------------------
   const handleDeleteContact = async (contact) => {
     try {
       const token = await StorageService.getAccessToken();
@@ -164,11 +198,9 @@ export default function EditProfileScreen() {
     }
   };
 
-  /**
-   * Renderiza o campo de input:
-   * - Se for type.id === 1 ou 2 => campo com máscara de telefone
-   * - Caso contrário => TextInput normal
-   */
+  // -------------------------------------
+  // Renderiza o campo de input, com máscara (WhatsApp/Telegram) ou texto normal
+  // -------------------------------------
   const renderContactInput = (type) => {
     const value = userContacts[type.id] || '';
     const existing = existingContacts.find((c) => c.contact_type_id === type.id);
@@ -215,11 +247,11 @@ export default function EditProfileScreen() {
         <View style={styles.userCard}>
           {/* Avatar + Botão de foto */}
           <View style={styles.avatarContainer}>
-            {photo ? (
-              // Se já tem foto, mostre
+            {photo && photo.uri ? (
+              // Se já tem URL da foto, mostra a <Image>
               <Image source={{ uri: photo.uri }} style={styles.avatarImage} />
             ) : (
-              // Avatar circular sem foto
+              // Caso não tenha foto, mostra o placeholder
               <View style={styles.avatarPlaceholder}>
                 <Icon name="user" size={40} color="#666" />
               </View>
@@ -267,7 +299,6 @@ export default function EditProfileScreen() {
                 color={defineIconColor(type.name)}
                 style={styles.icon}
               />
-              {/* Aqui, decidimos se renderizar Mask ou TextInput normal */}
               {renderContactInput(type)}
 
               {/* Ícone de lixeira se já existe */}
@@ -292,7 +323,7 @@ export default function EditProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Modal para escolher foto */}
+      {/* Modal para escolher foto (PhotoPicker) */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -357,11 +388,17 @@ function defineIconColor(contactName) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#141527' },
-  content: { flex: 1, padding: 20 },
-  backButton: { marginBottom: 20 },
-
-  // Card do usuário
+  container: {
+    flex: 1,
+    backgroundColor: '#141527',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  backButton: {
+    marginBottom: 20,
+  },
   userCard: {
     borderWidth: 1,
     borderColor: '#6D44FF', // borda roxa
@@ -402,20 +439,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-
-  photoSection: { alignItems: 'center', marginBottom: 20, display: 'none' }, 
-  // OBS: "photoSection" virou obsoleto, pois movemos a lógica de foto pro userCard, 
-  // mas caso queira remover, fique à vontade.
-
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
   },
-  field: { flex: 1, marginHorizontal: 5 },
-  label: { color: '#FFFFFF', fontWeight: 'bold', marginBottom: 5 },
-  readOnly: { color: '#bbb', fontSize: 16 },
-
+  field: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  label: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  readOnly: {
+    color: '#bbb',
+    fontSize: 16,
+  },
   sectionTitle: {
     color: '#FFFFFF',
     fontSize: 16,
@@ -427,7 +468,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 8,
   },
-  icon: { marginRight: 10 },
+  icon: {
+    marginRight: 10,
+  },
   input: {
     flex: 1,
     borderBottomWidth: 1,
@@ -448,8 +491,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 20,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -469,6 +515,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  modalButtonText: { color: '#fff', fontSize: 16 },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
 });
-
