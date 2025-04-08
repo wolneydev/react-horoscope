@@ -44,6 +44,7 @@ const MyAccountScreen = () => {
       try {
         setIsLoading(true);
         const savedUserData = await StorageService.getUserData();
+        console.log('savedUserData', savedUserData);
         setUserData(savedUserData);
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
@@ -85,6 +86,14 @@ const MyAccountScreen = () => {
           {/* Email Verificado */}
           <EmailVerifiedCard/>
                     
+          {/* Personalizar Perfil */}
+          <ScreenMenuItemCard 
+            title="Personalizar Perfil"
+            description="Personalize seu perfil para poder se conectar com outros usuários."
+            icon="arrow-forward"
+            onPress={() => handleCardPress('Personalizar Perfil')}
+          />
+
           {/* Minhas Compras */}
           <ScreenMenuItemCard 
             title="Minhas Compras"

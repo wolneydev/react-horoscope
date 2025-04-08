@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
-
 import { TextInputMask } from 'react-native-masked-text'; // <--- biblioteca de máscara
 import PhotoPicker from '../Components/PhotoPicker';
 import MessageModal from '../Components/MessageModal';
 import api from '../services/api';
 import StorageService from '../store/store';
+import AnimatedStars from '../Components/animation/AnimatedStars';
+import LoadingOverlay from '../Components/LoadingOverlay';
+import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -31,6 +33,16 @@ export default function EditProfileScreen() {
   const [msgModalVisible, setMsgModalVisible] = useState(false);
   const [msgModalType, setMsgModalType] = useState('info');
   const [msgModalText, setMsgModalText] = useState('');
+  
+  // ----------------------------
+  // Estados para dados do usuário
+  // ----------------------------
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Carregando dados do usuário...');
+  
+  // Memoize AnimatedStars para evitar re-renderização
+  const memoStars = useMemo(() => <AnimatedStars />, []);
 
   // ----------------------------
   // Exemplo de dados fixos do perfil
@@ -46,6 +58,22 @@ export default function EditProfileScreen() {
   // 1) A foto de perfil do usuário
   // 2) Os contatos do usuário
   useEffect(() => {
+
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
+        console.log('fetchUserData');
+        const savedUserData = await StorageService.getUserData();
+        console.log('savedUserData', savedUserData);
+        setUserData(savedUserData);
+        console.log('userData', userData);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUserData();
     fetchProfilePhoto();
     fetchContactsData();
   }, []);
@@ -91,6 +119,7 @@ export default function EditProfileScreen() {
   const fetchContactsData = async () => {
     try {
       const token = await StorageService.getAccessToken();
+      console.log('token', token);
       const response = await api.get('getcontacstsuser', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -235,123 +264,128 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    <EmailVerificationGuard>
+      <ScrollView style={styles.container}>
+        {memoStars}
+        {isLoading && <LoadingOverlay message={loadingMessage} />}
 
-        {/* Botão Voltar */}
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-left" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        {/* Card com infos do usuário (nome, data de nascimento, signo) */}
-        <View style={styles.userCard}>
-          {/* Avatar + Botão de foto */}
-          <View style={styles.avatarContainer}>
-            {photo && photo.uri ? (
-              // Se já tem URL da foto, mostra a <Image>
-              <Image source={{ uri: photo.uri }} style={styles.avatarImage} />
-            ) : (
-              // Caso não tenha foto, mostra o placeholder
-              <View style={styles.avatarPlaceholder}>
-                <Icon name="user" size={40} color="#666" />
-              </View>
-            )}
-
-            {/* Botão de editar foto (ícone de lápis) */}
-            <TouchableOpacity
-              style={styles.editPhotoButton}
-              onPress={() => setModalVisible(true)}
-            >
-              <Icon
-                name="edit-2"
-                size={16}
-                color="#fff"
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Infos do usuário (somente leitura) */}
-          <Text style={styles.userName}>{userProfile.name}</Text>
-
-          <View style={styles.infoRow}>
-            <View style={styles.field}>
-              <Text style={styles.label}>Data de nascimento</Text>
-              <Text style={styles.readOnly}>{userProfile.birthDate}</Text>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Signo</Text>
-              <Text style={styles.readOnly}>{userProfile.zodiacSign}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Seção de contatos */}
-        <Text style={styles.sectionTitle}>Contatos</Text>
-
-        {contactTypes.map((type) => {
-          const existing = existingContacts.find((c) => c.contact_type_id === type.id);
-          return (
-            <View key={type.id} style={styles.contactRow}>
-              <Icon
-                name={defineIconName(type.name)}
-                size={20}
-                color={defineIconColor(type.name)}
-                style={styles.icon}
-              />
-              {renderContactInput(type)}
-
-              {/* Ícone de lixeira se já existe */}
-              {existing && (
-                <TouchableOpacity onPress={() => handleDeleteContact(existing)}>
-                  <Icon name="trash-2" size={20} color="#FF4747" />
-                </TouchableOpacity>
+        <View style={styles.content}>
+          {/* Card com infos do usuário (nome, data de nascimento, signo) */}
+          <View style={styles.userCard}>
+            {/* Avatar + Botão de foto */}
+            <View style={styles.avatarContainer}>
+              {photo && photo.uri ? (
+                // Se já tem URL da foto, mostra a <Image>
+                <Image source={{ uri: photo.uri }} style={styles.avatarImage} />
+              ) : (
+                // Caso não tenha foto, mostra o placeholder
+                <View style={styles.avatarPlaceholder}>
+                  <Icon name="user" size={40} color="#666" />
+                </View>
               )}
+
+              {/* Botão de editar foto (ícone de lápis) */}
+              <TouchableOpacity
+                style={styles.editPhotoButton}
+                onPress={() => setModalVisible(true)}
+              >
+                <Icon
+                  name="edit-2"
+                  size={16}
+                  color="#fff"
+                />
+              </TouchableOpacity>
             </View>
-          );
-        })}
 
-        {/* Mensagem padrão */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Você poderá selecionar um desses contatos para compartilhar no menu notificações</Text>
-          <Text style={styles.readOnlyMessage}>{userProfile.contactMessage}</Text>
-        </View>
+            {/* Infos do usuário (somente leitura) */}
+            {userData ? (
+              <>
+                <Text style={styles.userName}>{userData.name}</Text>
 
-        {/* Botão para Salvar */}
-        <TouchableOpacity style={styles.button} onPress={handleSave}>
-          <Text style={styles.buttonText}>Salvar contatos</Text>
-        </TouchableOpacity>
-      </View>
+                <View style={styles.infoRow}>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>Data de nascimento</Text>
+                    <Text style={styles.readOnly}>{userData.birth_date}</Text>
+                  </View>
 
-      {/* Modal para escolher foto (PhotoPicker) */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <PhotoPicker
-              photo={photo}
-              setPhoto={(newPhoto) => {
-                setPhoto(newPhoto);
-                setModalVisible(false);
-              }}
-            />
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Fechar</Text>
-            </TouchableOpacity>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>Signo</Text>
+                    <Text style={styles.readOnly}>{userData.email_verified_at}</Text>
+                  </View>
+                </View>
+              </>
+            ) : (
+              <Text style={styles.userName}>Carregando dados...</Text>
+            )}
           </View>
-        </View>
-      </Modal>
 
-      {/* Modal de mensagens (sucesso/erro) */}
-      <MessageModal
-        visible={msgModalVisible}
-        onClose={() => setMsgModalVisible(false)}
-        message={msgModalText}
-        type={msgModalType}
-      />
-    </ScrollView>
+          {/* Seção de contatos */}
+          <Text style={styles.sectionTitle}>Contatos</Text>
+
+          {contactTypes.map((type) => {
+            const existing = existingContacts.find((c) => c.contact_type_id === type.id);
+            return (
+              <View key={type.id} style={styles.contactRow}>
+                <Icon
+                  name={defineIconName(type.name)}
+                  size={20}
+                  color={defineIconColor(type.name)}
+                  style={styles.icon}
+                />
+                {renderContactInput(type)}
+
+                {/* Ícone de lixeira se já existe */}
+                {existing && (
+                  <TouchableOpacity onPress={() => handleDeleteContact(existing)}>
+                    <Icon name="trash-2" size={20} color="#FF4747" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          })}
+
+          {/* Mensagem padrão */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Você poderá selecionar um desses contatos para compartilhar no menu notificações</Text>
+            <Text style={styles.readOnlyMessage}>{userProfile.contactMessage}</Text>
+          </View>
+
+          {/* Botão para Salvar */}
+          <TouchableOpacity style={styles.button} onPress={handleSave}>
+            <Text style={styles.buttonText}>Salvar contatos</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modal para escolher foto (PhotoPicker) */}
+        <Modal visible={modalVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <PhotoPicker
+                photo={photo}
+                setPhoto={(newPhoto) => {
+                  setPhoto(newPhoto);
+                  setModalVisible(false);
+                }}
+              />
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal de mensagens (sucesso/erro) */}
+        <MessageModal
+          visible={msgModalVisible}
+          onClose={() => setMsgModalVisible(false)}
+          message={msgModalText}
+          type={msgModalType}
+        />
+      </ScrollView>
+    </EmailVerificationGuard>
   );
 }
 

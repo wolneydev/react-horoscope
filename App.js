@@ -297,15 +297,7 @@ function CustomDrawerContent(props) {
             currentRoute === 'Aprendizado' && styles.drawerLabelActive
           ]}
         />
-        <DrawerItem
-          label="Meu perfil social"
-          icon={({ focused }) => (
-            <Icon name="account-circle" color={currentRoute === 'EditProfileScreen' ? '#FFFFFF' : '#7A708E'} size={24} />
-          )}
-          onPress={() => props.navigation.navigate('EditProfileScreen')}
-          style={[styles.drawerItem, currentRoute === 'EditProfileScreen' && styles.drawerItemActive]}
-          labelStyle={[styles.drawerLabel, currentRoute === 'EditProfileScreen' && styles.drawerLabelActive]}
-        />
+
         {/* ITEM DE MENU PARA A LISTA DE USUÁRIOS */}
         <DrawerItem
           label="Social"
@@ -466,6 +458,16 @@ function AppDrawer() {
             ),
           }}
         />
+
+        <Drawer.Screen
+          name="Personalizar Perfil"
+          component={EditProfileScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="account-circle" color={color} size={size} />
+            ),
+          }}
+        />        
 
         <Drawer.Screen
           name="Minha Conta"

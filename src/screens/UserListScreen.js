@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-
 import api from '../services/api';
 import StorageService from '../store/store';
+import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 
 const BASE_IMAGE_URL = 'https://api.astralmatch.life/storage/';
 
@@ -90,144 +90,146 @@ const UserListScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        {/* Cartão do usuário principal */}
-        <TouchableOpacity
-          style={styles.infoCard}
-          onPress={() => navigation.navigate('EditProfileScreen')}
-        >
-          <View style={styles.infoCardHeader}>
-            {mainUserPhoto ? (
-              <Image
-                source={{ uri: `${BASE_IMAGE_URL}${mainUserPhoto}` }}
-                style={styles.infoCardPhoto}
-              />
-            ) : (
-              <Icon name="person" size={60} color="#fff" />
-            )}
-            <View style={styles.titleContainer}>
-              <Text style={styles.infoCardTitle}>{mainUserName || 'Social'}</Text>
+    <EmailVerificationGuard>
+      <View style={styles.container}>
+        <View style={styles.content}>
+          {/* Cartão do usuário principal */}
+          <TouchableOpacity
+            style={styles.infoCard}
+            onPress={() => navigation.navigate('EditProfileScreen')}
+          >
+            <View style={styles.infoCardHeader}>
+              {mainUserPhoto ? (
+                <Image
+                  source={{ uri: `${BASE_IMAGE_URL}${mainUserPhoto}` }}
+                  style={styles.infoCardPhoto}
+                />
+              ) : (
+                <Icon name="person" size={60} color="#fff" />
+              )}
+              <View style={styles.titleContainer}>
+                <Text style={styles.infoCardTitle}>{mainUserName || 'Social'}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.changePhotoButton}
+                onPress={() => navigation.navigate('EditProfileScreen')}
+              >
+                <Icon name="edit" size={24} color="#fff" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.changePhotoButton}
-              onPress={() => navigation.navigate('EditProfileScreen')}
-            >
-              <Icon name="edit" size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
 
-          <Text style={styles.infoCardDescription}>
-            Explicação da conexão astral: Combinação em relação à compatibilidade de signos
-            do mapa astral, mas não é uma Combinação da Sinastria (análise mais profunda).
-          </Text>
-        </TouchableOpacity>
+            <Text style={styles.infoCardDescription}>
+              Explicação da conexão astral: Combinação em relação à compatibilidade de signos
+              do mapa astral, mas não é uma Combinação da Sinastria (análise mais profunda).
+            </Text>
+          </TouchableOpacity>
 
-        {isLoading ? (
-          <ActivityIndicator color="#6D44FF" size="large" />
-        ) : (
-          <>
-            {/* Cria uma “tela cheia” para cada compatibilidade */}
-            {compatibilidades.map((user, index) => {
-              const isOpen = openWindows[index];
-              if (!isOpen) return null;
+          {isLoading ? (
+            <ActivityIndicator color="#6D44FF" size="large" />
+          ) : (
+            <>
+              {/* Cria uma “tela cheia” para cada compatibilidade */}
+              {compatibilidades.map((user, index) => {
+                const isOpen = openWindows[index];
+                if (!isOpen) return null;
 
-              const compatibilidadeFormatada = user.compatibilidade_media?.toFixed(2);
+                const compatibilidadeFormatada = user.compatibilidade_media?.toFixed(2);
 
-              return (
-                <View key={index} style={styles.fullScreenOverlay}>
-                  {/* Conteúdo do “modal” em tela cheia */}
-                  <View style={styles.fullScreenContainer}>
-                    {/* Metade superior -> Foto expandida */}
-                    <View style={styles.topHalf}>
-                      {user.user_photo_url ? (
-                        <Image
-                          source={{ uri: `${BASE_IMAGE_URL}${user.user_photo_url}` }}
-                          style={styles.topImage}
-                        />
-                      ) : (
-                        <View style={styles.fallbackContainer}>
-                          <Icon name="person" size={48} color="#6D44FF" />
-                          <Text style={{ color: '#fff', marginTop: 6 }}>
-                            Sem foto
+                return (
+                  <View key={index} style={styles.fullScreenOverlay}>
+                    {/* Conteúdo do “modal” em tela cheia */}
+                    <View style={styles.fullScreenContainer}>
+                      {/* Metade superior -> Foto expandida */}
+                      <View style={styles.topHalf}>
+                        {user.user_photo_url ? (
+                          <Image
+                            source={{ uri: `${BASE_IMAGE_URL}${user.user_photo_url}` }}
+                            style={styles.topImage}
+                          />
+                        ) : (
+                          <View style={styles.fallbackContainer}>
+                            <Icon name="person" size={48} color="#6D44FF" />
+                            <Text style={{ color: '#fff', marginTop: 6 }}>
+                              Sem foto
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Metade inferior -> ScrollView com infos e botões */}
+                      <View style={styles.bottomHalf}>
+                        <ScrollView contentContainerStyle={styles.bottomScroll}>
+                          <Text style={styles.userModalName}>{user.nome_usuario}</Text>
+
+                          <Text
+                            style={[
+                              styles.userModalCompatibility,
+                              { color: getCompatibilityColor(user.compatibilidade_media) }
+                            ]}
+                          >
+                            Conexão Astral: {compatibilidadeFormatada}%
                           </Text>
-                        </View>
-                      )}
-                    </View>
 
-                    {/* Metade inferior -> ScrollView com infos e botões */}
-                    <View style={styles.bottomHalf}>
-                      <ScrollView contentContainerStyle={styles.bottomScroll}>
-                        <Text style={styles.userModalName}>{user.nome_usuario}</Text>
+                          <Text style={styles.userModalDetails}>
+                            Aqui você pode colocar detalhes adicionais do usuário{' '}
+                            {user.nome_usuario}, como descrição, signo, ascendente, etc.
+                          </Text>
 
-                        <Text
-                          style={[
-                            styles.userModalCompatibility,
-                            { color: getCompatibilityColor(user.compatibilidade_media) }
-                          ]}
-                        >
-                          Conexão Astral: {compatibilidadeFormatada}%
-                        </Text>
+                          <View style={styles.buttonsRow}>
+                            <TouchableOpacity
+                              style={styles.roundButton}
+                              onPress={() => closeWindow(index)}
+                            >
+                              <Icon name="close" size={24} color="#fff" />
+                            </TouchableOpacity>
 
-                        <Text style={styles.userModalDetails}>
-                          Aqui você pode colocar detalhes adicionais do usuário{' '}
-                          {user.nome_usuario}, como descrição, signo, ascendente, etc.
-                        </Text>
+                            <View style={{ width: 40 }} />
 
-                        <View style={styles.buttonsRow}>
-                          <TouchableOpacity
-                            style={styles.roundButton}
-                            onPress={() => closeWindow(index)}
-                          >
-                            <Icon name="close" size={24} color="#fff" />
-                          </TouchableOpacity>
-
-                          <View style={{ width: 40 }} />
-
-                          <TouchableOpacity
-                            style={styles.roundButton}
-                            onPress={() => setContactRequestFor(index)}
-                          >
-                            <Icon name="phone" size={24} color="#fff" />
-                          </TouchableOpacity>
-                        </View>
-                      </ScrollView>
-                    </View>
-                  </View>
-
-                  {/* Janela de confirmação para solicitação de contato */}
-                  {contactRequestFor === index && (
-                    <View style={styles.confirmOverlay}>
-                      <View style={styles.confirmContainer}>
-                        <Text style={styles.confirmTitle}>Solicitar Contato</Text>
-                        <Text style={styles.confirmText}>
-                          Deseja solicitar o contato de {user.nome_usuario}?
-                        </Text>
-
-                        <View style={styles.confirmButtons}>
-                          <TouchableOpacity
-                            style={[styles.modalButton, { marginRight: 10 }]}
-                            onPress={() => setContactRequestFor(null)}
-                          >
-                            <Text style={styles.modalButtonText}>Cancelar</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.modalButton}
-                            onPress={() => confirmContactRequest(index)}
-                          >
-                            <Text style={styles.modalButtonText}>Enviar</Text>
-                          </TouchableOpacity>
-                        </View>
+                            <TouchableOpacity
+                              style={styles.roundButton}
+                              onPress={() => setContactRequestFor(index)}
+                            >
+                              <Icon name="phone" size={24} color="#fff" />
+                            </TouchableOpacity>
+                          </View>
+                        </ScrollView>
                       </View>
                     </View>
-                  )}
-                </View>
-              );
-            })}
-          </>
-        )}
+
+                    {/* Janela de confirmação para solicitação de contato */}
+                    {contactRequestFor === index && (
+                      <View style={styles.confirmOverlay}>
+                        <View style={styles.confirmContainer}>
+                          <Text style={styles.confirmTitle}>Solicitar Contato</Text>
+                          <Text style={styles.confirmText}>
+                            Deseja solicitar o contato de {user.nome_usuario}?
+                          </Text>
+
+                          <View style={styles.confirmButtons}>
+                            <TouchableOpacity
+                              style={[styles.modalButton, { marginRight: 10 }]}
+                              onPress={() => setContactRequestFor(null)}
+                            >
+                              <Text style={styles.modalButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.modalButton}
+                              onPress={() => confirmContactRequest(index)}
+                            >
+                              <Text style={styles.modalButtonText}>Enviar</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </>
+          )}
+        </View>
       </View>
-    </View>
+    </EmailVerificationGuard>
   );
 };
 
