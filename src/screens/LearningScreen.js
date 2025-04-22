@@ -39,7 +39,7 @@ const LearningScreen = () => {
           {/* Cards de Navegação */}
           <View style={styles.cardsContainer}>
 
-            {/* Minhas Compras */}
+            {/* Entidades do Mapa Astral */}
             <ScreenMenuItemCard 
               title="Entidades do Mapa Astral"
               description="Veja os detalhes das entidades do mapa astral."

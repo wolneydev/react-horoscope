@@ -205,6 +205,26 @@ class StorageService {
       return 0;
     }
   }
+
+  async getSocialOnboarding() {
+    try {
+      const userData = await this.getUserData();
+      return userData.social_onboarding;
+    } catch (error) {
+      console.error('Erro ao obter onboarding social:', error);
+      return false;
+    }
+  }
+
+  async setSocialOnboarding(completed) {
+    try {
+      const userData = await this.getUserData();
+      userData.social_onboarding = completed;
+      await this.saveUserData(userData);
+    } catch (error) {
+      console.error('Erro ao definir onboarding social:', error);
+    }
+  }
 }
 
 export default new StorageService();

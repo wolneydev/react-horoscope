@@ -123,6 +123,11 @@ export default function LoginScreen({ navigation }) {
           email_verified_at: data.email_verified_at,
           encryptedPassword,
           extra_maps_max_number: data.extra_maps_max_number,
+          has_profile_photo: data.has_profile_photo,
+          profile_photo_url: data.profile_photo_url,
+          has_contacts: data.has_contacts,
+          contacts: data.contacts,
+          sign: data.sun.sign.name,
           birthData: {
             city: data.birth_city,
             year: data.birth_year,

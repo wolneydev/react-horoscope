@@ -118,7 +118,7 @@ export default function PhotoPicker() {
         name: 'minha_foto.jpg',
       });
       
-      const response = await api.post('usersphoto', formData, {
+      const response = await api.post('users/photos/upload-profile-photo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
@@ -126,7 +126,15 @@ export default function PhotoPicker() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert('Sucesso', 'Imagem enviada com sucesso!');
+        Alert.alert('Sucesso', 'Imagem de perfil atualizada com sucesso!');
+        console.log('response', response.data);
+
+        // atualiza o storage com o has_profile_photo e o profile_photo_url
+        const userData = await StorageService.getUserData();
+        userData.has_profile_photo = true;
+        userData.profile_photo_url = response.data.data;
+        await StorageService.saveUserData(userData);
+        
       } else {
         Alert.alert('Erro', 'Falha ao enviar a imagem.');
         console.error('Resposta do servidor:', response.data);
