@@ -12,6 +12,7 @@ import LoadingOverlay from '../Components/LoadingOverlay';
 import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 import { formatNumber } from '../utils/helpers';
+import CustomButton from '../Components/CustomButton';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -73,13 +74,8 @@ const EditProfileScreen = () => {
   // 1) A foto de perfil do usuário
   // 2) Os contatos do usuário
   useEffect(() => {
-
     setShowInfoPopup(true);
-
-    
-
     fetchUserData();
-
     // busca os contatos do usuário
     fetchContactsData();
   }, []);
@@ -100,6 +96,9 @@ const EditProfileScreen = () => {
     try {
       setIsLoading(true);
       const savedUserData = await StorageService.getUserData();
+
+      const token = await StorageService.getAccessToken();
+      console.log('token', token);
 
       console.log('savedUserData', savedUserData);
       if (savedUserData.has_profile_photo) {
@@ -124,7 +123,7 @@ const EditProfileScreen = () => {
     try {
       const token = await StorageService.getAccessToken();
       console.log('token', token);
-      const response = await api.get('getcontacstsuser', {
+      const response = await api.get('users/contacts/', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -196,7 +195,8 @@ const EditProfileScreen = () => {
             contact_type_id: existing.contact_type_id,
             description: typedDescription,
           };
-          await api.put('contactsuser', itemToUpdate, {
+          console.log('itemToUpdate', itemToUpdate);
+          await api.put('users/contacts/contact', itemToUpdate, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -210,7 +210,8 @@ const EditProfileScreen = () => {
                 description: typedDescription,
               },
             ];
-            await api.post('contactsuser', itemToCreate, {
+            console.log('itemToCreate', itemToCreate);
+            await api.post('users/contacts/contact', itemToCreate, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -239,7 +240,8 @@ const EditProfileScreen = () => {
         description: contact.description,
       };
 
-      await api.delete('contactsuser', {
+      console.log('payload', payload);
+      await api.delete('users/contacts/contact', {
         headers: { Authorization: `Bearer ${token}` },
         data: payload,
       });
@@ -310,231 +312,239 @@ const EditProfileScreen = () => {
     }
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = async () => {
     setModalVisible(false);
-    fetchProfilePhoto();
+    
+    // Atualiza a foto forçando o refresh da URL
+    const userData = await StorageService.getUserData();
+    if (userData?.profile_photo_url) {
+      // Adiciona um query param para forçar o refresh
+      const refreshedUrl = userData.profile_photo_url + '?t=' + Date.now();
+      setPhoto({ uri: refreshedUrl });
+    }
   };
 
   return (
     <EmailVerificationGuard>
-      <ScrollView style={styles.container}>
-        {memoStars}
-        {isLoading && <LoadingOverlay message={loadingMessage} />}
+      <View style={styles.containerWithButton}>
+        <ScrollView style={styles.container}>
+          {memoStars}
+          {isLoading && <LoadingOverlay message={loadingMessage} />}
 
-        <View style={styles.content}>
-          
-          {/* Card do Perfil */}
-          <TouchableOpacity 
-            style={styles.userCard}
-            onPress={() => setIsExpanded(!isExpanded)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.userCardHeader}>
-              <View style={styles.avatarAndInfo}>
-                <View style={styles.avatarContainer}>
-                  {photo && photo.uri ? (
-                    <Image source={{ uri: photo.uri }} style={styles.avatarImage} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Icon name="user" size={40} color={COLORS.TEXT_TERTIARY} />
-                    </View>
-                  )}
-                  <TouchableOpacity
-                    style={styles.editPhotoButton}
-                    onPress={() => setModalVisible(true)}
-                  >
-                    <Icon name="edit" size={16} color={COLORS.TEXT_PRIMARY} />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.headerInfo}>
-                  <Text style={styles.userName}>{userData?.name || 'Seu Nome'}</Text>
-                  <Text style={styles.userSubtitle}>Ver detalhes do perfil</Text>
-                </View>
-              </View>
-              <Icon 
-                name={isExpanded ? "chevron-up" : "chevron-down"} 
-                size={24} 
-                color={COLORS.PRIMARY} 
-              />
-            </View>
-
-            {isExpanded && (
-              <View style={styles.userCardContent}>
-                {[
-                  { label: 'Nome', value: userData?.name },
-                  { label: 'Signo', value: userData?.sign },
-                  { label: 'Nascimento', value: userData?.birthData.day + '/' + userData?.birthData.month + '/' + userData?.birthData.year + ' às ' + formatNumber(userData?.birthData.hour) + ':' + formatNumber(userData?.birthData.minute) },
-                  { label: 'Cidade natal', value: userData?.birthData.city },
-                ].map((item, index) => (
-                  <View key={index} style={styles.attributeRow}>
-                    <Text style={styles.attributeLabel}>{item.label}</Text>
-                    <Text style={styles.attributeValue}>{item.value || '-'}</Text>
+          <View style={styles.content}>
+            
+            {/* Card do Perfil */}
+            <TouchableOpacity 
+              style={styles.userCard}
+              onPress={() => setIsExpanded(!isExpanded)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.userCardHeader}>
+                <View style={styles.avatarAndInfo}>
+                  <View style={styles.avatarContainer}>
+                    {photo && photo.uri ? (
+                      <Image source={{ uri: photo.uri }} style={styles.avatarImage} />
+                    ) : (
+                      <View style={styles.avatarPlaceholder}>
+                        <Icon name="user" size={40} color={COLORS.TEXT_TERTIARY} />
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={styles.editPhotoButton}
+                      onPress={() => setModalVisible(true)}
+                    >
+                      <Icon name="edit" size={16} color={COLORS.TEXT_PRIMARY} />
+                    </TouchableOpacity>
                   </View>
-                ))}
-              </View>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.warningContainer}>
-            {!profileValidation.isValid ? (
-              <View style={[styles.warningCard, styles.warningCardError]}>
-                <View style={styles.warningIconContainer}>
-                  <Icon name="warning" size={24} color={COLORS.WARNING} />
-                </View>
-                <View style={styles.warningContent}>
-                  {profileValidation.messages.photo && (
-                    <View style={styles.warningItem}>
-                      <Text style={styles.warningCardDescription}>
-                        {profileValidation.messages.photo}
-                      </Text>
-                    </View>
-                  )}
-                  {profileValidation.messages.contacts && (
-                    <View style={styles.warningItem}>
-                      <Text style={styles.warningCardDescription}>
-                        {profileValidation.messages.contacts}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            ) : (
-              <View style={[styles.warningCard, styles.warningCardSuccess]}>
-                <View style={styles.warningIconContainer}>
-                  <Icon name="check-circle" size={24} color={COLORS.SUCCESS} />
-                </View>
-                <View style={styles.warningContent}>
-                  <Text style={styles.warningCardTitle}>Perfil completo!</Text>
-                  <Text style={styles.warningCardDescription}>
-                    Seu perfil está pronto para receber conexões
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* Seção de Contatos */}
-          <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Contatos</Text>
-              <TouchableOpacity 
-                onPress={() => setShowInfoPopup(true)}
-                style={styles.infoButton}
-              >
-                <Icon name="info" size={20} color={COLORS.PRIMARY} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Lista de contatos */}
-            {contactTypes.map((type) => {
-              const existing = existingContacts.find((c) => c.contact_type_id === type.id);
-              return (
-                <View key={type.id} style={styles.contactRow}>
-                  <View style={styles.contactTypeContainer}>
-                    <Icon
-                      name={defineIconName(type.name)}
-                      size={24}
-                      color={defineIconColor(type.name)}
-                      style={styles.icon}
-                    />
-                    <Text style={styles.contactTypeName}>{type.name}</Text>
+                  <View style={styles.headerInfo}>
+                    <Text style={styles.userName}>{userData?.name || 'Seu Nome'}</Text>
+                    <Text style={styles.userSubtitle}>Ver detalhes do perfil</Text>
                   </View>
-                  
-                  <View style={styles.inputContainer}>
-                    {renderContactInput(type)}
-                    
-                    {existing && (
-                      <TouchableOpacity 
-                        style={styles.deleteButton}
-                        onPress={() => handleDeleteContact(existing)}
-                      >
-                        <Icon name="trash" size={20} color={COLORS.ERROR} />
-                      </TouchableOpacity>
+                </View>
+                <Icon 
+                  name={isExpanded ? "chevron-up" : "chevron-down"} 
+                  size={24} 
+                  color={COLORS.PRIMARY} 
+                />
+              </View>
+
+              {isExpanded && (
+                <View style={styles.userCardContent}>
+                  {[
+                    { label: 'Nome', value: userData?.name },
+                    { label: 'Signo', value: userData?.sign },
+                    { label: 'Nascimento', value: userData?.birthData.day + '/' + userData?.birthData.month + '/' + userData?.birthData.year + ' às ' + formatNumber(userData?.birthData.hour) + ':' + formatNumber(userData?.birthData.minute) },
+                    { label: 'Cidade natal', value: userData?.birthData.city },
+                  ].map((item, index) => (
+                    <View key={index} style={styles.attributeRow}>
+                      <Text style={styles.attributeLabel}>{item.label}</Text>
+                      <Text style={styles.attributeValue}>{item.value || '-'}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.warningContainer}>
+              {!profileValidation.isValid ? (
+                <View style={[styles.warningCard, styles.warningCardError]}>
+                  <View style={styles.warningIconContainer}>
+                    <Icon name="warning" size={24} color={COLORS.WARNING} />
+                  </View>
+                  <View style={styles.warningContent}>
+                    {profileValidation.messages.photo && (
+                      <View style={styles.warningItem}>
+                        <Text style={styles.warningCardDescription}>
+                          {profileValidation.messages.photo}
+                        </Text>
+                      </View>
+                    )}
+                    {profileValidation.messages.contacts && (
+                      <View style={styles.warningItem}>
+                        <Text style={styles.warningCardDescription}>
+                          {profileValidation.messages.contacts}
+                        </Text>
+                      </View>
                     )}
                   </View>
                 </View>
-              );
-            })}
-          </View>
+              ) : (
+                <View style={[styles.warningCard, styles.warningCardSuccess]}>
+                  <View style={styles.warningIconContainer}>
+                    <Icon name="check-circle" size={24} color={COLORS.SUCCESS} />
+                  </View>
+                  <View style={styles.warningContent}>
+                    <Text style={styles.warningCardTitle}>Perfil completo!</Text>
+                    <Text style={styles.warningCardDescription}>
+                      Seu perfil está pronto para receber conexões
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
-          <TouchableOpacity 
-            style={styles.saveButton} 
+            {/* Seção de Contatos */}
+            <View>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Contatos</Text>
+                <TouchableOpacity 
+                  onPress={() => setShowInfoPopup(true)}
+                  style={styles.infoButton}
+                >
+                  <Icon name="info" size={20} color={COLORS.PRIMARY} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Lista de contatos */}
+              {contactTypes.map((type) => {
+                const existing = existingContacts.find((c) => c.contact_type_id === type.id);
+                return (
+                  <View key={type.id} style={styles.contactRow}>
+                    <View style={styles.contactTypeContainer}>
+                      <Icon
+                        name={defineIconName(type.name)}
+                        size={24}
+                        color={defineIconColor(type.name)}
+                        style={styles.icon}
+                      />
+                      <Text style={styles.contactTypeName}>{type.name}</Text>
+                    </View>
+                    
+                    <View style={styles.inputContainer}>
+                      {renderContactInput(type)}
+                      
+                      {existing && (
+                        <TouchableOpacity 
+                          style={styles.deleteButton}
+                          onPress={() => handleDeleteContact(existing)}
+                        >
+                          <Icon name="trash" size={20} color={COLORS.ERROR} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </ScrollView>
+
+        <View style={styles.stickyButtonContainer}>
+          <CustomButton
+            title="Salvar contatos"
             onPress={handleSave}
-          >
-            <Text style={styles.buttonText}>Salvar contatos</Text>
-          </TouchableOpacity>
+            icon="save"
+          />
         </View>
+      </View>
 
-        {/* Modal para escolher foto */}
-        <Modal onClose={() => fetchProfilePhoto()} visible={modalVisible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <PhotoPicker
-                photo={photo}
-                setPhoto={(newPhoto) => {
-                  setPhoto(newPhoto);
-                  setModalVisible(false);
-                }}
-              />
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={() => handleCloseModal()}
-              >
-                <Text style={styles.modalButtonText}>Fechar</Text>
-              </TouchableOpacity>
+      {/* Modal para escolher foto */}
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <PhotoPicker
+              photo={photo}
+              setPhoto={(newPhoto) => {
+                setPhoto(newPhoto);
+                setModalVisible(false);
+              }}
+              onClose={handleCloseModal}
+            />
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleCloseModal()}
+            >
+              <Text style={styles.modalButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de mensagens (sucesso/erro) */}
+      <MessageModal
+        visible={msgModalVisible}
+        onClose={() => setMsgModalVisible(false)}
+        message={msgModalText}
+        type={msgModalType}
+      />
+
+      <MessageModal
+        visible={showInfoPopup}
+        title="Como funciona o compartilhamento de contatos"
+        type="info"
+        onClose={() => setShowInfoPopup(false)}
+        message=""
+        extraContent={
+          <View style={styles.popupContent}>
+            <View style={styles.infoItem}>
+              <View style={styles.infoItemIconContainer}>
+                <Icon name="check-circle" size={20} color={COLORS.SUCCESS} />
+              </View>
+              <Text style={styles.infoDescription}>
+                Adicione pelo menos um contato para que outros usuários possam solicitar conexão com você
+              </Text>
+            </View>
+            
+            <View style={styles.infoItem}>
+              <View style={styles.infoItemIconContainer}>
+                <Icon name="warning" size={20} color={COLORS.WARNING} />
+              </View>
+              <Text style={styles.infoDescription}>
+                Você receberá uma notificação quando alguém solicitar seus contatos
+              </Text>
+            </View>
+            
+            <View style={styles.infoItem}>
+              <View style={styles.infoItemIconContainer}>
+                <Icon name="share" size={20} color={COLORS.PRIMARY} />
+              </View>
+              <Text style={styles.infoDescription}>
+                Escolha quais contatos deseja compartilhar com cada solicitação de conexão
+              </Text>
             </View>
           </View>
-        </Modal>
-
-        {/* Modal de mensagens (sucesso/erro) */}
-        <MessageModal
-          visible={msgModalVisible}
-          onClose={() => setMsgModalVisible(false)}
-          message={msgModalText}
-          type={msgModalType}
-        />
-
-        <MessageModal
-          visible={showInfoPopup}
-          title="Como funciona o compartilhamento de contatos"
-          type="info"
-          onClose={() => setShowInfoPopup(false)}
-          message=""
-          extraContent={
-            <View style={styles.popupContent}>
-              <View style={styles.infoItem}>
-                <View style={styles.infoItemIconContainer}>
-                  <Icon name="check-circle" size={20} color={COLORS.SUCCESS} />
-                </View>
-                <Text style={styles.infoDescription}>
-                  Adicione pelo menos um contato para que outros usuários possam solicitar conexão com você
-                </Text>
-              </View>
-              
-              <View style={styles.infoItem}>
-                <View style={styles.infoItemIconContainer}>
-                  <Icon name="warning" size={20} color={COLORS.WARNING} />
-                </View>
-                <Text style={styles.infoDescription}>
-                  Você receberá uma notificação quando alguém solicitar seus contatos
-                </Text>
-              </View>
-              
-              <View style={styles.infoItem}>
-                <View style={styles.infoItemIconContainer}>
-                  <Icon name="share" size={20} color={COLORS.PRIMARY} />
-                </View>
-                <Text style={styles.infoDescription}>
-                  Escolha quais contatos deseja compartilhar com cada solicitação de conexão
-                </Text>
-              </View>
-            </View>
-          }
-        />
-
-        
-
-      </ScrollView>
+        }
+      />
     </EmailVerificationGuard>
   );
 }; 
@@ -578,9 +588,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
   },
+  containerWithButton: {
+    flex: 1,
+    backgroundColor: COLORS.BACKGROUND,
+  },
   content: {
     flex: 1,
     padding: SPACING.LARGE,
+    paddingBottom: 80,
   },
   backButton: {
     marginBottom: 20,
@@ -606,15 +621,15 @@ const styles = StyleSheet.create({
     marginRight: SPACING.MEDIUM,
   },
   avatarImage: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
     borderRadius: 40,
     borderWidth: 2,
     borderColor: COLORS.PRIMARY,
   },
   avatarPlaceholder: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 30,
     backgroundColor: COLORS.CARD_BACKGROUND,
     justifyContent: 'center',
@@ -834,12 +849,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  saveButton: {
-    backgroundColor: COLORS.PRIMARY,
-    padding: SPACING.MEDIUM,
-    borderRadius: CARD_STYLES.DEFAULT.borderRadius,
-    alignItems: 'center',
-    marginVertical: SPACING.LARGE,
+  stickyButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.BACKGROUND,
+    paddingHorizontal: SPACING.LARGE,
+    paddingVertical: SPACING.MEDIUM,
+    borderTopWidth: 1,
+    borderTopColor: `${COLORS.BORDER}20`,
   },
   warningContainer: {
     marginTop: SPACING.TINY,

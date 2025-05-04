@@ -14,23 +14,40 @@ import * as ImageManipulator from 'expo-image-manipulator';
 
 import StorageService from '../store/store';
 import api from '../services/api';
+import CustomButton from './CustomButton';
+import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
+import MessageModal from './MessageModal';
 
-export default function PhotoPicker() {
+export default function PhotoPicker({ onClose }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   useEffect(() => {
     (async () => {
-      // Pedir permissão para galeria
       const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (mediaStatus !== 'granted') {
-        Alert.alert('Atenção', 'É necessário permitir acesso à galeria para enviar fotos.');
+        setMessageModal({
+          visible: true,
+          title: 'Atenção',
+          message: 'É necessário permitir acesso à galeria para enviar fotos.',
+          type: 'warning'
+        });
       }
 
-      // Pedir permissão para câmera
       const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
       if (cameraStatus !== 'granted') {
-        Alert.alert('Atenção', 'É necessário permitir acesso à câmera para tirar fotos.');
+        setMessageModal({
+          visible: true,
+          title: 'Atenção',
+          message: 'É necessário permitir acesso à câmera para tirar fotos.',
+          type: 'warning'
+        });
       }
     })();
   }, []);
@@ -104,7 +121,12 @@ export default function PhotoPicker() {
    */
   const handleUploadImage = async () => {
     if (!selectedImage) {
-      Alert.alert('Atenção', 'Nenhuma imagem selecionada!');
+      setMessageModal({
+        visible: true,
+        title: 'Atenção',
+        message: 'Nenhuma imagem selecionada!',
+        type: 'warning'
+      });
       return;
     }
 
@@ -126,121 +148,170 @@ export default function PhotoPicker() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert('Sucesso', 'Imagem de perfil atualizada com sucesso!');
-        console.log('response', response.data);
-
-        // atualiza o storage com o has_profile_photo e o profile_photo_url
         const userData = await StorageService.getUserData();
         userData.has_profile_photo = true;
         userData.profile_photo_url = response.data.data;
         await StorageService.saveUserData(userData);
-        
+
+        setMessageModal({
+          visible: true,
+          title: 'Sucesso',
+          message: 'Imagem de perfil atualizada com sucesso!',
+          type: 'success',
+          onClose: () => {
+            setMessageModal(prev => ({ ...prev, visible: false }));
+            onClose();
+          }
+        });
       } else {
-        Alert.alert('Erro', 'Falha ao enviar a imagem.');
-        console.error('Resposta do servidor:', response.data);
+        setMessageModal({
+          visible: true,
+          title: 'Erro',
+          message: 'Falha ao enviar a imagem.',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('Erro no envio da imagem:', error);
-      Alert.alert('Erro', 'Ocorreu um erro ao enviar a imagem.');
+      console.error('Erro no envio da imagem:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data,
+        responseStatus: error.response?.status,
+        responseHeaders: error.response?.headers
+      });
+      setMessageModal({
+        visible: true,
+        title: 'Erro',
+        message: 'Ocorreu um erro ao enviar a imagem.',
+        type: 'error'
+      });
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Selecione ou tire uma foto</Text>
-      
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handlePickImage}>
-          <Text style={styles.buttonText}>Galeria</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleTakePhoto}>
-          <Text style={styles.buttonText}>Câmera</Text>
-        </TouchableOpacity>
-      </View>
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Selecione uma foto sua da galeria ou tire uma com a câmera!</Text>
+        
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            title="Tirar foto"
+            onPress={handleTakePhoto}
+            icon="camera"
+          />
+          <CustomButton
+            title="Escolher da galeria"
+            onPress={handlePickImage}
+            icon="image"
+          />
+        </View>
 
-      {isProcessing && <ActivityIndicator size="large" color="#6D44FF" style={{ marginVertical: 10 }} />}
-      
-      {selectedImage && (
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.clearButton} onPress={handleClearImage}>
-              <Text style={styles.clearButtonText}>Remover</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.uploadButton} onPress={handleUploadImage}>
-              <Text style={styles.uploadButtonText}>Enviar</Text>
+        {isProcessing && (
+          <ActivityIndicator 
+            size="large" 
+            color={COLORS.PRIMARY} 
+            style={styles.loader} 
+          />
+        )}
+        
+        {selectedImage && (
+          <View style={styles.selectedImageContainer}>
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: selectedImage }} style={styles.imagePreview} />            
+            </View>
+            <TouchableOpacity 
+              style={styles.successButton}
+              onPress={handleUploadImage}
+            >
+              <Text style={styles.successButtonText}>Selecionar</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        onClose={messageModal.onClose || (() => setMessageModal(prev => ({ ...prev, visible: false })))}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#141527',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 2,
+    backgroundColor: COLORS.BACKGROUND,
+    padding: SPACING.MEDIUM,
   },
   title: {
-    fontSize: 22,
-    color: '#fff',
-    marginBottom: 20,
-    fontWeight: 'bold',
+    fontSize: FONTS.SIZES.MEDIUM,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.LARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+    textAlign: 'center',
   },
   buttonContainer: {
-    flexDirection: 'row',
     width: '100%',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#6D44FF',
-    paddingVertical: 1,
-    paddingHorizontal: 2,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    gap: SPACING.MEDIUM,
   },
   imageContainer: {
     width: '100%',
     alignItems: 'center',
+    marginTop: SPACING.LARGE,
+    paddingHorizontal: SPACING.MEDIUM,
   },
   imagePreview: {
     width: 300,
     height: 300,
-    borderRadius: 15,
+    borderRadius: CARD_STYLES.DEFAULT.borderRadius,
     resizeMode: 'cover',
-    marginBottom: 20,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    width: '80%',
-    justifyContent: 'space-between',
+  loader: {
+    marginVertical: SPACING.MEDIUM,
   },
-  clearButton: {
-    backgroundColor: '#FF4D4D',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+  preview: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: CARD_STYLES.DEFAULT.borderRadius,
+    marginBottom: SPACING.MEDIUM,
+    backgroundColor: COLORS.BACKGROUND_DARK,
+    overflow: 'hidden',
   },
-  clearButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  image: {
+    width: '100%',
+    height: '100%',
   },
-  uploadButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+  placeholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND_DARK,
   },
-  uploadButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  placeholderText: {
+    color: COLORS.TEXT_TERTIARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    marginTop: SPACING.SMALL,
+  },
+  selectedImageContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  successButton: {    
+    backgroundColor: COLORS.SUCCESS,
+    padding: SPACING.MEDIUM,
+    borderRadius: CARD_STYLES.DEFAULT.borderRadius,
+    marginTop: SPACING.LARGE,
+    width: '100%',
+    alignItems: 'center',
+  },
+  successButtonText: {
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.MEDIUM,
+    fontWeight: FONTS.WEIGHTS.BOLD,
   },
 });
