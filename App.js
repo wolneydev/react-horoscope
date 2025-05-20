@@ -39,6 +39,8 @@ import UserListScreen from './src/screens/UserListScreen';
 import PhotoPicker from './src/Components/PhotoPicker';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import LearningScreen from './src/screens/LearningScreen';
+import DiaryScreen from './src/screens/DiaryScreen';
+
 enableScreens(false);
 
 const Stack = createStackNavigator();
@@ -166,6 +168,11 @@ function MainStack() {
           component={EditProfileScreen} 
           options={{ headerShown: false }}
         />              
+      <Stack.Screen
+        name="DiaryScreen"
+        component={DiaryScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -310,6 +317,16 @@ function CustomDrawerContent(props) {
         />
 
         <DrawerItem
+          label="Diário"
+          icon={({ focused }) => (
+            <Icon name="book" color={currentRoute === 'Diário' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Diário')}
+          style={[styles.drawerItem, currentRoute === 'Diário' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Diário' && styles.drawerLabelActive]}
+        />  
+
+        <DrawerItem
           label="Minha Conta"
           icon={({ focused }) => (
             <Icon name="account-circle" color={currentRoute === 'Minha Conta' ? '#FFFFFF' : '#7A708E'} size={24} />
@@ -425,6 +442,16 @@ function AppDrawer() {
           options={{
             drawerIcon: ({ color, size }) => (
               <Icon name="favorite" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Drawer.Screen
+          name="Diário"
+          component={DiaryScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Icon name="book" color={color} size={size} />
             ),
           }}
         />
