@@ -81,31 +81,6 @@ const SynastryScreen = () => {
   };
 
   const handleCreateChart = () => {
-    if (!userData || userData.astral_tokens < 50) {
-      setMessageModal({
-        visible: true,
-        title: 'Tokens Insuficientes',
-        message: 'Você precisa de 50 Astral Tokens para criar um mapa extra.',
-        type: 'error',
-        loading: false,
-        actions: [
-          {
-            text: 'Comprar Tokens',
-            primary: true,
-            onPress: () => {
-              setMessageModal(prev => ({ ...prev, visible: false }));
-              navigation.navigate('AstralTokens');
-            }
-          },
-          {
-            text: 'Cancelar',
-            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
-          }
-        ]
-      });
-      return;
-    }
-
     navigation.navigate('CreateExtraChartScreen');
   };
 

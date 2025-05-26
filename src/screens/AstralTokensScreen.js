@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import UserInfoHeader from '../Components/UserInfoHeader';
 import LoadingOverlay from '../Components/LoadingOverlay';
@@ -7,6 +7,7 @@ import BuyGenericButton from '../Components/BuyGenericButton';
 import MessageModal from '../Components/MessageModal';
 import StripeService from '../services/StripeService';
 import { useUser } from '../contexts/UserContext';
+import AnimatedStars from '../Components/animation/AnimatedStars';
 
 const AstralTokensScreen = () => {  
   const { userData, refreshUserData } = useUser();
@@ -22,6 +23,9 @@ const AstralTokensScreen = () => {
     extraContent: null,
     loading: false
   });
+
+  // Animação de fundo (memoizada)
+  const memoStars = useMemo(() => <AnimatedStars />, []);
 
   React.useEffect(() => {
     initializeStripe();
@@ -126,6 +130,7 @@ const AstralTokensScreen = () => {
 
   return (
     <View style={styles.container}>
+      {memoStars}
       <UserInfoHeader userData={userData} />
       
       <ScrollView style={styles.content}>
