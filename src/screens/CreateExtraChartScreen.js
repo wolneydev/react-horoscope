@@ -210,7 +210,7 @@ const CreateExtraChartScreen = () => {
 
     try {
       const token = await StorageService.getAccessToken();
-      const response = await api.post('users/create-extra-chart', {
+      const response = await api.post('astralmap/create', {
         name: nome,
         birth_day: birthDate.getDate(),
         birth_month: birthDate.getMonth() + 1,
