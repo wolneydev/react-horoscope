@@ -124,7 +124,15 @@ function MainStack() {
       <Stack.Screen
         name="CreateExtraChartScreen"
         component={CreateExtraChartScreen}
-        options={{ headerShown: false }}
+        options={{ 
+          title: 'Criar Novo Mapa',
+          headerStyle: {
+            backgroundColor: '#141527',
+            borderWidth: 1,
+            borderColor: 'rgba(109, 68, 255, 0.2)'
+          },
+          headerTintColor: 'white',
+        }}
       />
       <Stack.Screen
         name="HomeScreen"
@@ -134,7 +142,15 @@ function MainStack() {
       <Stack.Screen
         name="SynastryDesambiguationScreen"
         component={SynastryDesambiguationScreen}
-        options={{ headerShown: false }}
+        options={{ 
+          title: 'Sinastria',
+          headerStyle: {
+            backgroundColor: '#141527',
+            borderWidth: 1,
+            borderColor: 'rgba(109, 68, 255, 0.2)'
+          },
+          headerTintColor: 'white',
+        }}
       />
       <Stack.Screen
         name="ForgotPasswordScreen"
@@ -188,14 +204,28 @@ function MainStack() {
 // Criar um Stack Navigator para as telas de Sinastria
 function SinastriaStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator 
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#141527',
+          borderWidth: 1,
+          borderColor: 'rgba(109, 68, 255, 0.2)'
+        },
+        headerTintColor: 'white',
+      }}
+    >
       <Stack.Screen
         name="SynastryDesambiguation"
         component={SynastryDesambiguationScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CreateExtraChart"
         component={CreateExtraChartScreen}
+        options={{ 
+          title: 'Criar Novo Mapa',
+          headerShown: true
+        }}
       />
     </Stack.Navigator>
   );
@@ -403,22 +433,18 @@ function AppDrawer() {
 
         <Drawer.Screen
           name="Sinastria"
-          component={SinastriaStack}
+          component={SynastryDesambiguationScreen}
           options={{
             drawerIcon: ({ color, size }) => (
               <Icon name="favorite" color={color} size={size} />
             ),
-            title: "Sinastria"
-          }}
-        />
-
-        <Drawer.Screen
-          name="Mapa Extra"
-          component={CreateExtraChartScreen}
-          options={{
-            drawerIcon: ({ color, size }) => (
-              <Icon name="favorite" color={color} size={size} />
-            ),
+            title: 'Sinastria',
+            headerStyle: {
+              backgroundColor: '#141527',
+              borderWidth: 1,
+              borderColor: 'rgba(109, 68, 255, 0.2)'
+            },
+            headerTintColor: 'white',
           }}
         />
 
@@ -511,11 +537,6 @@ function AppDrawer() {
             ),
           }}
         />
-
-        {/* 
-          Observação: Não repetimos o item "UserListScreen" aqui, 
-          pois ele foi adicionado no menu através do CustomDrawerContent.
-        */}
 
         <Drawer.Screen
           name="Sair"

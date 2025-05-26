@@ -27,7 +27,6 @@ class UserDataRefreshService {
         };
 
         await StorageService.saveAstralMaps(data.astral_maps);
-        await StorageService.setExtraMapsUsed(data.extra_maps_used);
 
         return {
           success: true,
