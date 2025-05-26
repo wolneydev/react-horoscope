@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../contexts/UserContext';
 
 /**
  * Componente de cabeçalho com informações do usuário e avatar
  * 
- * @param {object} userData - Dados do usuário (nome, email)
  * @param {boolean} showWelcome - Se deve mostrar a mensagem de boas-vindas (apenas para HomeScreen)
  * @param {object} style - Estilos adicionais para o container
  */
 const UserInfoHeader = ({ 
-  userData, 
   showWelcome = false,
   style
 }) => {
+  const navigation = useNavigation();
+  const { userData } = useUser();
   const [zodiacSign, setZodiacSign] = useState("default");
 
   // Objeto de mapeamento de imagens
@@ -88,6 +90,13 @@ const UserInfoHeader = ({
           {!showWelcome && userData?.email && (
             <Text style={styles.userEmail}>{userData.email}</Text>
           )}
+          <TouchableOpacity 
+            style={styles.tokensContainer}
+            onPress={() => navigation.navigate('AstralTokens')}
+          >
+            <Text style={styles.tokensText}>{userData?.astral_tokens || 0}</Text>
+            <Text style={styles.tokensLabel}>Astral Tokens</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -143,6 +152,26 @@ const styles = StyleSheet.create({
     color: '#7A708E',
     fontSize: 12,
     marginTop: 2,
+  },
+  tokensContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  tokensText: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 4,
+  },
+  tokensLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
   },
 });
 

@@ -11,6 +11,7 @@ import {
   View,
   Alert,
 } from 'react-native';
+import { UserProvider } from './src/contexts/UserContext';
 
 // Importando as telas
 import SplashScreen from './src/screens/SplashScreen';
@@ -40,6 +41,7 @@ import PhotoPicker from './src/Components/PhotoPicker';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import LearningScreen from './src/screens/LearningScreen';
 import DiaryScreen from './src/screens/DiaryScreen';
+import AstralTokensScreen from './src/screens/AstralTokensScreen';
 
 enableScreens(false);
 
@@ -173,6 +175,12 @@ function MainStack() {
         component={DiaryScreen}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="AstralTokensScreen"
+        component={AstralTokensScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -195,44 +203,12 @@ function SinastriaStack() {
 
 /** CustomDrawerContent é responsável por renderizar o conteúdo personalizado do Drawer */
 function CustomDrawerContent(props) {
-  const [userData, setUserData] = useState(null);
   const currentRoute = props.state.routeNames[props.state.index];
-
-  React.useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const savedUserData = await StorageService.getUserData();
-        setUserData(savedUserData);
-      } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await StorageService.clearAll();
-      props.navigation.reset({
-        index: 0,
-        routes: [{ name: 'IndexScreen' }],
-      });
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      Alert.alert('Erro', 'Não foi possível fazer logout.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <DrawerContentScrollView {...props}>
       {/* Header com Avatar */}
       <UserInfoHeader 
-        userData={userData}
         showWelcome={false}
       />
 
@@ -243,7 +219,7 @@ function CustomDrawerContent(props) {
           icon={({ focused }) => (
             <Icon name="home" color={currentRoute === 'Home' ? '#FFFFFF' : '#7A708E'} size={24} />
           )}
-          onPress={() => props.navigation.navigate('Home', { userData: userData })}
+          onPress={() => props.navigation.navigate('Home')}
           style={[
             styles.drawerItem,
             currentRoute === 'Home' && styles.drawerItemActive
@@ -294,7 +270,7 @@ function CustomDrawerContent(props) {
           icon={({ focused }) => (
             <Icon name="book" color={currentRoute === 'Aprendizado' ? '#FFFFFF' : '#7A708E'} size={24} />
           )}
-          onPress={() => props.navigation.navigate('Aprendizado', { userData: userData })}
+          onPress={() => props.navigation.navigate('Aprendizado')}
           style={[  
             styles.drawerItem,
             currentRoute === 'Aprendizado' && styles.drawerItemActive
@@ -325,6 +301,16 @@ function CustomDrawerContent(props) {
           style={[styles.drawerItem, currentRoute === 'Diário' && styles.drawerItemActive]}
           labelStyle={[styles.drawerLabel, currentRoute === 'Diário' && styles.drawerLabelActive]}
         />  
+
+        <DrawerItem
+          label="Astral Tokens"
+          icon={({ focused }) => (
+            <Icon name="stars" color={currentRoute === 'Astral Tokens' ? '#FFFFFF' : '#7A708E'} size={24} />
+          )}
+          onPress={() => props.navigation.navigate('Astral Tokens')}
+          style={[styles.drawerItem, currentRoute === 'Astral Tokens' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Astral Tokens' && styles.drawerLabelActive]}
+        />
 
         <DrawerItem
           label="Minha Conta"
@@ -516,6 +502,16 @@ function AppDrawer() {
           }}
         />
 
+        <Drawer.Screen
+          name="Astral Tokens"
+          component={AstralTokensScreen}
+          options={{ 
+            drawerIcon: ({ color, size }) => (
+              <Icon name="stars" color={color} size={size} />
+            ),
+          }}
+        />
+
         {/* 
           Observação: Não repetimos o item "UserListScreen" aqui, 
           pois ele foi adicionado no menu através do CustomDrawerContent.
@@ -549,13 +545,15 @@ const EmptyComponent = () => null;
 // Componente principal
 const App = () => {
   return (
-    <PortalProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
-          <MainStack />
-        </NavigationContainer>
-      </GestureHandlerRootView>
-    </PortalProvider>
+    <UserProvider>
+      <PortalProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <NavigationContainer>
+            <MainStack />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </PortalProvider>
+    </UserProvider>
   );
 };
 

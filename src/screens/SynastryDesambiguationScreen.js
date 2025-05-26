@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import StorageService from '../store/store';
 import CustomButton from '../Components/CustomButton';
-import BuyExtraMapsButton from '../Components/BuyExtraMapsButton';
+import BuyGenericButton from '../Components/BuyGenericButton';
 import StripeService from '../services/StripeService';
 import { formatNumber } from '../utils/helpers';
 import api from '../services/api';
@@ -15,9 +15,11 @@ import InfoCardSinastria from '../Components/InfoCardSinastria';
 import LoadingOverlay from '../Components/LoadingOverlay';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 import EmailVerificationGuard from '../Components/emailVerification/EmailVerificationGuard';
+import { useUser } from '../contexts/UserContext';
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
+  const { userData, refreshUserData } = useUser();
   const [extraCharts, setExtraCharts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -48,7 +50,6 @@ const SynastryScreen = () => {
   const initializeScreen = async () => {
     try {
       await refreshUserData();
-      //await loadChartInfo();
       await StripeService.initializeStripe();
       setIsInitialized(true);
     } catch (error) {
@@ -56,59 +57,7 @@ const SynastryScreen = () => {
     }
   };
 
-  const refreshUserData = async () => {
-    try {
-      setIsLoading(true);
-      console.log('Iniciando verificação de atualização de número de mapas extras');
-      
-      const token = await StorageService.getAccessToken();
-
-      const response = await api.get(`users/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const { status, data } = response.data;
-
-      if (status === 'success') {
-        // Preparando dados do usuário para salvar localmente
-        const userData = {
-          extra_maps_max_number: data.extra_maps_max_number,
-        };
-
-        await StorageService.saveAstralMaps(data.astral_maps);
-        await StorageService.setExtraMapsMaxNumber(userData.extra_maps_max_number);
-
-        setExtraMapsUsed(await StorageService.getExtraMapsUsed());
-        setMaxExtraMaps(await StorageService.getExtraMapsMaxNumber());
-        setExtraCharts(await StorageService.getExtraCharts());
-      }
-      
-    } catch (error) {
-      console.error('Erro ao verificar dados do usuário (users/me)', error);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-
-  };
-
-  const handleCreateChart = async () => {
-    const used = await StorageService.getExtraMapsUsed();
-    const max = await StorageService.getExtraMapsMaxNumber();
-    
-    if (used >= max) {
-      setShowCreditsModal(true);
-    } else {
-      navigation.navigate('HomeScreen', { 
-        screen: 'Mapa Extra', 
-      });
-    }
-  };
-
   const handlePurchaseSuccess = async () => {
-    // Oculta o loading quando a compra tem sucesso
     setIsAnyProcessing(false);
     setLoadingMessage('');
     
@@ -120,41 +69,10 @@ const SynastryScreen = () => {
       loading: true
     });
     
-    setIsLoading(true);
-    console.log('Iniciando verificação de atualização de número de mapas extras');
-
-    // Função para verificar os mapas extras
-    const checkMaxExtraMaps = async () => {
-      try {
-        const token = await StorageService.getAccessToken();
-        const userData = await StorageService.getUserData();
-        const response = await api.get(`users/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        return response.data.data.extra_maps_max_number;
-      } catch (error) {
-        console.error('Erro ao verificar mapas extras:', error);
-        return null;
-      }
-    };
-
-    // Verifica a cada 2 segundos até confirmar atualização
-    const initialMapsNumber = await StorageService.getExtraMapsMaxNumber();
-    
-    const interval = setInterval(async () => {
-      const currentMapsNumber = await checkMaxExtraMaps();
-      console.log('Verificando mapas extras:', currentMapsNumber, 'inicial:', initialMapsNumber);
+    try {
+      const result = await refreshUserData();
       
-      if (currentMapsNumber > initialMapsNumber) {
-        StorageService.setExtraMapsMaxNumber(currentMapsNumber);
-        clearInterval(interval);
-        setMaxExtraMaps(currentMapsNumber);
-        setIsLoading(false);
-        
-        // Atualizar o modal para mostrar sucesso
+      if (result.success) {
         setMessageModal({
           visible: true,
           title: 'Compra Realizada!',
@@ -170,18 +88,34 @@ const SynastryScreen = () => {
           ]
         });
         
-        // Esconder o popup após 3 segundos
         setTimeout(() => {
           setMessageModal(prev => ({ ...prev, visible: false }));
         }, 3000);
+      } else {
+        throw new Error(result.error);
       }
-    }, 2000);
-
+    } catch (error) {
+      console.error('Erro ao atualizar dados:', error);
+      setMessageModal({
+        visible: true,
+        title: 'Erro!',
+        message: 'Ocorreu um erro ao atualizar seus dados. Por favor, tente novamente.',
+        type: 'error',
+        loading: false,
+        actions: [
+          {
+            text: 'OK',
+            primary: true,
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ]
+      });
+    }
+    
     setShowCreditsModal(false);
   };
 
   const handlePurchaseCancel = (failMessage) => {
-    // Oculta o loading quando a compra falha
     setIsAnyProcessing(false);
     setLoadingMessage('');
     
@@ -198,7 +132,6 @@ const SynastryScreen = () => {
             primary: true,
             onPress: () => {
               setMessageModal(prev => ({ ...prev, visible: false }));
-              // Reabrir o modal de créditos após fechar a mensagem de erro
               setShowCreditsModal(true);
             }
           }
@@ -210,14 +143,7 @@ const SynastryScreen = () => {
           </View>
         ) : null
       });
-      
-      // Removendo o timeout automático para permitir que o usuário leia a mensagem
-      // e decida quando fechar (e reabrir o modal de créditos)
-      /* setTimeout(() => {
-        setMessageModal(prev => ({ ...prev, visible: false }));
-      }, 7000); */
     } else {
-      // Se não houver mensagem de erro, apenas reabrir o modal de créditos
       setShowCreditsModal(true);
     }
   };
@@ -290,7 +216,7 @@ const SynastryScreen = () => {
 
           <CustomButton
             title="Criar Novo Mapa Astral"
-            onPress={handleCreateChart}
+            onPress={() => navigation.navigate('HomeScreen', { screen: 'Mapa Extra' })}
             icon="add-circle-outline"
             disabled={!isInitialized || isLoading}
           />        
@@ -311,7 +237,7 @@ const SynastryScreen = () => {
               </Text>
 
               <View style={styles.creditsOptions}>
-                <BuyExtraMapsButton
+                <BuyGenericButton
                   amount={10.00}
                   product_slug={'extra_map'}
                   onSuccess={handlePurchaseSuccess}
@@ -333,7 +259,7 @@ const SynastryScreen = () => {
                 />
 
                 <View style={styles.discountContainer}>
-                  <BuyExtraMapsButton
+                  <BuyGenericButton
                     amount={18.00}
                     product_slug={'two_extra_map_pack'}
                     onSuccess={handlePurchaseSuccess}
@@ -360,7 +286,7 @@ const SynastryScreen = () => {
                 </View>
 
                 <View style={styles.bestValueContainer}>
-                  <BuyExtraMapsButton
+                  <BuyGenericButton
                     amount={40.00}
                     product_slug={'five_extra_map_pack'}
                     onSuccess={handlePurchaseSuccess}
@@ -415,7 +341,6 @@ const SynastryScreen = () => {
         />
       </View>
 
-      {/* Loading Overlay */}
       {isAnyProcessing && <LoadingOverlay message={loadingMessage} />}
     </EmailVerificationGuard>
   );
