@@ -95,6 +95,10 @@ const UserInfoHeader = ({
             onPress={() => navigation.navigate('AstralTokens')}
           >
             <Text style={styles.tokensText}>{userData?.astral_tokens || 0}</Text>
+            <Image 
+              source={require('../assets/images/moeda.png')}
+              style={styles.tokenIcon}
+            />
             <Text style={styles.tokensLabel}>Astral Tokens</Text>
           </TouchableOpacity>
         </View>
@@ -156,10 +160,10 @@ const styles = StyleSheet.create({
   tokensContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 12,
     backgroundColor: '#2A2A2A',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
     marginTop: 8,
     alignSelf: 'flex-start',
   },
@@ -167,6 +171,11 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     fontSize: 14,
     fontWeight: 'bold',
+    marginRight: 4,
+  },
+  tokenIcon: {
+    width: 14,
+    height: 14,
     marginRight: 4,
   },
   tokensLabel: {

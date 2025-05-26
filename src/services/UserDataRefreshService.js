@@ -24,11 +24,10 @@ class UserDataRefreshService {
           has_contacts: data.has_contacts,
           contacts: data.contacts,
           astral_tokens: data.astral_tokens,
-          extra_maps_max_number: data.extra_maps_max_number,
         };
 
         await StorageService.saveAstralMaps(data.astral_maps);
-        await StorageService.setExtraMapsMaxNumber(userData.extra_maps_max_number);
+        await StorageService.setExtraMapsUsed(data.extra_maps_used);
 
         return {
           success: true,
