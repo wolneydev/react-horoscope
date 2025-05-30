@@ -80,6 +80,7 @@ export default function CompatibilityScreen({ route }) {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       const { compatibilidades, compatibilidade_media } = response.data.data;
+   
       setCompatibilities(compatibilidades || []);
       setAverageCompatibility(compatibilidade_media || null);
     } catch (error) {
