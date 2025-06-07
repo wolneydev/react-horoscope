@@ -323,13 +323,13 @@ function CustomDrawerContent(props) {
         />
 
         <DrawerItem
-          label="Diário"
+          label="Meu Diário Astral"
           icon={({ focused }) => (
-            <Icon name="book" color={currentRoute === 'Diário' ? '#FFFFFF' : '#7A708E'} size={24} />
+            <Icon name="book" color={currentRoute === 'Meu Diário Astral' ? '#FFFFFF' : '#7A708E'} size={24} />
           )}
-          onPress={() => props.navigation.navigate('Diário')}
-          style={[styles.drawerItem, currentRoute === 'Diário' && styles.drawerItemActive]}
-          labelStyle={[styles.drawerLabel, currentRoute === 'Diário' && styles.drawerLabelActive]}
+          onPress={() => props.navigation.navigate('Meu Diário Astral')}
+          style={[styles.drawerItem, currentRoute === 'Meu Diário Astral' && styles.drawerItemActive]}
+          labelStyle={[styles.drawerLabel, currentRoute === 'Meu Diário Astral' && styles.drawerLabelActive]}
         />  
 
         <DrawerItem
@@ -459,7 +459,7 @@ function AppDrawer() {
         />
 
         <Drawer.Screen
-          name="Diário"
+          name="Meu Diário Astral"
           component={DiaryScreen}
           options={{
             drawerIcon: ({ color, size }) => (

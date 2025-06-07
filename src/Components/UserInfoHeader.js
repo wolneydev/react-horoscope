@@ -92,7 +92,7 @@ const UserInfoHeader = ({
           )}
           <TouchableOpacity 
             style={styles.tokensContainer}
-            onPress={() => navigation.navigate('AstralTokens')}
+            onPress={() => navigation.navigate('HomeScreen', { screen: 'Astral Tokens' })}
           >
             <Text style={styles.tokensText}>{userData?.astral_tokens || 0}</Text>
             <Image 
