@@ -11,6 +11,7 @@ import AnimatedStars from '../Components/animation/AnimatedStars';
 import UserInfoHeader from '../Components/UserInfoHeader';
 import InfoCard from '../Components/InfoCard';
 import LoadingOverlay from '../Components/LoadingOverlay';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function DiaryScreen() {
   const navigation = useNavigation();
@@ -20,6 +21,7 @@ export default function DiaryScreen() {
   const [loadingMessage, setLoadingMessage] = useState('Carregando...');
   const [aiResponse, setAiResponse] = useState('');
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [modal, setModal] = useState({ 
     visible: false, 
     title: '', 
@@ -275,7 +277,20 @@ export default function DiaryScreen() {
           />
         </View>
       </View>
-      <Text style={styles.historyTitle}>Histórico</Text>
+      <TouchableOpacity 
+        style={styles.historyHeader}
+        onPress={() => setIsHistoryExpanded(!isHistoryExpanded)}
+      >
+        <View style={styles.historyHeaderContent}>
+          <Icon name="history" size={20} color={COLORS.PRIMARY} />
+          <Text style={styles.historyTitle}>Histórico</Text>
+        </View>
+        <Icon 
+          name={isHistoryExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
+          size={20} 
+          color={COLORS.TEXT_TERTIARY} 
+        />
+      </TouchableOpacity>
     </View>
   );
 
@@ -288,12 +303,12 @@ export default function DiaryScreen() {
       <UserInfoHeader />
       <View style={styles.mainContainer}>
         <FlatList
-          data={history}
+          data={isHistoryExpanded ? history : []}
           keyExtractor={item => String(item.id)}
           renderItem={renderHistoryItem}
           contentContainerStyle={styles.content}
           ListHeaderComponent={renderHeader}
-          ListEmptyComponent={<Text style={styles.emptyHistory}>Nenhuma mensagem enviada ainda.</Text>}
+          ListEmptyComponent={isHistoryExpanded ? <Text style={styles.emptyHistory}>Nenhuma mensagem enviada ainda.</Text> : null}
           keyboardShouldPersistTaps="handled"
         />
       </View>
@@ -473,7 +488,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     alignSelf: 'stretch',
-    marginBottom: SPACING.LARGE,
+    marginBottom: SPACING.TINY,
     flexDirection: 'row',
   },
   buttonStyle: {
@@ -509,6 +524,28 @@ const styles = StyleSheet.create({
   tokenChipText: {
     color: '#FFD700',
     fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.MEDIUM,
+    marginTop: SPACING.LARGE,
+    backgroundColor: COLORS.BACKGROUND_DARK,
+    borderRadius: CARD_STYLES.DEFAULT.borderRadius,
+    paddingHorizontal: SPACING.MEDIUM,
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.2)',
+  },
+  historyHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.SMALL,
+  },
+  historyTitle: {
+    color: COLORS.TEXT_PRIMARY,
+    fontSize: FONTS.SIZES.LARGE,
     fontWeight: FONTS.WEIGHTS.BOLD,
   },
 }); 
