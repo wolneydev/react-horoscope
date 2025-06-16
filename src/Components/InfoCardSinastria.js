@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { COLORS, SPACING, FONTS, CARD_STYLES } from '../styles/theme';
 
-const InfoCardSinastria = ({ isInitialized, extraMapsUsed, maxExtraMaps, isInfoExpanded, setIsInfoExpanded }) => {
+const InfoCardSinastria = ({ isInfoExpanded, setIsInfoExpanded }) => {
   return (
     <View style={styles.infoCard}>
       <View style={styles.infoCardHeader}>
@@ -12,11 +12,6 @@ const InfoCardSinastria = ({ isInitialized, extraMapsUsed, maxExtraMaps, isInfoE
         </View>
         <View style={styles.titleContainer}>
           <Text style={styles.infoCardTitle}>Sinastria Astrológica</Text>
-          {isInitialized && (
-            <Text style={styles.extraMapsText}>
-              Mapas Extras: {extraMapsUsed}/{maxExtraMaps}
-            </Text>
-          )}
         </View>
         <TouchableOpacity 
           onPress={() => setIsInfoExpanded(!isInfoExpanded)}

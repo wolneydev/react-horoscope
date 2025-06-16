@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import StripeService from '../services/StripeService';
 
-const BuyExtraMapsButton = ({ 
+const BuyGenericButton = ({ 
   label,
   amount, 
   onSuccess,
@@ -62,4 +62,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BuyExtraMapsButton; 
+export default BuyGenericButton; 

@@ -128,6 +128,7 @@ export default function LoginScreen({ navigation }) {
           has_contacts: data.has_contacts,
           contacts: data.contacts,
           sign: data.sun.sign.name,
+          astral_tokens: data.astral_tokens,
           birthData: {
             city: data.birth_city,
             year: data.birth_year,

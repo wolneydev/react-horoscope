@@ -9,6 +9,7 @@ import {
   View,
   Alert,
   FlatList,
+  Image,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -21,9 +22,13 @@ import { useNavigation } from '@react-navigation/native';
 import InfoCard from '../Components/InfoCard';
 import { COLORS, SPACING, FONTS } from '../styles/theme';
 import CityAutoComplete from '../Components/CityAutoComplete';
+import { useUser } from '../contexts/UserContext';
+import UserInfoHeader from '../Components/UserInfoHeader';
+import MessageModal from '../Components/MessageModal';
 
 const CreateExtraChartScreen = () => {
   const navigation = useNavigation();
+  const { userData, refreshUserData } = useUser();
 
   // Campos existentes
   const [nome, setNome] = useState('');
@@ -55,6 +60,15 @@ const CreateExtraChartScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'success',
+    actions: [],
+    extraContent: null,
+    loading: false
+  });
 
   // Animação de fundo (memoizada)
   const memoStars = useMemo(() => <AnimatedStars />, []);
@@ -127,6 +141,87 @@ const CreateExtraChartScreen = () => {
 
   // --- Submit ---
   const handleSubmit = async () => {
+    if (!userData || userData.astral_tokens < 50) {
+      setMessageModal({
+        visible: true,
+        title: 'Tokens Insuficientes',
+        message: 'Para criar um novo mapa astral, você precisa de 50 Astral Tokens. Adquira mais tokens para desbloquear essa funcionalidade incrível!',
+        type: 'error',
+        loading: false,
+        actions: [
+          {
+            text: 'Comprar Tokens',
+            primary: true,
+            onPress: () => {
+              setMessageModal(prev => ({ ...prev, visible: false }));
+              navigation.navigate('HomeScreen', {
+                screen: 'Astral Tokens',
+              });
+            }
+          },
+          {
+            text: 'Cancelar',
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ],
+        extraContent: (
+          <View style={styles.modalTokensContainer}>
+            <View style={styles.tokensInfo}>
+              <View style={styles.currentTokensContainer}>
+                <Text style={styles.tokensLabel}>Seu saldo atual</Text>
+                <TouchableOpacity style={styles.tokensContainer}>
+                  <Text style={styles.tokensText}>{userData?.astral_tokens || 0}</Text>
+                  <Image 
+                    source={require('../assets/images/moeda.png')}
+                    style={styles.tokenIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )
+      });
+      return;
+    }
+
+    setMessageModal({
+      visible: true,
+      title: 'Confirmar Criação',
+      message: 'Você irá gastar 50 Astral Tokens para criar um novo mapa astral. Deseja continuar?',
+      type: 'info',
+      loading: false,
+      actions: [
+        {
+          text: 'Confirmar',
+          primary: true,
+          onPress: () => {
+            setMessageModal(prev => ({ ...prev, visible: false }));
+            processCreateChart();
+          }
+        },
+        {
+          text: 'Cancelar',
+          onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+        }
+      ],
+      extraContent: (
+        <View style={styles.modalTokensContainer}>
+          <View style={styles.tokensInfo}>
+            <Text style={styles.tokensLabel}>Seu novo saldo será de</Text>
+            <TouchableOpacity style={styles.tokensContainer}>
+              <Text style={styles.tokensText}>{Math.max(0, (userData?.astral_tokens || 0) - 50)}</Text>
+              <Image 
+                source={require('../assets/images/moeda.png')}
+                style={styles.tokenIcon}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )
+    });
+  };
+
+  const processCreateChart = async () => {
     if (validateFields()) {
       try {
         setIsLoading(true);
@@ -172,6 +267,8 @@ const CreateExtraChartScreen = () => {
 
         if (status === 'success') {
           // Terceiro passo
+
+          await refreshUserData();
           setLoadingMessage('Gerando o mapa astral ...');
 
           // Limpa os campos
@@ -193,10 +290,10 @@ const CreateExtraChartScreen = () => {
     }
   };
 
-
   return (
     <View style={styles.container}>
       {memoStars}
+      <UserInfoHeader />
 
       <View style={styles.content}>
         <View style={styles.header}>
@@ -272,12 +369,21 @@ const CreateExtraChartScreen = () => {
           </View>
 
           {/* Botão de Envio */}
-          <CustomButton
-            title="Gerar Mapa Astral"
-            onPress={handleSubmit}
-            icon="auto-awesome"
-            style={styles.customButton}
-          />
+          <View style={styles.buttonContainer}>
+            <CustomButton
+              title="Gerar Mapa Astral"
+              onPress={handleSubmit}
+              icon="auto-awesome"
+              style={styles.customButton}
+            />
+            <View style={styles.tokenChip}>
+              <Text style={styles.tokenChipText}>50</Text>
+              <Image 
+                source={require('../assets/images/moeda.png')}
+                style={styles.tokenIcon}
+              />
+            </View>
+          </View>
         </View>
 
         {/* DateTimePickers */}
@@ -299,6 +405,17 @@ const CreateExtraChartScreen = () => {
 
       {/* Loading Overlay */}
       {isLoading && <LoadingOverlay message={loadingMessage} />}
+
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        loading={messageModal.loading}
+        actions={messageModal.actions}
+        extraContent={messageModal.extraContent}
+        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };
@@ -388,5 +505,73 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     color: '#000',
+  },
+  buttonContainer: {
+    position: 'relative',
+  },
+  tokenChip: {
+    position: 'absolute',
+    right: SPACING.MEDIUM,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: SPACING.SMALL,
+    paddingVertical: SPACING.TINY,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  tokenChipText: {
+    color: '#FFD700',
+    fontSize: FONTS.SIZES.SMALL,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+  },
+  tokenIcon: {
+    width: 14,
+    height: 14,
+  },
+  modalTokensContainer: {
+    marginTop: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
+  },
+  tokensInfo: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.MEDIUM,
+  },
+  currentTokensContainer: {
+    alignItems: 'center',
+    gap: SPACING.SMALL,
+  },
+  requiredTokensContainer: {
+    alignItems: 'center',
+    gap: SPACING.SMALL,
+  },
+  tokensContainer: {
+    backgroundColor: '#2A2A2A',
+    padding: SPACING.MEDIUM,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(109, 68, 255, 0.3)',
+    flexDirection: 'row',
+    gap: 4,
+  },
+  requiredTokens: {
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  tokensText: {
+    color: '#FFD700',
+    fontSize: FONTS.SIZES.XLARGE,
+    fontWeight: FONTS.WEIGHTS.BOLD,
+  },
+  tokensLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: FONTS.SIZES.MEDIUM,
+    textAlign: 'center',
   },
 });

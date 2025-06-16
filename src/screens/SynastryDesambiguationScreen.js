@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Modal, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedStars from '../Components/animation/AnimatedStars';
 import StorageService from '../store/store';
 import CustomButton from '../Components/CustomButton';
-import BuyExtraMapsButton from '../Components/BuyExtraMapsButton';
-import StripeService from '../services/StripeService';
+import { useUser } from '../contexts/UserContext';
 import { formatNumber } from '../utils/helpers';
 import api from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,11 +17,9 @@ import EmailVerificationGuard from '../Components/emailVerification/EmailVerific
 
 const SynastryScreen = () => {
   const navigation = useNavigation();
+  const { userData, refreshUserData } = useUser();
   const [extraCharts, setExtraCharts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreditsModal, setShowCreditsModal] = useState(false);
-  const [extraMapsUsed, setExtraMapsUsed] = useState(0);
-  const [maxExtraMaps, setMaxExtraMaps] = useState(1);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAnyProcessing, setIsAnyProcessing] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
@@ -39,6 +36,32 @@ const SynastryScreen = () => {
 
   const memoStars = useMemo(() => <AnimatedStars />, []);
 
+  const loadExtraCharts = async () => {
+    try {
+      const extraCharts = await StorageService.getExtraCharts();
+      setExtraCharts(extraCharts || []);
+      
+    } catch (error) {
+      console.error('Erro ao carregar mapas extras:', error);
+      setMessageModal({
+        visible: true,
+        title: 'Erro',
+        message: 'Não foi possível carregar seus mapas extras. Por favor, tente novamente.',
+        type: 'error',
+        loading: false,
+        actions: [
+          {
+            text: 'OK',
+            primary: true,
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ]
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       initializeScreen();
@@ -47,190 +70,18 @@ const SynastryScreen = () => {
 
   const initializeScreen = async () => {
     try {
+      setIsLoading(true);
       await refreshUserData();
-      //await loadChartInfo();
-      await StripeService.initializeStripe();
+      await loadExtraCharts();
       setIsInitialized(true);
     } catch (error) {
       console.error('Erro ao inicializar tela:', error);
-    }
-  };
-
-  const refreshUserData = async () => {
-    try {
-      setIsLoading(true);
-      console.log('Iniciando verificação de atualização de número de mapas extras');
-      
-      const token = await StorageService.getAccessToken();
-
-      const response = await api.get(`users/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const { status, data } = response.data;
-
-      if (status === 'success') {
-        // Preparando dados do usuário para salvar localmente
-        const userData = {
-          extra_maps_max_number: data.extra_maps_max_number,
-        };
-
-        await StorageService.saveAstralMaps(data.astral_maps);
-        await StorageService.setExtraMapsMaxNumber(userData.extra_maps_max_number);
-
-        setExtraMapsUsed(await StorageService.getExtraMapsUsed());
-        setMaxExtraMaps(await StorageService.getExtraMapsMaxNumber());
-        setExtraCharts(await StorageService.getExtraCharts());
-      }
-      
-    } catch (error) {
-      console.error('Erro ao verificar dados do usuário (users/me)', error);
-      return null;
-    } finally {
       setIsLoading(false);
     }
-
   };
 
-  const handleCreateChart = async () => {
-    const used = await StorageService.getExtraMapsUsed();
-    const max = await StorageService.getExtraMapsMaxNumber();
-    
-    if (used >= max) {
-      setShowCreditsModal(true);
-    } else {
-      navigation.navigate('HomeScreen', { 
-        screen: 'Mapa Extra', 
-      });
-    }
-  };
-
-  const handlePurchaseSuccess = async () => {
-    // Oculta o loading quando a compra tem sucesso
-    setIsAnyProcessing(false);
-    setLoadingMessage('');
-    
-    setMessageModal({
-      visible: true,
-      title: 'Processando...',
-      message: 'Verificando sua compra',
-      type: 'info',
-      loading: true
-    });
-    
-    setIsLoading(true);
-    console.log('Iniciando verificação de atualização de número de mapas extras');
-
-    // Função para verificar os mapas extras
-    const checkMaxExtraMaps = async () => {
-      try {
-        const token = await StorageService.getAccessToken();
-        const userData = await StorageService.getUserData();
-        const response = await api.get(`users/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        return response.data.data.extra_maps_max_number;
-      } catch (error) {
-        console.error('Erro ao verificar mapas extras:', error);
-        return null;
-      }
-    };
-
-    // Verifica a cada 2 segundos até confirmar atualização
-    const initialMapsNumber = await StorageService.getExtraMapsMaxNumber();
-    
-    const interval = setInterval(async () => {
-      const currentMapsNumber = await checkMaxExtraMaps();
-      console.log('Verificando mapas extras:', currentMapsNumber, 'inicial:', initialMapsNumber);
-      
-      if (currentMapsNumber > initialMapsNumber) {
-        StorageService.setExtraMapsMaxNumber(currentMapsNumber);
-        clearInterval(interval);
-        setMaxExtraMaps(currentMapsNumber);
-        setIsLoading(false);
-        
-        // Atualizar o modal para mostrar sucesso
-        setMessageModal({
-          visible: true,
-          title: 'Compra Realizada!',
-          message: 'Novo(s) mapa(s) extra(s) foram adicionado(s) à sua conta. Você já pode criá-lo(s) e realizar a sinastria com o seu mapa astral!',
-          type: 'success',
-          loading: false,
-          actions: [
-            {
-              text: 'OK',
-              primary: true,
-              onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
-            }
-          ]
-        });
-        
-        // Esconder o popup após 3 segundos
-        setTimeout(() => {
-          setMessageModal(prev => ({ ...prev, visible: false }));
-        }, 3000);
-      }
-    }, 2000);
-
-    setShowCreditsModal(false);
-  };
-
-  const handlePurchaseCancel = (failMessage) => {
-    // Oculta o loading quando a compra falha
-    setIsAnyProcessing(false);
-    setLoadingMessage('');
-    
-    if (failMessage) {
-      setMessageModal({
-        visible: true,
-        title: 'Erro na Compra!',
-        message: 'Você pode tentar outros cartões ou tentar novamente quando a situação for resolvida. Caso queira mais informações sobre esta transação, acesse o menu \'Minhas Compras\'.',
-        type: 'error',
-        loading: false,
-        actions: [
-          {
-            text: 'OK',
-            primary: true,
-            onPress: () => {
-              setMessageModal(prev => ({ ...prev, visible: false }));
-              // Reabrir o modal de créditos após fechar a mensagem de erro
-              setShowCreditsModal(true);
-            }
-          }
-        ],
-        extraContent: failMessage ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorTitle}>Retorno da operadora:</Text>
-            <Text style={styles.errorMessage}>{failMessage}</Text>
-          </View>
-        ) : null
-      });
-      
-      // Removendo o timeout automático para permitir que o usuário leia a mensagem
-      // e decida quando fechar (e reabrir o modal de créditos)
-      /* setTimeout(() => {
-        setMessageModal(prev => ({ ...prev, visible: false }));
-      }, 7000); */
-    } else {
-      // Se não houver mensagem de erro, apenas reabrir o modal de créditos
-      setShowCreditsModal(true);
-    }
-  };
-
-  const handleCloseErrorPopup = () => {
-    setMessageModal({
-      visible: false,
-      title: '',
-      message: '',
-      type: 'success',
-      actions: [],
-      extraContent: null
-    });
+  const handleCreateChart = () => {
+    navigation.navigate('CreateExtraChartScreen');
   };
 
   const renderChartItem = ({ item }) => (
@@ -263,9 +114,6 @@ const SynastryScreen = () => {
         
         <View style={styles.content}>
           <InfoCardSinastria 
-            isInitialized={isInitialized}
-            extraMapsUsed={extraMapsUsed}
-            maxExtraMaps={maxExtraMaps}
             isInfoExpanded={isInfoExpanded}
             setIsInfoExpanded={setIsInfoExpanded}
           />
@@ -288,120 +136,15 @@ const SynastryScreen = () => {
             )}
           </View>
 
-          <CustomButton
-            title="Criar Novo Mapa Astral"
-            onPress={handleCreateChart}
-            icon="add-circle-outline"
-            disabled={!isInitialized || isLoading}
-          />        
-        </View>
-
-        <Modal
-          visible={showCreditsModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowCreditsModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Adicionar Mapas</Text>
-              <Text style={styles.modalText}>
-                Você já utilizou todos os seus mapas extras disponíveis. 
-                Escolha um pacote para continuar gerando mapas e verificando as compatibilidades com o seu.
-              </Text>
-
-              <View style={styles.creditsOptions}>
-                <BuyExtraMapsButton
-                  amount={10.00}
-                  product_slug={'extra_map'}
-                  onSuccess={handlePurchaseSuccess}
-                  onCancel={handlePurchaseCancel}
-                  onStartProcessing={() => {
-                    setIsAnyProcessing(true);
-                    setLoadingMessage('Processando pagamento');
-                    setShowCreditsModal(false);
-                  }}
-                  onEndProcessing={() => setIsAnyProcessing(false)}
-                  style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
-                  disabled={isAnyProcessing}
-                  label={
-                    <View style={styles.buttonLabelContainer}>
-                      <Text style={[styles.buttonLabel, isAnyProcessing && styles.disabledText]}>1 Mapa Extra</Text>
-                      <Text style={[styles.buttonAmount, isAnyProcessing && styles.disabledText]}>R$ 10,00</Text>
-                    </View>
-                  }
-                />
-
-                <View style={styles.discountContainer}>
-                  <BuyExtraMapsButton
-                    amount={18.00}
-                    product_slug={'two_extra_map_pack'}
-                    onSuccess={handlePurchaseSuccess}
-                    onCancel={handlePurchaseCancel}
-                    onStartProcessing={() => {
-                      setIsAnyProcessing(true);
-                      setLoadingMessage('Processando pagamento');
-                      setShowCreditsModal(false);
-                    }}
-                    onEndProcessing={() => setIsAnyProcessing(false)}
-                    style={[styles.creditButton, isAnyProcessing && styles.disabledButton]}
-                    disabled={isAnyProcessing}
-                    label={
-                      <View style={styles.buttonLabelContainer}>
-                        <Text style={[styles.buttonLabel, isAnyProcessing && styles.disabledText]}>2 Mapas Extras</Text>
-                        <Text style={[styles.buttonAmount, isAnyProcessing && styles.disabledText]}>R$ 18,00</Text>
-                      </View>
-                    }
-                  />
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountText}>10% OFF</Text>
-                    <Text style={styles.pricePerUnit}>R$ 9,00/cada</Text>
-                  </View>
-                </View>
-
-                <View style={styles.bestValueContainer}>
-                  <BuyExtraMapsButton
-                    amount={40.00}
-                    product_slug={'five_extra_map_pack'}
-                    onSuccess={handlePurchaseSuccess}
-                    onCancel={handlePurchaseCancel}
-                    onStartProcessing={() => {
-                      setIsAnyProcessing(true);
-                      setLoadingMessage('Processando pagamento');
-                      setShowCreditsModal(false);
-                    }}
-                    onEndProcessing={() => setIsAnyProcessing(false)}
-                    style={[
-                      styles.creditButton, 
-                      styles.bestValueButton,
-                      isAnyProcessing && styles.disabledButton
-                    ]}
-                    disabled={isAnyProcessing}
-                    label={
-                      <View style={styles.buttonLabelContainer}>
-                        <Text style={[styles.buttonLabel, styles.bestValueLabel, isAnyProcessing && styles.disabledText]}>
-                          5 Mapas Extras
-                        </Text>
-                        <Text style={[styles.buttonAmount, styles.bestValueAmount, isAnyProcessing && styles.disabledText]}>
-                          R$ 40,00
-                        </Text>
-                      </View>
-                    }
-                  />
-                  <View style={[styles.discountBadge, styles.bestValueBadge]}>
-                    <Text style={styles.discountText}>20% OFF</Text>
-                    <Text style={styles.pricePerUnit}>R$ 8,00/cada</Text>
-                  </View>
-                </View>
-              </View>
-
-              <CustomButton
-                title="Fechar"
-                onPress={() => setShowCreditsModal(false)}
-              />
-            </View>
+          <View style={styles.buttonContainer}>
+            <CustomButton
+              title="Criar Novo Mapa Astral"
+              onPress={handleCreateChart}
+              icon="add-circle-outline"
+              disabled={!isInitialized || isLoading}
+            />
           </View>
-        </Modal>
+        </View>
 
         <MessageModal
           visible={messageModal.visible}
@@ -415,7 +158,6 @@ const SynastryScreen = () => {
         />
       </View>
 
-      {/* Loading Overlay */}
       {isAnyProcessing && <LoadingOverlay message={loadingMessage} />}
     </EmailVerificationGuard>
   );
@@ -436,20 +178,6 @@ const styles = StyleSheet.create({
   chartsList: {
     flexGrow: 1,
     paddingBottom: SPACING.LARGE,
-  },
-  titleContainer: {
-    flex: 1,
-    marginLeft: SPACING.MEDIUM,
-  },
-  extraMapsText: {
-    color: COLORS.TEXT_TERTIARY,
-    fontSize: FONTS.SIZES.SMALL,
-  },
-  sectionTitle: {
-    color: COLORS.TEXT_PRIMARY,
-    fontSize: FONTS.SIZES.LARGE,
-    fontWeight: FONTS.WEIGHTS.BOLD,
-    marginBottom: SPACING.LARGE,
   },
   chartCard: {
     flexDirection: 'row',
@@ -486,151 +214,8 @@ const styles = StyleSheet.create({
     marginTop: SPACING.LARGE,
     fontSize: FONTS.SIZES.MEDIUM,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: SPACING.LARGE,
-    marginBottom: SPACING.MEDIUM,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.LARGE,
-  },
-  modalContent: {
-    backgroundColor: COLORS.BACKGROUND,
-    borderRadius: 15,
-    padding: SPACING.LARGE,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-  },
-  modalTitle: {
-    fontSize: FONTS.SIZES.XXLARGE,
-    color: COLORS.HIGHLIGHT,
-    textAlign: 'center',
-    marginBottom: SPACING.MEDIUM,
-  },
-  modalText: {
-    fontSize: FONTS.SIZES.MEDIUM,
-    color: COLORS.TEXT_PRIMARY,
-    textAlign: 'center',
-    marginBottom: SPACING.XLARGE,
-  },
-  creditsOptions: {
-    gap: SPACING.LARGE,
-    marginBottom: SPACING.LARGE,
-  },
-  creditButton: {
-    backgroundColor: 'rgba(109, 68, 255, 0.25)',
-    borderColor: 'rgba(109, 68, 255, 0.75)',
-  },
-  discountContainer: {
+  buttonContainer: {
     position: 'relative',
-  },
-  bestValueContainer: {
-    position: 'relative',
-    transform: [{ scale: 1.05 }],
-  },
-  bestValueButton: {
-    backgroundColor: 'rgba(109, 68, 255, 0.4)',
-    borderColor: COLORS.HIGHLIGHT,
-    borderWidth: 2,
-  },
-  discountBadge: {
-    position: 'absolute',
-    right: -10,
-    top: -10,
-    backgroundColor: '#FF4081',
-    borderRadius: 12,
-    padding: SPACING.SMALL,
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  bestValueBadge: {
-    backgroundColor: COLORS.HIGHLIGHT,
-  },
-  discountText: {
-    color: COLORS.TEXT_PRIMARY,
-    fontWeight: FONTS.WEIGHTS.BOLD,
-    fontSize: FONTS.SIZES.MEDIUM,
-  },
-  pricePerUnit: {
-    color: COLORS.TEXT_PRIMARY,
-    fontSize: FONTS.SIZES.SMALL,
-    opacity: 0.9,
-  },
-  bestValueFlag: {
-    position: 'absolute',
-    left: 10,
-    top: -12,
-    backgroundColor: COLORS.HIGHLIGHT,
-    paddingHorizontal: SPACING.MEDIUM,
-    paddingVertical: SPACING.TINY,
-    borderRadius: 12,
-  },
-  bestValueText: {
-    color: COLORS.BACKGROUND,
-    fontWeight: FONTS.WEIGHTS.BOLD,
-    fontSize: FONTS.SIZES.TINY,
-  },
-  closeButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  buttonLabelContainer: {
-    alignItems: 'center',
-  },
-  buttonLabel: {
-    color: COLORS.TEXT_PRIMARY,
-    fontSize: FONTS.SIZES.LARGE,
-    fontWeight: FONTS.WEIGHTS.BOLD,
-    marginBottom: SPACING.TINY,
-  },
-  buttonAmount: {
-    color: COLORS.TEXT_PRIMARY,
-    fontSize: FONTS.SIZES.MEDIUM,
-    opacity: 0.9,
-  },
-  bestValueLabel: {
-    fontSize: FONTS.SIZES.XLARGE,
-    color: COLORS.HIGHLIGHT,
-  },
-  bestValueAmount: {
-    fontSize: FONTS.SIZES.LARGE,
-    color: COLORS.HIGHLIGHT,
-  },
-  expandButton: {
-    padding: SPACING.SMALL,
-  },
-  expandedInfo: {
-    marginTop: SPACING.LARGE,
-    paddingTop: SPACING.LARGE,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(109, 68, 255, 0.2)',
-  },
-  errorContainer: {
-    marginTop: SPACING.MEDIUM,
-    padding: SPACING.MEDIUM,
-    backgroundColor: 'rgba(255, 68, 68, 0.1)',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#FF4444',
-    marginBottom: SPACING.LARGE,
-    alignItems: 'center',
-  },
-  errorTitle: {
-    color: '#FF4444',
-    fontWeight: FONTS.WEIGHTS.BOLD,
-    fontSize: FONTS.SIZES.MEDIUM,
-    marginBottom: SPACING.SMALL,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    color: COLORS.ERROR || '#FF4444',
-    fontSize: FONTS.SIZES.SMALL,
-    textAlign: 'center',
   },
 });
 
