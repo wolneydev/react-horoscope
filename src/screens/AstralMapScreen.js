@@ -16,7 +16,7 @@ import { COLORS } from '../styles/theme';
 // Componentes refatorados
 import InfoCard from '../Components/astralmap/InfoCard';
 import AstralEntityCard from '../Components/astralmap/AstralEntityCard';
-
+import NetworkGraph from '../Components/astralmap/NetworkGraph';
 // Mapeamento de imagens baseado nos nomes dos signos
 const imageMap = {
   áries: require('../assets/images/sign/aries.jpg'),
@@ -138,6 +138,8 @@ const AstralMapScreen = ({ route }) => {
             {/* Componente InfoCard */}
             <InfoCard astralMap={astralMap} />
 
+
+
             {/* Lista de entidades astrais (usando AstralEntityCard) */}
             {astralMap?.astral_entities?.map((item) => (
               <AstralEntityCard
@@ -146,6 +148,19 @@ const AstralMapScreen = ({ route }) => {
                 imageMap={imageMap}
               />
             ))}
+
+              {/* --- Exibe o gráfico UMA VEZ --- */}
+              {astralMap?.astral_entities?.length > 1 && (
+                <View style={styles.networkCard}>
+                  <Text style={styles.networkTitle}>Rede dos Graus Astrais</Text>
+                  <NetworkGraph
+                    data={astralMap.astral_entities.map(i => ({
+                      name: i.astral_entity?.name || i.name || 'N/D',
+                      degree: i.degree,
+                    }))}
+                  />
+                </View>
+              )}            
           </ScrollView>
         </View>
       </View>
