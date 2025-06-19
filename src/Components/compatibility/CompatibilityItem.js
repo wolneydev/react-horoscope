@@ -1,57 +1,60 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import api from '../../services/api';
 import StorageService from '../../../src/store/store';
+import { useUser } from '../../contexts/UserContext';
+import { useNavigation } from '@react-navigation/native';
+import MessageModal from '../MessageModal';
 
 // Função para retornar um contexto resumido de cada entidade astral
 
 
 const gerarLabelPorEntidadeAstral = (entidade) => {
   const labels = {
-    'Sol': 'Relatório sobre a essência',
-    'Lua': 'Relatório emocional',
-    'Mercúrio': 'Relatório comunicativo',
-    'Vênus': 'Relatório amoroso',
-    'Marte': 'Relatório de energia e ação',
-    'Júpiter': 'Relatório de expansão e fé',
-    'Saturno': 'Relatório de desafios e estrutura',
-    'Urano': 'Relatório de inovação e mudança',
-    'Netuno': 'Relatório espiritual e intuitivo',
-    'Plutão': 'Relatório de transformação',
-    'Ascendente': 'Relatório de personalidade externa',
-    'Descendente': 'Relatório sobre relacionamentos',
-    'Meio do céu': 'Relatório de carreira e propósito',
-    'Fundo do céu': 'Relatório de vida íntima'
+    'Sol': '🌟 Desvende sua Essência',
+    'Lua': '🌙 Mergulhe nas Emoções',
+    'Mercúrio': '💬 Conecte-se pela Comunicação',
+    'Vênus': '💕 Descubra o Amor',
+    'Marte': '⚡ Energia e Paixão',
+    'Júpiter': '✨ Expansão e Sabedoria',
+    'Saturno': '🏗️ Desafios e Crescimento',
+    'Urano': '⚡ Revolução e Inovação',
+    'Netuno': '🔮 Intuição e Sonhos',
+    'Plutão': '🔄 Transformação Total',
+    'Ascendente': '👤 Sua Máscara Social',
+    'Descendente': '💑 Relacionamentos Íntimos',
+    'Meio do céu': '🎯 Carreira e Propósito',
+    'Fundo do céu': '🏠 Lar e Raízes',
   };
 
-  return labels[entidade] || 'Relatório personalizado';
+  return labels[entidade] || '✨ Relatório Personalizado';
 };
 const gerarContextoPorEntidadeAstral = (entidade) => {
   const entidades = { 
-    'Sol': 'O Sol mostra o centro da personalidade.',
-    'Lua': 'A Lua indica as emoções e reações instintivas.',
-    'Mercúrio': 'Mercúrio trata da comunicação e do raciocínio.',
-    'Vênus': 'Vênus representa a forma de amar e de se relacionar.',
-    'Marte': 'Marte simboliza a iniciativa e o desejo.',
-    'Júpiter': 'Júpiter aponta para expansão e crenças.',
-    'Saturno': 'Saturno lida com responsabilidades e limites.',
-    'Urano': 'Urano rege a inovação, rebeldia e mudanças súbitas.',
-    'Netuno': 'Netuno está ligado à espiritualidade, sonhos e ilusões.',
-    'Plutão': 'Plutão representa transformação, poder e renascimento.',
-    'Ascendente': 'O Ascendente revela como nos mostramos ao mundo e nossa abordagem inicial à vida.',
-    'Descendente': 'O Descendente trata de relacionamentos íntimos e da forma como enxergamos o outro.',
-    'Meio do Ceu': 'O Meio do Céu (MC) indica a vocação, imagem pública e objetivos de vida.',
-    'Fundo do Ceu': 'O Fundo do Céu (IC ou Nadir) representa as raízes, o lar e a vida privada.'
+    'Sol': '',
+    'Lua': '',
+    'Mercúrio': '',
+    'Vênus': '',
+    'Marte': 'Adicione um grau de safadeza e aventura.',
+    'Júpiter': '',
+    'Saturno': '',
+    'Urano': '',
+    'Netuno': '',
+    'Plutão': '',
+    'Ascendente': '',
+    'Descendente': '',
+    'Meio do Ceu': '',
+    'Fundo do Ceu': ''
   };
 
-  return entidades[entidade] || 'Entidade astral não reconhecida.';
+  return entidades[entidade] || '';
 };
 
 const gerarPromptCompatibilidade = (item) => {
   // Gera contexto automático e resumido com base na entidade astral
   const contexto = gerarContextoPorEntidadeAstral(item.astral_entity);
-  let base = `Solicito uma análise aprofundada sobre a interação da posição astral "${item.astral_entity}" nos signos "${item.signo1}" e "${item.signo2}" dentro de um mapa astral. Descreva como essa configuração pode influenciar a compatibilidade entre as duas pessoas, com base em princípios astrológicos.`;
-  if (contexto) base += ` Caso aplicável, foque em: ${contexto}.`;
+  let base = `Preciso de uma análise aprofundada sobre a interação da posição astral "${item.astral_entity}" nos signos "${item.signo1}" e "${item.signo2}" dentro de um mapa astral. Descreva como essa configuração pode influenciar a compatibilidade entre as duas pessoas, com base em princípios astrológicos. Já comece com uma breve descrição sobre a posição astral e como ela pode influenciar a compatibilidade. Já comece a resposta com o texto. `;
+  if (contexto) base += contexto;
   return base;
 };
 
@@ -60,19 +63,128 @@ const CompatibilityItem = ({
   astros,
   getCompatibilityColor,
   getAstroImage,
+  onLoadingChange,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [iaResponse, setIaResponse] = useState('');
+  const [loadingMessage, setLoadingMessage] = useState('Carregando ...');
+  const { userData, refreshUserData } = useUser();
+  const navigation = useNavigation();
+  const [messageModal, setMessageModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info',
+    actions: [],
+    extraContent: null,
+    loading: false
+  });
+
+  // Função para atualizar o loading no componente pai
+  const updateLoading = (isLoading, message) => {
+    setLoading(isLoading);
+    setLoadingMessage(message);
+    if (onLoadingChange) {
+      onLoadingChange(isLoading, message);
+    }
+  };
 
   const handleSendPrompt = async () => {
+    // Verifica se tem tokens suficientes
+    if (!userData || userData.astral_tokens < 10) {
+      setMessageModal({
+        visible: true,
+        title: 'Tokens Insuficientes',
+        message: `Para obter a análise de "${gerarLabelPorEntidadeAstral(item.astral_entity)}", você precisa de 10 Astral Tokens. Adquira mais tokens para desbloquear essa funcionalidade incrível!`,
+        type: 'error',
+        loading: false,
+        actions: [
+          {
+            text: 'Comprar Tokens',
+            primary: true,
+            onPress: () => {
+              setMessageModal(prev => ({ ...prev, visible: false }));
+              navigation.navigate('HomeScreen', {
+                screen: 'Astral Tokens',
+              });
+            }
+          },
+          {
+            text: 'Cancelar',
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ],
+        extraContent: (
+          <View style={styles.modalTokensContainer}>
+            <View style={styles.tokensInfo}>
+              <View style={styles.currentTokensContainer}>
+                <Text style={styles.tokensLabel}>Seu saldo atual</Text>
+                <TouchableOpacity style={styles.tokensContainer}>
+                  <Text style={styles.tokensText}>{userData?.astral_tokens || 0}</Text>
+                  <Image 
+                    source={require('../../assets/images/moeda.png')}
+                    style={styles.tokenIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )
+      });
+      return;
+    }
+
+    // Confirma o consumo de tokens
+    setMessageModal({
+      visible: true,
+      title: 'Confirmar Análise',
+      message: `Você irá gastar 10 Astral Tokens para obter uma análise mais aprofundada acerca da compatibilidade entre "${item.signo1}" e "${item.signo2}" sobre "${gerarLabelPorEntidadeAstral(item.astral_entity)}". Deseja continuar?`,
+      type: 'info',
+      loading: false,
+      actions: [
+        {
+          text: 'Confirmar',
+          primary: true,
+          onPress: () => {
+            setMessageModal(prev => ({ ...prev, visible: false }));
+            processSendPrompt();
+          }
+        },
+        {
+          text: 'Cancelar',
+          onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+        }
+      ],
+      extraContent: (
+        <View style={styles.modalTokensContainer}>
+          <View style={styles.tokensInfo}>
+            <Text style={styles.tokensLabel}>Seu novo saldo será de</Text>
+            <TouchableOpacity style={styles.tokensContainer}>
+              <Text style={styles.tokensText}>{Math.max(0, (userData?.astral_tokens || 0) - 10)}</Text>
+              <Image 
+                source={require('../../assets/images/moeda.png')}
+                style={styles.tokenIcon}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )
+    });
+  };
+
+  const processSendPrompt = async () => {
     console.log(item.astral_entity);
     const prompt = gerarPromptCompatibilidade(item);
-    setLoading(true);
+    console.log(prompt);
+    updateLoading(true, 'Estabelecendo comunicação astral...');
+    
     try {
       const token = await StorageService.getAccessToken();
+
+      updateLoading(true, 'Analisando compatibilidade astral...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       const response = await api.post(
-        '/gepeto',
+        '/synastry/analyze-item',
         { mensagem: prompt },
         {
           headers: {
@@ -85,15 +197,45 @@ const CompatibilityItem = ({
         throw new Error('Erro na requisição');
       }
       const data = response.data;
-      const respostaIa = data.resposta_ia;
+      console.log(data);
+      const respostaIa = data.data.resposta_ia;
 
-      setIaResponse(respostaIa || 'Resposta não disponível.');
-      setShowModal(true);
+      updateLoading(true, 'Processando resposta...');
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Atualiza os dados do usuário para refletir o consumo de tokens
+      await refreshUserData();
+      
+      // Exibe o modal com a resposta da IA
+      setMessageModal({
+        visible: true,
+        title: 'Análise de Compatibilidade',
+        message: respostaIa || 'Resposta não disponível.',
+        type: 'info',
+        actions: [
+          {
+            text: 'OK',
+            primary: true,
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ]
+      });
     } catch (error) {
-      setIaResponse(error.message || 'Erro desconhecido');
-      setShowModal(true);
+      setMessageModal({
+        visible: true,
+        title: 'Erro',
+        message: error.message || 'Erro desconhecido',
+        type: 'error',
+        actions: [
+          {
+            text: 'OK',
+            primary: true,
+            onPress: () => setMessageModal(prev => ({ ...prev, visible: false }))
+          }
+        ]
+      });
     } finally {
-      setLoading(false);
+      updateLoading(false, '');
     }
   };
 
@@ -132,53 +274,40 @@ const CompatibilityItem = ({
       <View style={styles.cardContent}>
         <Text style={styles.description}>{item.descriptions}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSendPrompt}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <Text style={styles.buttonText}>
-             {gerarLabelPorEntidadeAstral(item.astral_entity)}
-          </Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Modal customizado para resposta da IA */}
-      <Modal
-        visible={showModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Image
-                source={getAstroImage(item.astral_entity, astros)}
-                style={styles.modalAstroImage}
-              />
-              <Text style={styles.modalTitle}>Compatibilidade Astrológica</Text>
-              <Text style={styles.modalSubTitle}>
-                {item.astral_entity} em {item.signo1} × {item.signo2}
-              </Text>
-            </View>
-            <ScrollView style={styles.modalScrollView}>
-              <Text style={styles.modalResponse}>
-                {iaResponse}
-              </Text>
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setShowModal(false)}
-            >
-              <Text style={styles.modalButtonText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSendPrompt}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.buttonText}>
+               {gerarLabelPorEntidadeAstral(item.astral_entity)}
+            </Text>
+          )}
+        </TouchableOpacity>
+        <View style={styles.tokenChip}>
+          <Text style={styles.tokenChipText}>10</Text>
+          <Image 
+            source={require('../../assets/images/moeda.png')}
+            style={styles.tokenIcon}
+          />
         </View>
-      </Modal>
+      </View>
+
+      {/* Modal de tokens e confirmação */}
+      <MessageModal
+        visible={messageModal.visible}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        actions={messageModal.actions}
+        extraContent={messageModal.extraContent}
+        loading={messageModal.loading}
+        onClose={() => setMessageModal(prev => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };
@@ -244,8 +373,11 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     lineHeight: 20,
   },
-  button: {
+  buttonContainer: {
+    position: 'relative',
     margin: 16,
+  },
+  button: {
     padding: 12,
     backgroundColor: '#6D44FF',
     borderRadius: 10,
@@ -258,85 +390,63 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(32, 14, 53, 0.88)',
-    justifyContent: 'center',
+  tokenChip: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  modalCard: {
-    width: '88%',
-    maxHeight: '80%',
-    backgroundColor: 'rgba(41, 16, 90, 0.97)',
-    borderRadius: 24,
-    padding: 22,
-    alignItems: 'center',
-    shadowColor: '#FFD700',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 20,
-    elevation: 10,
-    borderWidth: 1.5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#FFD700',
+    borderRadius: 12,
+    borderWidth: 2,
     borderColor: '#6D44FF',
   },
-  modalHeader: {
+  tokenChipText: {
+    color: '#6D44FF',
+    fontWeight: 'bold',
+    fontSize: 12,
+    marginRight: 2,
+  },
+  tokenIcon: {
+    width: 16,
+    height: 16,
+  },
+  // Modal de tokens
+  modalTokensContainer: {
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  tokensInfo: {
+    flexDirection: 'column',
     alignItems: 'center',
-    marginBottom: 18,
+    justifyContent: 'center',
+    gap: 12,
   },
-  modalAstroImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    marginBottom: 10,
+  currentTokensContainer: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  tokensLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  tokensContainer: {
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FFD700',
-    backgroundColor: '#3a237e',
+    borderColor: 'rgba(109, 68, 255, 0.3)',
+    flexDirection: 'row',
+    gap: 4,
   },
-  modalTitle: {
+  tokensText: {
+    color: '#FFD700',
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFD700',
-    letterSpacing: 1.2,
-    marginBottom: 2,
-    textShadowColor: '#fff5',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
-  },
-  modalSubTitle: {
-    fontSize: 15,
-    color: '#D6B0FF',
-    marginBottom: 3,
-    fontStyle: 'italic',
-  },
-  modalScrollView: {
-    maxHeight: 220,
-    marginBottom: 14,
-  },
-  modalResponse: {
-    color: '#FFF',
-    fontSize: 15,
-    textAlign: 'justify',
-    lineHeight: 22,
-    paddingHorizontal: 2,
-  },
-  modalButton: {
-    marginTop: 5,
-    paddingHorizontal: 36,
-    paddingVertical: 10,
-    backgroundColor: '#6D44FF',
-    borderRadius: 14,
-    alignItems: 'center',
-    shadowColor: '#FFD700',
-    shadowOpacity: 0.19,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 7,
-  },
-  modalButtonText: {
-    color: '#FFD700',
-    fontWeight: 'bold',
-    fontSize: 15,
-    letterSpacing: 0.4,
   },
 });
 

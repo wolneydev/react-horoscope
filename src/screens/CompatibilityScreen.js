@@ -14,6 +14,7 @@ import StorageService from '../store/store';
 import CompatibilityHeader from '../Components/compatibility/CompatibilityHeader';
 import CompatibilityItem from '../Components/compatibility/CompatibilityItem';
 import { COLORS, SPACING, FONTS } from '../styles/theme';
+import UserInfoHeader from '../Components/UserInfoHeader';
 
 export default function CompatibilityScreen({ route }) {
   const memoizedStars = useMemo(() => <AnimatedStars />, []);
@@ -27,6 +28,16 @@ export default function CompatibilityScreen({ route }) {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Calculando compatibilidade...');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Estado para loading dos itens de compatibilidade
+  const [itemLoading, setItemLoading] = useState(false);
+  const [itemLoadingMessage, setItemLoadingMessage] = useState('');
+
+  // Função para gerenciar o loading dos itens
+  const handleItemLoadingChange = (isLoading, message) => {
+    setItemLoading(isLoading);
+    setItemLoadingMessage(message);
+  };
 
   // Lista de astros e imagens
   const astros = [
@@ -146,13 +157,16 @@ export default function CompatibilityScreen({ route }) {
       astros={astros}
       getCompatibilityColor={getCompatibilityColor}
       getAstroImage={getAstroImage}
+      onLoadingChange={handleItemLoadingChange}
     />
   );
 
   return (
     <SafeAreaView style={styles.container}>
       {memoizedStars}
+      <UserInfoHeader />
       {loading && <LoadingOverlay message={loadingMessage} />}
+      {itemLoading && <LoadingOverlay message={itemLoadingMessage} />}
 
       <View style={styles.content}>
         <FlatList
