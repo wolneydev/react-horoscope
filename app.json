@@ -1,4 +1,9 @@
 {
   "name": "horoscope",
-  "displayName": "horoscope"
+  "displayName": "horoscope",
+  "extra": {
+    "eas": {
+      "projectId": "da5986cf-fdf7-478a-9391-0fe78ba6f723"
+    }
+  }
 }

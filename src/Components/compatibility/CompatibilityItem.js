@@ -8,7 +8,6 @@ import MessageModal from '../MessageModal';
 
 // Função para retornar um contexto resumido de cada entidade astral
 
-
 const gerarLabelPorEntidadeAstral = (entidade) => {
   const labels = {
     'Sol': '🌟 Desvende sua Essência',
