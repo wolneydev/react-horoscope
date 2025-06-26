@@ -1,0 +1,12 @@
+export default {
+  name: 'horoscope',
+  android: {
+    package: 'com.wolney.dev.horoscope',
+    permissions: ['INTERNET'],
+  },
+  extra: {
+    eas: {
+      projectId: '',
+    },
+  },
+};

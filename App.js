@@ -31,15 +31,10 @@ import MyAccountScreen from './src/screens/MyAccountScreen';
 import { enableScreens } from 'react-native-screens';
 import LoadingOverlay from './src/Components/LoadingOverlay';
 import StorageService from './src/store/store';
-import { useState, useRef, useEffect } from 'react';
 import MyPurchasesScreen from './src/screens/MyPurchasesScreen';
 import { PrivacyPolicyScreen, TermsOfUseScreen } from './src/screens/TermsScreen';
 import { PortalProvider } from '@gorhom/portal';
 import UserInfoHeader from './src/Components/UserInfoHeader';
-import UserListScreen from './src/screens/UserListScreen'; 
-import PhotoPicker from './src/Components/PhotoPicker';
-import EditProfileScreen from './src/screens/EditProfileScreen';
-import LearningScreen from './src/screens/LearningScreen';
 import DiaryScreen from './src/screens/DiaryScreen';
 import AstralTokensScreen from './src/screens/AstralTokensScreen';
 
@@ -167,25 +162,25 @@ function MainStack() {
         component={MyAccountScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="LearningScreen"
         component={LearningScreen}
         options={{ headerShown: false }}
-      />
-      <Stack.Screen
+      /> */}
+      {/* <Stack.Screen
         name="UserListScreen"
         component={UserListScreen}
         options={{ headerShown: false }}
-      />
-      <Stack.Screen 
+      /> */}
+      {/* <Stack.Screen 
           name="PhotoPicker" 
           component={PhotoPicker} 
-        />      
-       <Stack.Screen 
+        />       */}
+       {/* <Stack.Screen 
           name="EditProfileScreen" 
           component={EditProfileScreen} 
           options={{ headerShown: false }}
-        />              
+        />               */}
       <Stack.Screen
         name="DiaryScreen"
         component={DiaryScreen}
@@ -294,25 +289,10 @@ function CustomDrawerContent(props) {
           />          
         </View>
 
-        {/* ITEM DE MENU PARA A SEÇÃO DE APRENDIZADO */}
-        <DrawerItem
-          label="Aprendizado"
-          icon={({ focused }) => (
-            <Icon name="book" color={currentRoute === 'Aprendizado' ? '#FFFFFF' : '#7A708E'} size={24} />
-          )}
-          onPress={() => props.navigation.navigate('Aprendizado')}
-          style={[  
-            styles.drawerItem,
-            currentRoute === 'Aprendizado' && styles.drawerItemActive
-          ]}
-          labelStyle={[
-            styles.drawerLabel,
-            currentRoute === 'Aprendizado' && styles.drawerLabelActive
-          ]}
-        />
+
 
         {/* ITEM DE MENU PARA A LISTA DE USUÁRIOS */}
-        <DrawerItem
+        {/* <DrawerItem
           label="Social"
           icon={({ focused }) => (
             <Icon name="account-circle" color={currentRoute === 'Social' ? '#FFFFFF' : '#7A708E'} size={24} />
@@ -320,7 +300,7 @@ function CustomDrawerContent(props) {
           onPress={() => props.navigation.navigate('Social')}
           style={[styles.drawerItem, currentRoute === 'Social' && styles.drawerItemActive]}
           labelStyle={[styles.drawerLabel, currentRoute === 'Social' && styles.drawerLabelActive]}
-        />
+        /> */}
 
         <DrawerItem
           label="Meu Diário Astral"
@@ -448,7 +428,7 @@ function AppDrawer() {
           }}
         />
 
-        <Drawer.Screen
+        {/* <Drawer.Screen
           name="Social"
           component={UserListScreen}
           options={{
@@ -456,7 +436,7 @@ function AppDrawer() {
               <Icon name="favorite" color={color} size={size} />
             ),
           }}
-        />
+        /> */}
 
         <Drawer.Screen
           name="Meu Diário Astral"
@@ -487,7 +467,7 @@ function AppDrawer() {
             ),
           }}
         />
-
+{/* 
         <Drawer.Screen  
           name="Aprendizado"
           component={LearningScreen}
@@ -496,9 +476,9 @@ function AppDrawer() {
               <Icon name="book" color={color} size={size} />
             ),
           }}
-        />
+        /> */}
 
-        <Drawer.Screen
+        {/* <Drawer.Screen
           name="Personalizar Perfil"
           component={EditProfileScreen}
           options={{
@@ -506,7 +486,7 @@ function AppDrawer() {
               <Icon name="account-circle" color={color} size={size} />
             ),
           }}
-        />        
+        />         */}
 
         <Drawer.Screen
           name="Minha Conta"
